@@ -1,6 +1,6 @@
 
 \documentclass[11pt]{article}
-\usepackage[paper=letterpaper]{geometry}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
 \pdfpagewidth 8.5in
 \pdfpageheight 11in
 \setlength\parindent{0in}
@@ -52,5 +52,312 @@
 
 \begin{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Homework 1 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
 
+\begin{itemize}
+    \item[1.1.] 
+        \begin{itemize}
+            \item[DF 3]
+                Suppose, to the contrary, $\lim_{x \to -\infty} F(x) \neq 0$. \\
+                $\Rightarrow \exists \epsilon>0: \lim_{x \to -\infty} F(x) = \epsilon$, since $F$ is bounded below by 0 and nondecreasing. \\
+                $\Rightarrow$ For any sequence $x_n: \lim_{n \to \infty}x_n = -\infty$, $\lim_{n \to \infty} F(x_n)=\epsilon$. \\
+                Let $x_n$ be such a sequence, with the additional restriction that it is strictly decreasing. \\
+                $\Rightarrow \forall n, F(x_n)>\epsilon$, since $F$ is nondecreasing. \\
+                Let $A_n = {X\leq x_n}$ and $A = \inter{n}A_n$. Since $x_n$ is strictly decreasing, $\forall n>m, A_n \subset A_m$. \\
+                $\Rightarrow P[A_n] \downarrow P[A]$, since $A_n \downarrow A$. \\
+                $\Rightarrow \exists a \in A$, since $P[A]\downarrow \epsilon$ and $P[\emptyset]=0$. \\
+                $\Rightarrow \forall n, a\leq x_n$. \\
+                This is a contradiction, since $\lim_{n \to \infty}x_n = -\infty$. Thus, we must conclude that $\lim_{x \to -\infty} F(x) = 0$ 
+                \smallskip
+
+                Suppose, to the contrary, $\lim_{x \to \infty} F(x) \neq 1$. \\
+                $\Rightarrow \exists \epsilon<1: \lim_{x \to \infty} F(x) = \epsilon$, since $F$ is bounded above by 1 and nondecreasing. \\
+                $\Rightarrow$ For any sequence $x_n: \lim_{n \to \infty}x_n = \infty$, $\lim_{n \to \infty} F(x_n)=\epsilon$. \\
+                Let $x_n$ be such a sequence, with the additional restriction that it is strictly increasing. \\
+                $\Rightarrow \forall n, F(x_n)<\epsilon$, since $F$ is nondecreasing. \\
+                Let $A_n = {X\leq x_n}$ and $A = \un{n}A_n$. Since $x_n$ is strictly increasing, $\forall n>m, A_m \subset A_n$. \\
+                $\Rightarrow P[A_n] \uparrow P[A]$, since $A_n \uparrow A$. \\
+                $\Rightarrow P[A^c]>0$, since $P[A]\uparrow \epsilon$ and $\epsilon<1$. \\
+                $\Rightarrow \exists a \in A^c$, since $P[\emptyset]=0$. \\
+                $\Rightarrow \forall n, a> x_n$. \\
+                This is a contradiction, since $\lim_{n \to \infty}x_n = \infty$. Thus, we must conclude that $\lim_{x \to \infty} F(x) = 1$ \\
+            \item[DF 4]
+                $F$ is bounded above and nondecreasing, so we know that $F(x-)$ exists. Let $x_n$ be a strictly increasing sequence such that $\lim_{n \to \infty} x_n = x$. 
+                Let $A_n = {X\leq x_n}$ and $A = \un{n} A_n$. It is clearly the case that $A = {X<x}$, and since $A_n\uparrow A$, $P[A_n]\uparrow P[A]$. Since $P[A_n]=F(x_n)$, we may 
+                conclude that $\lim_{n \to \infty} F(x_n) = P[X<x]$. Thus, we can conclude $F(x-)=P[X<x]$ as well.               
+            \item[DF 5]
+                \begin{align*}
+                    F(x) - F(x-) &= P[X\leq x] - P[X<x] \\
+                                 &= P[X=x]
+                \end{align*}
+        \end{itemize}
+    \item[1.2.]
+        Let 
+        \[F(x)= 
+            \begin{cases} 
+                0,           &\mbox{if } x<0          \\
+                \frac{1}{2}, &\mbox{if } 0\leq x < 2  \\
+                1,           &\mbox{if } 2\leq x
+            \end{cases}
+        \]
+        Here, $F^*(\frac{1}{2})=0<1$, yet $\frac{1}{2}=F(1)$. As well, $\frac{1}{4}<\frac{1}{2}=F(0)$, yet $F^*(\frac{1}{4})=0$.
+    \item[1.3.]
+        \(\forall v\in (0,1): \lim_{u\downarrow 0} F^*(u) \leq F^*(v)\), since $F^*$ nondecreasing. \\
+        \(\Rightarrow \forall v\in (0,1): \forall x \in \{x\in\R: v\leq F(x)\}: \lim_{u\downarrow 0} F^*(u) \leq x$, by the definition of $F^*\) \\
+        \(\Rightarrow \forall x \in \{x\in \R: F(x)>0\}: \lim_{u\downarrow 0} F^*(u) \leq x\) \\
+        Also, \(\nexists w: \forall v\in (0,1): \lim_{u\downarrow 0} F^*(u) < w \leq F^*(v)\). \\
+        \(\Rightarrow \nexists w: \forall v\in (0,1): \forall x \in \{x\in \R: v\leq F(x)\}: \lim_{u\downarrow 0} F^*(u) < w \leq F(x) \) \\
+        \(\Rightarrow \nexists w: \forall x \in \{x\in \R: F(x)>0\}: \lim_{u\downarrow 0} F^*(u) < w \leq F(x) \) \\
+        Accordingly, since \(\lim_{u\downarrow 0} F^*(u)\) is the greatest upper bound of \(\{x\in \R: F(x)>0\}\), \\
+        \[\lim_{u\downarrow 0} F^*(u) = \inf\{x\in \R: F(x)>0\}\]
+        \smallskip
+
+        Let \(x\in\R: F(x)\in(0,1)\). \\
+        \(\Rightarrow \exists v\in(0,1): F(x)<v<1 \) \\
+        \(\Rightarrow F^*(v)>x \) by the switching formula. \\
+        \(\Rightarrow \lim_{u\uparrow 1} F^*(u) \geq F^*(v) > x\), since \(F^*\) is nondecreasing.\\
+        \(\Rightarrow \lim_{u\uparrow 1} F^*(u)\) is an upper bound of \(\{x\in\R:F(x)<1\}\) \\
+        Suppose, to the contrary, \(\exists w: \forall x \in \{x\in\R: F(x)<1\}: x\leq w < \lim_{u\uparrow 1} F^*(u)\). \\
+        \(\Rightarrow \forall v\in(0,1): F^*(v)\leq w < \lim_{u\uparrow 1} F^*(u)\). \\
+        \(\Rightarrow \lim_{u\uparrow 1} F^*(u) \leq w < \lim_{u\uparrow 1} F^*(u)\) \\
+        Since the above is a contradiction, we must conclude that \(\lim_{u\uparrow 1} F^*(u)\) is the least upper bound of \(\{x\in\R:F(x)<1\}\), and therefor \\
+        \[\lim_{u\uparrow 0} F^*(u) = \sup\{x\in \R: F(x)>0\}\]
+    \item[1.4.]
+        \(F(x)\leq F(x)\) \\
+        \(\Rightarrow F^*(F(x))\leq x \) by the switching formula. \\
+        Let \(\delta>0\). \\
+        \(\Rightarrow F(x) < F(x) + \delta \) \\
+        \(\Rightarrow x < F^*(F(x+\delta)) \) by the switching formula. \\
+        \(\Rightarrow x \leq F^*(F(x)+) \) \\
+        Accordingly,
+        \[F^*(F(x))\leq x \leq F^*(F(x)+) \]
+    \item[1.5.]
+        We can show that
+        \begin{align*}
+            F^*(u) &\leq F^*(u)         & \\
+                u  &\leq F(F^*(u))      & \mbox{by the switching formula }  \\
+            F^*(u) &\leq F^*(F(F^*(u))) & \mbox{since } F^* \mbox{ is nondecreasing}             
+        \end{align*}    
+        Now suppose, to the contrary, that \(F^*(u)<F^*(F(F^*(u)))\). \\
+        \(\Rightarrow F(F^*(u))<F(F^*(u)) \) by the switching formula. \\
+        Since this is an obvious contradiction, we may conclude that
+        \[F^*(u) = F^*(F(F^*(u))) \]
+        \smallskip
+
+        We can also show that
+        \begin{align*}
+            F(x) &\leq     F(x)     & \\
+              x  &\leq F^*(F(x))    & \mbox{by the switching formula} \\
+            F(x) &\leq F(F^*(F(x))) & \mbox{since } F \mbox{ is nondecreasing}
+        \end{align*}    
+        If \(F(x) < F(F^*(F(x)))\), this would imply by the switching formula that \(F^*(F(x))>F^*(F(x))\), which an obvious contradiction. Thus, we can conclude that
+        \[F(x) = F(F^*(F(x)))\]
+    \item[1.6.]
+        Let $F$ not be continious at $x$.  \\
+        \(\Rightarrow F(x-)\neq F(x)\), since \(F(x)=F(x)\) by DF2. \\
+        \(\Rightarrow F(x-)< F(x)\) since $F$ is nondecreasing. \\
+        \(\Rightarrow \exists \epsilon>0: \forall \delta>0: \exists x_1\in(x-\delta,x): F(x)-F(x_1)>\epsilon \) \\
+        \(\Rightarrow \forall w<x, F(x)-\epsilon>F(w)\), since F is nondecreasing, and \(\exists x_1\in(w,x): F(w)\leq F(x_1)< F(x)-\epsilon\) \\
+        \(\Rightarrow \forall u \in (F(x)-\epsilon,F(x)): F^*(u)\geq x \), since $x$ is a lower bound of \(\{x\in\R:u\leq F(x)\}\). \\
+        \(\Rightarrow F(F^*(u)) \geq F(x) > u \), since F is nondecreasing. \\
+        \(\Rightarrow\) It is not the case that \(\forall u \in(0,1): F(F^*(u))=u \)  \\
+        Now, going the other direction, let $F$ be continious, and, to the contrary, let \(F(F^*(u))>u\) for some \(u\in(0,1)\) \\
+        \(\Rightarrow \forall x\in\R: F(x-)= F(x) \). \\
+        \(\Rightarrow \forall \epsilon>0: \exists \delta>0: \forall x_1\in (x-\delta,x), F(x)-F(x_1)<\delta \) \\
+        \(\Rightarrow \exists \delta>0: \forall w \in (F^*(u)-\delta,F^*(u)): F(F^*(u))-F(w)<F(F^*(u))-u \) \\
+        \(\Rightarrow F(w)>u \) and \(F^*(u)>w\) \\
+        However, by definition, \(F^*(u)\) is less than or equal to all $x$ such that \(F(x)\geq u\), so we have reached a contradiction. Thus, we may conclude that if $F$ is continious,
+        it must also be the case that \(F(F^*(u))\leq u \). We can reject that \(F(F^*(u))< u \), since that would mean \(F^*(u)<F^*(u) \) by the switching formula, so we are left with \(F(F^*(u))= u \). \\
+        Taking both direction together, we get the result 
+        \[\forall u\in(0,1): F(F^*(u))=u \Leftrightarrow F \mbox{is continious} \]
+        \smallskip
+
+        Let $F$ be strictly increasing. \\
+        \( \Rightarrow\) if \(x_2<x_1\), then \(F(x_2)<F(x_1)\).\\
+        \( \Rightarrow x_2<F^*(F(x_1)) \) by the switching formula. \\
+        \( \Rightarrow x_2<F^*(F(x_1))\leq x_1 \) by IDF4. \\
+        \( \Rightarrow \forall \epsilon>0: x_1-\epsilon<F^*(F(x_1))\leq x_1 \). \\
+        \( \Rightarrow x_1 = F^*(F(x_1)) \). \\
+        Now, let $F$ not be strictly increasing. \\
+        \( \Rightarrow \exists x_1,x_2 \in \R: x_2<x_1 \mbox{ and } F(x_2)\geq F(x_1) \) \\
+        \( \Rightarrow F(x_2)= F(x_1) \), since $F$ is nondecreasing. \\
+        \( \Rightarrow F^*(F(x_1))\leq x_2 < x_1 \) \\
+        \( \Rightarrow \) It is not the case that \(\forall x\in\{x\in\R:0<F(x)<1\}: F^*(F(x))=x\). \\
+        Taking both directions together, we get the result that
+        \[ \forall x\in A:=\{x\in\R:0<F(x)<1\}: F^*(F(x))=x\ \Leftrightarrow F \mbox{ is strictly increasing over } A \]
+    \item[1.7.]
+        To acheive a desired $p$-value, it is sufficient that, for a test statistic $x$, \(F(x)\leq p\).
+    \item[1.8.]
+        \begin{itemize}
+            \item[a)]
+                Let \(u\geq F(x-)\) \\
+                \( \Leftrightarrow \forall \delta_1>0: u\geq F(x-\delta_1) \), since $F$ is nondecreasing. \\
+                \( \Leftrightarrow \forall \delta_1,\delta_2>0: u + \delta_2 > F(x-\delta_1) \) \\
+                \( \Leftrightarrow \forall \delta_1,\delta_2>0: F^*(u + \delta_2) > x-\delta_1 \) by the switching formula. \\
+                \( \Leftrightarrow \forall \delta_2>0: F^*(u + \delta_2) \geq x \) \\
+                \( \Leftrightarrow F^*(u+) \geq x \) \\
+            \item[b)]
+                Let \(A = \{w:u\geq F(w-)\}\) \\
+                \( \Rightarrow A = \{w:F^*(u+)\geq w\} \) by part a) \\
+                \( \Rightarrow \forall x \in A: F^*(u+)\geq x \) \\
+                \( \Rightarrow F^*(u+)\geq \sup(A) \) \\
+                Now suppose, to the contrary, that \(F^*(u+)> \sup(A)\) \\
+                \( \Rightarrow \exists x\in \R : F^*(u+)>x>\sup(A) \) \\
+                \( \Rightarrow x\in A \mbox{ and } x>\sup A \) \\
+                This is a contradiction, so we must conclude that it cannot be the case that \(\sup A < F^*(u+)\), and rather it must be that \(\sup A = F^*(u+)\).
+        \end{itemize}
+    \item[1.9.]
+        \begin{itemize}
+            \item[a)]
+                Let $A$ be a closed and bounded supbinterval of $B$.\\
+                \( \Rightarrow f(A)\subseteq [f(\min(A)),f(\max(A))] \), since $f$ nondecreasing. \\
+                \( \Rightarrow \forall \epsilon>0:\) Let \(J_{A,\epsilon}=\{x\in A:f(x+)-f(x-)>\epsilon\} \) \\
+                \( \Rightarrow \vert J_{A,\epsilon}\vert\in \N \), since, due to $f$ being nondecreasing, \\
+                \[ \sum_{j\in J_{A,\epsilon}} \epsilon \leq \sum_{j\in J_{A,\epsilon}} f(j+)-f(j-) \leq f(\max(A)) - f(\min(A)) \]
+                Now, let, where \(K=\{z\in\Z : B\cap [z-1,z] \neq \emptyset\}\)  \\
+                \[ J=\bigcup_{z\in K} \un{n} J_{[z-1,z],\frac{1}{n}} \]
+                \( \Rightarrow D_f\subseteq J\), since if \(j\in D_f\), \(\exists z\in \Z: j\in[z-1,z] \) and \(\exists n\in \N_0: f(j+)-f(j-)>\frac{1}{n} \). \\
+                Let \(h:\Z \times \N_0 \times \N_0 \to J\) be defined as such: The triple \((z,n_1,n_2)\) gets mapped to the $n_2$th largest $j$ in \(J_{[z-1,z],\frac{1}{n_1}}\).
+                We may choose the $n_2$th largest since we have already shown \(J_{[z-1,z],\frac{1}{n_1}}\) is finite. This is clearly a surjective function, where 
+                \(\forall j\in J: \exists (z,n_1,n_2)\in \Z \times \N_0 \times \N_0 : h(z,n_1,n_2) = j \). Therefor, since such a mapping exists, we may conclude that
+                \[\left\vert \Z \times \N_0 \times \N_0 \right\vert \geq \left\vert J \right\vert \geq \left\vert D_f \right\vert \]
+                Since \(\Z \times \N_0 \times \N_0\) is countable, this means that $D_f$ is also at most countable.
+            \item[b)]
+                Let \(x\in B \mbox{ and } \epsilon>0\). \( (x-\epsilon,x+\epsilon) \) is an uncountable set, so there can't possibly be a surjective function \(h:D_f \to (x-\epsilon,x_\epsilon)\), 
+                since $D_f$ is at most countable. Thus, it must be the case that \(\exists c\in(x-\epsilon,x_\epsilon): c\in D_f^c=C_f\). We can thus conclude $C_f$ is dense in $B$.
+        \end{itemize}
+    \item[1.10.]
+        \begin{itemize}
+            \item[a)]
+                Let $w$ be a continuity point of $F$ and \(u\in(0,1)\) with \(F^*(u)>w \) \\
+                \( \Rightarrow u>F(w) \) by the switching formula \\
+                Let \(\epsilon = u - F(w)\).
+                \( \Rightarrow \exists m : \forall m\geq n: \vert F_n(w) - F(w) \vert < \epsilon \), since \(\lim_{n\to\infty} F_n(w)=F(w) \) \\
+                \( \Rightarrow \forall n \geq m \)
+                \begin{align*}
+                    u &= F(w) + (u - F(w) \\
+                      &> F(w) + \vert F_n(w) - F(w) \vert \\
+                      &> F(w) + F_n(w) - F(w) \\
+                      &> F_n(w)
+                \end{align*}
+            \item[b)]
+                Let $y$ be a continuity point of $F$ and \(u\in(0,1)\) with \(F^*(u+)<y \) \\
+                \(\Rightarrow \exists \delta>0: \forall \epsilon\in (0,\delta): F^*(u+\epsilon)<y \) \\
+                \(\Rightarrow u+\epsilon \leq F(y) \) by the switching formula \\
+                \(\Rightarrow u \leq F(y) - \epsilon \) \\
+                Since \(\lim_{n\to\infty} F_n(y)=F(y), \exists m: \forall n>m: \vert F_n(y) - F(y) \vert < \epsilon \) \\
+                \(\Rightarrow \forall n>m \)
+                \begin{align*}
+                        u &\leq F(y) - \epsilon \\
+                          &<    F(y) - \vert F_n(y) - F(y) \vert \\
+                          &<    F(y) - (F(y) -  F_n(y)) \\
+                          &<    F_n(y)                  \\
+                    F^*(u)&<      y                            & \mbox{By the switching formula}
+                \end{align*}
+            \item[c)]
+                Suppose, to the contrary, \(F^*(u) > \lim \inf_n F_n^*(u) \) \\
+                \( \Rightarrow \exists c\in C_f: F^*(u) > c > \liminf_n F_n^*(u) \), since $C_f$ is dense in $\R$. \\
+                \( \Rightarrow \exists m \in \N: \forall n>m: F_n^*(u)>c \), by part a. \\
+                \( \Rightarrow \forall n>m, \inf_n F_n^*(u) \geq c \) \\
+                \( \Rightarrow \liminf_n F_n^*(u) \geq c \) \\
+                This is a contradiction, so we must conclude \(\liminf_n F_n^*(u)\geq F^*(u)\)
+                \smallskip
+
+                \( \inf_n F^*(u) \leq \sup_n F^*(u) \) by definition. \\
+                \( \Rightarrow \liminf_n F_n^*(u)\leq \limsup_n F_n^*(u) \)
+                \smallskip 
+
+                Suppose, to the contrary, \(\limsup_n F_n^*(u) > F^*(u+) \) \\
+                \( \Rightarrow \exists c \in C_f: \limsup_n F_n^*(u) > c > F^*(u+) \), since $C_f$ is dense in $\R$a \\ 
+                \( \Rightarrow \exists m \in \N: \forall n>m: F_n^*(u)\leq c \), by part b. \\
+                \( \Rightarrow \forall n>m, \sup_n F_n^*(u) \leq c \) \\
+                \( \Rightarrow \limsup_n F_n^*(u) \leq c \) \\
+                This is a contradiction, so we must conclude \(\limsup_n F_n^*(u)\leq F^*(u+)\)
+                \smallskip 
+
+                Combining the three above results, we have that 
+                \[  F^*(u) \leq \liminf_n F_n^*(u) \leq \limsup_n F_n^*(u) \leq F^*(u+) \]
+            \item[d)]
+                If \(u\in C_f\), by definition \(F^*(u) = F^*(u+)\) \\
+                \( \Rightarrow F^*(u) = \liminf_n F_n^*(u) = \limsup_n F_n^*(u) \) by part c. \\
+                \( \Rightarrow \forall \epsilon>0: \exists m\in\N: \forall n>m: \) \\
+                \[ F^*(u) - \epsilon < \inf_n F_n^*(u) \leq \sup_n F_n^*(u) < F^*(u) + \epsilon \]
+                \( \Rightarrow \forall n>m : F^*(u) - \epsilon < F_n^*(u) < F^*(u) + \epsilon \) \\
+                \( \Rightarrow \lim_{n\to\infty} F_n^*(u) = F^*(u) \)
+            \item[e)]
+                Let
+                \[F_n^*(u) = (2u-1)^{-n} \mbox{ and } F^*(u) = 
+                    \begin{cases}
+                        -1, &\mbox{if } 0<x\leq\frac{1}{2} \\
+                         1, &\mbox{if } \frac{1}{2}<x\leq1 
+                    \end{cases}
+                \]
+                arising from 
+                \[F_n(u) =
+                    \begin{cases}
+                        0,               &\mbox{ if } x<-1        \\
+                        \frac{x^n+1}{2}, &\mbox{ if } -1\leq x< 1 \\
+                        1,               &\mbox{ if } 1 \leq x
+                    \end{cases}
+                \mbox{ and } F(u) =
+                    \begin{cases}
+                        0,               &\mbox{ if } x<-1        \\
+                        \frac{1}{2},     &\mbox{ if } -1\leq x< 1 \\
+                        1,               &\mbox{ if } 1 \leq x
+                    \end{cases}
+                \]
+                \( \lim_{n\to\infty} F_n^*(u) = F^*(u) \) for all continuity points of $F^*$. However, where $F^*$ isn't continious at $\frac{1}{2}$, 
+                \(\lim_{n\to\infty} F_n^*(\frac{1}{2}) = 0 \neq -1 = F^*(\frac{1}{2})\).
+        \end{itemize}
+    \item[2.1.]
+        Let $F(x)$ not be strictly increasing over \(A=\{x\in\R: 0<F(x)<1\}\). \\
+        \(\Rightarrow \exists x_1,x_2\in A: x_1<x_2 \mbox{ and } F(x_1)=F(x_2)\) \\
+        \(\Rightarrow F^*(F(x_1))\leq x_1, \mbox{ since } \inf\{x:F(x_1)\leq F(x)\} \leq x_2 \) \\
+        Let \(B = \{x\in A: F(x)=F(x_1)\} \) \\
+        \(\Rightarrow \forall x\in \{ x\in A: F(x)>F(x_1)\}, x\geq \sup B \), since the fact that $F$ is nondecreasing makes $x$ and upper bound on $B$ \\
+        \(\Rightarrow \forall v> F(x_1), F^*(v)\geq \sup B \) \\
+        \(\Rightarrow \forall \delta > 0 \)
+        \begin{align*}
+            F^*(F(x)+\delta)             &\geq \sup B -F^*(F(x_1)+F^*(F(x_1) \\
+            F^*(F(x)+\delta) -F^*(F(x_1)) &\geq \sup B -F^*(F(x_1) \\
+                                         &\geq x_2 - x_1
+        \end{align*}
+        \(\Rightarrow F^*(u+)\neq F^*(u)\)
+        \smallskip
+
+        Now, let $F$ be strictly increasing over $A$ and $x\in A$ such that \(x=F^*(u)\) and \(F(x)<1\). Let \(y\in(x,1)\). \\
+        \( \Rightarrow \exists w\in(x,y) \) \\
+        \( \Rightarrow u\leq F(x) < F(w) < F(y) \) since $F$ is strictly increasing.\\
+        \( \Rightarrow u+F(w)-F(x) \leq F(w) \) \\
+        \( \Rightarrow F^*(u+F(w)-F(x)) \leq w < y \) by the switching formula. \\
+        \( \Rightarrow F^*(u+) < y \) \\
+        \( \Rightarrow F^*(u+) = x = F^*(u) \)
+        \smallskip
+
+        Between these two results, we get that $F^*$ is continious if and only if $F$ is strictly increasing.
+    \item[2.2.]
+        \begin{itemize}
+            \item[a)]
+                \begin{align*}
+                    P[T(Y)\in B] &= P[Y \in {x: T(x)\in B}] \\
+                                 &= P[Z \in {x: T(x)\in B}] \\
+                                 &= P[T(Z) \in B]
+                \end{align*}
+                \( \Rightarrow Y~Z \)
+            \item[b)]
+                Let \(P[Y=Z]=1\)
+                \begin{align*}
+                    P[Y\in B] &= P[Y=Z \cap Y\in B] \\
+                              &= P[Y=Z \cap Z\in B] \\
+                              &= P[Z\in B]
+                \end{align*}
+                \( \Rightarrow Y~Z \)
+        \end{itemize}
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
