@@ -1,0 +1,188 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%% AMS PACKAGES - Chances are you will want some or all of these if writing a math dissertation.
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, enumerate, multicol, graphicx, listings}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+HW1 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+\begin{itemize}
+    \item[1.]
+        \begin{itemize}
+            \item[a)]
+                I've only included the graphs here, the commands used to generate them can be found in the R supplement in the back. For all of these, $B$, the number of trials for a particular $N$, was set to $100$. \\
+                \includegraphics[width=9cm]{hw1_1_a_reg} 
+                \includegraphics[width=9cm]{hw1_1_a_log} 
+            \item[b)]
+                I chose $N$ to be $10$, $50$, and $100$. For each of these, the density plot is again off of $B=100$ trials.
+                \includegraphics[width=9cm]{hw1_1_b_10} 
+                \includegraphics[width=9cm]{hw1_1_b_50} \\
+                \includegraphics[width=9cm]{hw1_1_b_100} 
+        \end{itemize}
+    \item[2.]
+        \begin{itemize}
+            \item[a)]
+                For $\sigma=1$
+                \smallskip
+
+                The risk of the MLE estimator is just the variance. Thus,
+                \[ R(Z,\theta) = \sum_{i=1}^{1000} \sigma^2 = \sum_{i=1}^{1000} 1 = 1000 \]
+
+                The risk of a shrinkage estimator will be:
+                \[ R(\hat\theta,\theta) = b^2n\sigma^2 + (1-b)^2 \| \theta \|^2 = b^2 1000 + (1-b)^2 \sum_{i=1}^{1000} \frac{1}{i^4} = b^2 1000 + (1-b)^2*1.082323 \]
+                Which is plotted here: \\
+                \includegraphics[width=9cm]{hw1_2_plot_1} \\
+                As the graph suggests, the minimum is achieved at
+                \[b_*=\frac{\|\theta \|^2}{n\sigma^2+\|\theta \|^2} = \frac{1.082323}{1+1.082323} = .0010812 \]
+                The James-Stein estimator seems to be a good approximation of this; it appears to be centered at the optimal $b$ (the mean is higher because negative values are excluded), with some random variance: \\
+                \includegraphics[width=9cm]{hw1_2_sim_1} \\
+
+                Setting $c^2$ to $1.082323$, we get a Pinsker Bound of \(\frac{1*1.082323}{1+1.082323}=.52976\). The MLE risk blows right by this by a factor of $2000$, partly because \(\sigma_n^2\neq \frac{\sigma^2}{n} \). The simulated mean squared error of the JS estimator is, as it should be, always coming in much below this threshold" \\
+                \includegraphics[width=9cm]{hw1_2_risk_1} \\
+
+
+            \item[b)]
+                For \(\sigma= \frac{1}{n}\)
+                \smallskip
+
+                The risk of the MLE estimator is just the variance. Thus,
+                \[ R(Z,\theta) = \sum_{i=1}^{1000} \sigma^2 = \sum_{i=1}^{1000} \frac{1}{1000} = 1 \]
+
+                The risk of a shrinkage estimator will be:
+                \[ R(\hat\theta,\theta) = b^2n\sigma^2 + (1-b)^2 \| \theta \|^2 = b^2 + (1-b)^2 \sum_{i=1}^{1000} \frac{1}{i^4} = b^2 + (1-b)^2*1.082323 \]
+                Which is plotted here: \\
+                \includegraphics[width=9cm]{hw1_2_plot_n} \\
+                As the graph suggests, the minimum is achieved at
+                \[b_*=\frac{\|\theta \|^2}{n\sigma^2+\|\theta \|^2} = \frac{1.082323}{1+1.082323} = .5197671 \]
+                The James-Stein estimator seems to be a good approximation of this; it appears to be centered at the optimal $b$, with some random variance: \\
+                \includegraphics[width=9cm]{hw1_2_sim_n} \\
+                With the same Pinkser Bound, with the variance assumption actually holding, the MLE risk is still about twice as high at 1. The simulated mean squared error of the JS estimator comes in far below, as one would expect. \\
+                \includegraphics[width=9cm]{hw1_2_risk_n} \\
+
+
+        \end{itemize}
+    \item[3.]
+        After some investigation, it is my belief that the actual $\theta$ vector was generated by a Pareto distribution, or a distribution that is quite similar to it. Choosing a shape parameter of 2 and a minimum of 2.4 for the Pareto distribution, I certainly seem to be very close: \\
+        \includegraphics[width=9cm]{hw1_3_den} 
+        \includegraphics[width=9cm]{hw1_3_qq}  \\
+        This is about as good a fit as you will see with a parametric model. Its hard to judge the fit of the tail, but even if it is off, since the signal overpowers the noise there, it doesn't matter that much for this exercise.
+        \smallskip
+
+        Armed with the assumption that \(\theta \sim Pareto(2,2.4)\), I can calculate the density function of $\theta$ conditioned on the particular $Z$:
+        \begin{align*}
+            f_\theta (\theta \,|\, Z) &= f_\theta (\theta \,|\, \theta + N(0,1) = z) \\
+                                  &= \dfrac{ 2 \cdot 2.4^2 \theta^{-3}}{\int_{2.4}^\infty 2 \cdot 2.4^2 x^{-3} \phi(z-x) dx}
+        \end{align*}
+        Using this, I can calculate the expected mean square error for a particular estimate $\hat\theta_i$ conditioned on $Z_i$:
+        \[ \E[(\theta_i-\hat\theta_i)^2 \,|\, Z_i] = \int_{2.4}^\infty (\theta_i-\hat\theta_i)^2 f_\theta(\theta \,|\, Z_i) d\theta \]
+        Combining all of this, I chose the $\hat\theta_i$ which minimized this expected mean squared error:
+        \[\hat\theta_i = \arg\!\min_b \E[(\theta_i-b)^2 \,|\, Z_i] \]
+        This was all implemented numerically in R. The one caveat is that the numerical integral ran into precision issues in calculation when $Z$ was large. I assume the reason is the integral was summing over values smaller than can be represented in double precision. Thus, for $Z$ larger than $30$, I instead used \(\hat\theta_i = \frac{Z_i-1}{Z_i} \), which is what the James Stein estimate would be for that observation by itself. The end result is this: \\
+        \includegraphics[width=9cm]{hw1_3_prediction} \\
+        Values of $Z$ below $2.4$ all got $\hat\theta_i$ higher than $2.4$ (since this was the assumed minimum), and there was a general pull towards $3$ or so, with larger values of $Z$ getting shrunk less than smaller values greater than $3$.
+
+    \item[4.]
+        We will begin by calculating the risk for a given \(\bar X_n\) \\
+        \begin{align*}
+            \E\left[\left(f_\theta(x) - f_{\bar X_n}(x)\right)^2\,|\, \bar X_n\right] 
+            &= \int_{-\infty}^\infty (f_\theta(x) - f_{\bar X_n}(x))^2 dx \\
+            &=\int_{-\infty}^\infty f_\theta(x)^2 dx + \int_{-\infty}^\infty f_{\bar X_n}(x)^2 dx - 2\int_{-\infty}^\infty f_\theta(x) f_{\bar X_n}(x) dx \\
+            &=2\int_{-\infty}^\infty \left( \frac{1}{\sqrt{2\pi}} e^{\frac{-(x-\mu)^2}{2}} \right )^2 dx - 2\int_{-\infty}^\infty \left( \frac{1}{\sqrt{2\pi}} e^{\frac{-(x-\theta)^2}{2}} \right) \left( \frac{1}{\sqrt{2\pi}} e^{\frac{(-(x-\bar X_n)^2}{2}} \right) dx \\
+            &=\frac{1}{\sqrt{\pi}}\int_{-\infty}^\infty \frac{1}{\sqrt{\pi}} e^{-(x-\mu)^2} dx -  \frac{1}{\sqrt{\pi}}\int_{-\infty}^\infty \frac{1}{\sqrt{\pi}} e^{\frac{-(x-\theta)^2-(x-\bar X_n)^2}{2}}  dx \\
+            &=\frac{1}{\sqrt{\pi}} - \frac{e^{-\frac{1}{4}(\theta-\bar X_n)^2}}{\sqrt{\pi}}\int_{-\infty}^\infty \frac{1}{\sqrt{\pi}} e^{-x^2+x\theta+x\bar X_n-\frac{\theta^2+X_n^2}{2}+\frac{\theta^2-2\theta\bar X_n+X_n^2}{4}}  dx \\
+            &=\frac{1}{\sqrt{\pi}} - \frac{e^{-\frac{1}{4}(\theta-\bar X_n)^2}}{\sqrt{\pi}}\int_{-\infty}^\infty \frac{1}{\sqrt{\pi}} e^{-x^2+x\theta+x\bar X_n-\frac{\theta^2+2\theta\bar X_n+\bar X_n^2}{4}}  dx \\
+            &=\frac{1}{\sqrt{\pi}} - \frac{e^{-\frac{1}{4}(\theta-\bar X_n)^2}}{\sqrt{\pi}}\int_{-\infty}^\infty \frac{1}{\sqrt{\pi}} e^{-(x-\frac{\theta+X_n}{2})^2}  dx \\
+            &=\frac{1}{\sqrt{\pi}} - \frac{e^{-\frac{1}{4}(\theta-\bar X_n)^2}}{\sqrt{\pi}} \\
+        \end{align*}
+        Now, taking the expectation of this over all \(\bar X_n\) will give us the unconditional expectation of the risk.
+        \begin{align*}
+            \E\left[\left(f_\theta(x) - f_{\bar X_n}(x)\right)^2 \right] 
+            &=\E\left[\E\left[\left(f_\theta(x) - f_{\bar X_n}(x)\right)^2\,|\, \bar X_n\right]\right] \\
+            &= \int_{-\infty}^\infty \left( \frac{1}{\sqrt{\pi}} - \frac{e^{-\frac{1}{4}(\theta-\bar X_n)^2}}{\sqrt{\pi}} \right)  \left(\frac{\sqrt{n}}{\sqrt{2\pi}} e^{\frac{-n(\theta-\bar X_n)^2}{2}}\right) d\bar X_n  \\
+            &=\frac{1}{\sqrt{\pi}} - \frac{1}{\sqrt{\pi}}\int_{-\infty}^\infty \frac{\sqrt{n}}{\sqrt{2\pi}} e^{\frac{-(\frac{1}{2}+n)(\theta-\bar X_n)^2}{2}} d\bar X_n \\
+            &=\frac{1}{\sqrt{\pi}} - \frac{1}{\sqrt{\pi}}\sqrt{\frac{n}{\frac{1}{2}+n}}\int_{-\infty}^\infty \frac{\sqrt{\frac{1}{2}+n}}{\sqrt{2\pi}} e^{\frac{-(\frac{1}{2}+n)(\theta-\bar X_n)^2}{2}} d\bar X_n \\
+            &=\frac{1}{\sqrt{\pi}}\left(1 - \sqrt{\frac{2n}{1+2n}} \right)\\
+        \end{align*}
+    \item[5.]
+        Doppler function with $\sigma=.1$: \\
+        \includegraphics[width=9cm]{hw1_5_p1_fit} 
+        \includegraphics[width=9cm]{hw1_5_p1_gcv} \\
+        Doppler function with $\sigma=1$: \\
+        \includegraphics[width=9cm]{hw1_5_1_fit} 
+        \includegraphics[width=9cm]{hw1_5_1_gcv} \\
+
+
+    \item[6.]
+        Per the definition of leave-one-out cross-validation, we have that
+        \begin{align*}
+            \hat R(h) &= \frac{1}{n} \sum_{i=1}^n \left(Y_i-\hat r_{(-i)}(x) \right )^2 \\
+            \hat R(h) &= \frac{1}{n} \sum_{i=1}^n \left(Y_i-\sum_{j\neq i} Y_i l_{j,(-i)} (x)  \right )^2 \\
+            \hat R(h) &= \frac{1}{n} \sum_{i=1}^n \left(Y_i- \frac{1}{\sum_{j\neq i} l_{j}(x)} \sum_{j\neq i} Y_i l_{j} (x)  \right )^2 \\
+            \hat R(h) &= \frac{1}{n} \sum_{i=1}^n \left(Y_i- \frac{\hat r_n (x) - Y_i l_{i}(x)}{1- l_{i}(x)} \right )^2 \\
+            \hat R(h) &= \frac{1}{n} \sum_{i=1}^n \left(\frac{Y_i - Y_i l_{i}(x) - \hat r_n (x) + Y_i l_{i}(x)}{1- l_{i}(x)} \right )^2 \\
+            \hat R(h) &= \frac{1}{n} \sum_{i=1}^n \left(\frac{Y_i -\hat r_n (x) }{1- l_{i}(x)} \right )^2 \\
+            \hat R(h) &= \frac{1}{n} \sum_{i=1}^n \left(\frac{Y_i -\hat r_n (x) }{1- L_{ii}} \right )^2 \\
+        \end{align*}
+
+\end{itemize}
+\hrule
+\vspace{2mm}
+This is the R code I used for this homework:
+\lstinputlisting{hw1.R}
+
+\end{document}
