@@ -1,0 +1,137 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%% AMS PACKAGES - Chances are you will want some or all of these if writing a math dissertation.
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, enumerate, multicol, graphicx, listings}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Homework 4 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+\begin{itemize}
+    \item[1.]
+        \begin{itemize}
+            \item[a)]
+                \begin{align*}
+                    \|Q\beta - y\|^2 &= (Q\beta - y)^T(Q\beta - y) \\                
+                                     &= (\beta^T Q^T - y^T)(Q\beta - y) \\
+                                     &= \beta^TQ^TQ\beta - y^TQ\beta - \beta^T Q^T y + y^Ty  \\
+                                     &= (\beta^T\beta - y^TQ\beta - \beta^T Q^T y + y^TQQ^Ty) + (y^Ty - y^TQQ^Ty) \\
+                                     &= (\beta^T - y^TQ)(\beta + Q^Ty) + (y^Ty - y^TQQ^Ty- y^TQQ^Ty + y^TQQ^Ty) \\
+                                     &= \|\beta - Q^Ty\|^2 + (y^Ty - y^TQQ^Ty- y^TQQ^Ty + y^TQQ^TQQ^Ty) \\
+                                     &= \|\beta - Q^Ty\|^2 + (y^T - y^TQQ^T)(y - QQ^Ty)\\
+                                     &= \|\beta - Q^Ty\|^2 + \|y - QQ^Ty\|^2\\
+                \end{align*}
+            \item[b)]
+                Since $Q^T$ is orthogonal,
+                \[RSS(\beta) = \|Y-X\beta\|^2 = \|Q^TY-Q^TX\beta\|^2 = \|Q^TY - RP^T\beta\|^2 \]
+                Using the result from a, we have that
+                \[RSS(\beta) = \|QRP^T\beta - Y\|^2 = \|RP^T\beta-Q^TY\|^2 + \|Y-QQ^TY\|^2 \]
+                Since \(\|y-QQ^Ty\|^2\) is fixed, the $RSS$ will be at a minimum when \(\|RP^T\beta-Q^TY\|^2\) is minimized. If \(R=\mathbf{0}\), then trivially all \(\beta\) achieve the same $RSS$. Otherwise, we want to minimize the non-trivial part of the expression. Where $R_{11}$ has $m$ rows, let $Y_1$ be the first $m$ rows of $Y$ and $Y_2$ be the last $n-m$ rows, and $Q_1$ the first $m$ rows of $Q$ with $Q_2$ the remiander. Thus, 
+                \begin{align*}
+                \|RP^T\beta-Q^TY\|^2 &= \left\| \left[\begin{array}{cc} R_{11} & R_{12} \\ \mathbf{0} & \mathbf{0} \end{array} \right] P^T \beta - [Q_1^T Q_2^T]\left[\begin{array}{c} Y_1 \\ Y_2 \end{array} \right] \right \|^2 \\
+                    &= \| \left[R_{11} R_{12}\right] P^T \beta - Q_1^T Y_1 \|^2 + \|Q_2^T Y_2\|^2
+                \end{align*}
+                Since $\|Q_2^TY_2\|^2$ is also fixed, we can reduce our minimization problem to minimizing \(\| [R_{11} R_{12}] P^T \beta - Q_1^T Y_1 \|^2\). Let the first $m$ rows of $P^T\beta$ be $\beta_1$ and the remainder be $\beta_2$. $P^T\beta$ is just a permutation of $\beta$, so it is the same coefficients, just out of order. Thus, we will get a minimum when,
+                \begin{align*}
+                    \left[R_{11} R_{12}\right] P^T \beta &= Q_1^T Y_1 \\
+                    \left[R_{11} R_{12}\right] \left[ \begin{array}{c} \beta_1 \\ \beta_2 \end{array} \right]  &= Q_1^T Y_1 \\
+                    R_{11}\beta_1 + R_{12}\beta_2 &= Q_1^T Y_1 \\
+                    R_{11}\beta_1  &= Q_1^T Y_1 - R_{12}\beta_2 \\
+                    \beta_1  &= R_{11}^{-1}(Q_1^T Y_1 - R_{12}\beta_2) 
+                \end{align*}
+                Thus, when $\beta_1$ is as defined, we will have minimized $RSS$.
+            \item[c)]
+                We want to solve \(\left[R_{11} R_{12}\right] P^T \beta = Q_1^T Y_1\). Let \(W=\left[R_{11} R_{12}\right] P^T\). If we have some solution $\beta$, and a vector $a$ in the null space of \(W\), then 
+                \[ W(\beta+a) = W \beta + W a = Q_1^T Y_1 + 0 \]
+                So $\beta+a$ is also a solution. Let $\beta^*$ be the vector that acheives the smallest norm and solves the equation. Assuming $R$ isn't all $0$, then there is some $\beta$ perpendicular to all $a$. If $\beta_1$ is and another $\beta_2$ isn't, by Cauchy-Schwarz
+                \begin{align*}
+                    \|\beta_2+a\|^2 &\geq \|\beta_1 + a\|^2 \\
+                    \|\beta_2\|^2 + \|a\|^2 &> \|\beta_1\|^2 + \|a\|^2 \\
+                    \|\beta_2\|^2 &> \|\beta_1\|^2 \\
+                \end{align*}
+                Thus, $\beta^*$ must be perpendicular to all $a$. If $b$ is a vector, 
+                \[0= b^T W a = (W^Tb)^T a \]
+                So the range of \(W^T\) is perpendicular to all $a$ as well. Thus, since $\beta^*$ is perpendicular to the null space of \(W\), it must be in the range of \(W^T\) (This range fills the complement of the null space because taking the transpose of a matrix doesn't reduce its rank). Accordingly, for some $v$,
+                \begin{align*}
+                    \beta^* &= W^Tv \\
+                    W\beta^* &= WW^Tv \\
+                    Q_1^T Y_1 &= WW^Tv  \\
+                    W^T(WW^T)^{-1} Q_1^T Y_1 &= W^T v \\
+                    W^T(WW^T)^{-1} Q_1^T Y_1 &= \beta^*  \\
+                \end{align*}
+                Thus we have our answer. We can invert \(WW^T\) since \(W\) is full row rank (since \(R_{11}\) is invertible) and similarly \(W^T\) is full column rank.
+        \end{itemize}
+        
+    \item{2.}
+        \begin{itemize}
+            \item{a)}
+                The trace of $H$ is its rank, since its idempotent. 
+        \end{itemize}
+    \item{4.}
+        \begin{itemize}
+            \item{2.13.}
+                \begin{itemize}
+                    \item{1.}
+                        
+                \end{itemize}
+        \end{itemize}
+
+\end{itemize}
+
+
+
+\end{document}
