@@ -1,0 +1,113 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%% AMS PACKAGES - Chances are you will want some or all of these if writing a math dissertation.
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, enumerate, multicol, graphicx, listings}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Homework 2 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+
+\begin{itemize}
+    \item[1.]
+        \begin{itemize}
+            \item[a)]
+                I will use SURE to estimate the risk of the generalized James-Stein estimator. Let
+                \[\hat\theta^{JS,v}= Z - \frac{(Z-v)(n-2)\sigma^2}{\sum_{i=1}^n (Z_i - v)^2}= Z + g(Z) \]  
+                Accordingly, 
+                \begin{align*}
+                    D_i &= \frac{\partial g_i}{\partial z_i} \\
+                    D_i  &= -(n-2)\sigma^2\left(\frac{1}{\sum_{i=1}^n (z_i - v)^2} - \frac{(z_i-v)^2}{\left(\sum_{i=1}^n 2(z_i - v)^2\right)^2}\right) \\
+                    \sum_{i=1}^n D_i &= -(n-2)\sigma^2\left(\frac{n}{\sum_{i=1}^n (z_i - v)^2} - \frac{2\sum_{i=1}^n(z_i-v)^2}{\left(\sum_{i=1}^n (z_i - v)^2\right)^2}\right) \\
+                    \sum_{i=1}^n D_i &= -(n-2)\sigma^2\left(\frac{n-2}{\sum_{i=1}^n (z_i - v)^2}\right)  \\
+                    \sum_{i=1}^n D_i &= -\frac{(n-2)^2\sigma^2}{\sum_{i=1}^n (z_i - v)^2} 
+                \end{align*}
+                Plugging this into the SURE formula, we get that
+                \begin{align*}
+                    \hat R (Z) &= n\sigma^2 + 2\sigma^2 \sum_{i=1}^n D_i + \sum_{i=1}^n g_i^2 \\
+                    \hat R (Z) &= n\sigma^2 - 2\frac{(n-2)^2\sigma^4}{\sum_{i=1}^n (Z_i - v)^2} + \sum_{i=1}^n \left(\frac{-(Z_i-v)(n-2)\sigma^2}{\sum_{i=1}^n (Z_i - v)^2}\right)^2 \\
+                    \hat R (Z) &= n\sigma^2 - 2 \frac{(n-2)^2\sigma^4}{\sum_{i=1}^n (Z_i - v)^2} + \frac{(n-2)^2\sigma^4\sum_{i=1}^n (Z_i - v)^2}{\left(\sum_{i=1}^n (Z_i - v)^2\right)^2} \\
+                    \hat R (Z) &= n\sigma^2 - 2 \frac{(n-2)^2\sigma^4}{\sum_{i=1}^n (Z_i - v)^2} + \frac{(n-2)^2\sigma^4}{\sum_{i=1}^n (Z_i - v)^2} \\
+                    \hat R (Z) &= n\sigma^2 - \frac{(n-2)^2\sigma^4}{\sum_{i=1}^n (Z_i - v)^2} \\
+                \end{align*}
+                Since the estimate is unbiased,
+                \[ R(\hat\theta^{JS,v},\theta) = \E(\hat R(Z)) = n\sigma^2 - (n-2)^2\sigma^4\E\left(\frac{1}{\sum_{i=1}^n (Z_i - v)^2}\right) \]
+                Since \(Z_i-v \sim N(\theta_i - v,\sigma^2)\), we can use a result from the book that 
+                \[\E\left(\frac{1}{\sum_{i=1}^n (Z_i - v)^2}\right) \geq \frac{1}{(n-2)\sigma^2 + \|\theta-v\|^2} \]
+                This gives us that
+                \begin{align*}
+                    R(\hat\theta^{JS,v},\theta) &\leq n\sigma^2 - \frac{(n-2)^2\sigma^4}{(n-2)\sigma^2 + \|\theta-v\|^2} \\
+                    R(\hat\theta^{JS,v},\theta) &\leq \frac{n\sigma^2((n-2)\sigma^2 + \|\theta-v\|^2) - (n-2)^2\sigma^4}{(n-2)\sigma^2 + \|\theta-v\|^2} \\
+                    R(\hat\theta^{JS,v},\theta) &\leq \frac{n(n-2)\sigma^4 + n\sigma^2\|\theta-v\|^2 - (n-2)^2\sigma^4}{(n-2)\sigma^2 + \|\theta-v\|^2} \\
+                    R(\hat\theta^{JS,v},\theta) &\leq \frac{2\sigma^2(n-2)\sigma^2 + (2 + n -2)\sigma^2\|\theta-v\|^2}{(n-2)\sigma^2 + \|\theta-v\|^2} \\
+                    R(\hat\theta^{JS,v},\theta) &\leq 2\sigma^2 + \frac{(n -2)\sigma^2\|\theta-v\|^2}{(n-2)\sigma^2 + \|\theta-v\|^2} \\
+                \end{align*}
+                Because 
+                \[1 < \frac{\|\theta-v\|^2}{(n-2)\sigma^2 + \|\theta-v\|^2}\]
+                We get that, for $n\geq3$,
+                \[R(\hat\theta^{JS,v},\theta) \leq 2\sigma^2 + \frac{(n -2)\sigma^2\|\theta-v\|^2}{(n-2)\sigma^2 + \|\theta-v\|^2} < 2\sigma^2 + (n-2)\sigma^2 = n\sigma^2 \]
+                \(R(\hat\theta^{JS,v},\theta)\) will be smallest when \(\frac{\|\theta-v\|^2}{(n-2)\sigma^2 + \|\theta-v\|^2}\) is smallest, which in turn is when \(\|\theta-v\|^2\) is smallest. Thus, $v=\bar\theta$, the mean of $\theta$, will result in the smallest risk.
+            \item[b)]
+                In the case where $n=1$, since $\hat\theta = Z$ is admissiable, there is no estimator $\tilde\theta$ such that \(R(\tilde\theta,\theta)<R(\hat\theta,\theta)\), so $\hat\theta^{a,b}$ is admissible only if 
+                \[R(\hat\theta,\theta)=\E(\hat\theta-\theta)^2=\E(\hat\theta^{a,b}-\theta)^2=R(\hat\theta^{a,b},\theta)\]
+                This implies that, to be admissiable, it must be the case that $Z=aZ+b$ for all potential $Z$. Thus, since this is not the case for i, ii, iii, and iv, we must conclude the estimator is not admissable in these cases. Only in case iv can $Z=aZ+b$ for all potential $Z$, so there the estimator is admissable. 
+                \smallskip
+                As we showed in part a, $R(Z,\theta)=n\sigma^2>R(\hat\theta^{JS,v},\theta)$ when $n\geq3, so $\hat\theta = Z$ is not admissable. However, there are certainly cases where \(R(\hat\theta^{JS,v},\theta)\) is not admissable. Take for instance the example of $\theta_i=c$ for some constant $c$. The mean of $Z$ of has risk \(R(\bar Z,\theta) = \frac{\sigma^2}{n} < \)
+                
+        \end{itemize}
+\end{itemize}
+\end{document}
