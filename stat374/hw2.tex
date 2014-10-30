@@ -102,12 +102,101 @@ Homework 2 \hfill Aaron Maurer
                 \[R(\hat\theta^{JS,v},\theta) \leq 2\sigma^2 + \frac{(n -2)\sigma^2\|\theta-v\|^2}{(n-2)\sigma^2 + \|\theta-v\|^2} < 2\sigma^2 + (n-2)\sigma^2 = n\sigma^2 \]
                 \(R(\hat\theta^{JS,v},\theta)\) will be smallest when \(\frac{\|\theta-v\|^2}{(n-2)\sigma^2 + \|\theta-v\|^2}\) is smallest, which in turn is when \(\|\theta-v\|^2\) is smallest. Thus, $v=\bar\theta$, the mean of $\theta$, will result in the smallest risk.
             \item[b)]
-                In the case where $n=1$, since $\hat\theta = Z$ is admissiable, there is no estimator $\tilde\theta$ such that \(R(\tilde\theta,\theta)<R(\hat\theta,\theta)\), so $\hat\theta^{a,b}$ is admissible only if 
-                \[R(\hat\theta,\theta)=\E(\hat\theta-\theta)^2=\E(\hat\theta^{a,b}-\theta)^2=R(\hat\theta^{a,b},\theta)\]
-                This implies that, to be admissiable, it must be the case that $Z=aZ+b$ for all potential $Z$. Thus, since this is not the case for i, ii, iii, and iv, we must conclude the estimator is not admissable in these cases. Only in case iv can $Z=aZ+b$ for all potential $Z$, so there the estimator is admissable. 
+                Let \(e\sim N(0,\sigma^2) \). For $n=1$, we can calculate the risk of \(\hat\theta^{a,b}\): 
+                \begin{align*}
+                    R(\hat\theta^{a,b},\theta) &= \E((aZ+b-\theta)^2) \\
+                                               &= \E((ae + a\theta -\theta + b)^2) \\
+                                               &= \E(a^2e^2+a^2\theta^2 +\theta^2 +b^2 + 2a^2e\theta - 2ae\theta + 2aeb - 2a\theta^2 + 2ba\theta - 2b\theta) \\
+                                               &= a^2\sigma^2+a^2\theta^2 +\theta^2 +b^2 - 2a\theta^2 + 2ba\theta - 2b\theta \\
+                                               &= a^2\sigma^2+(a-1)^2\theta^2 +b^2 + 2(a-1)b\theta  \\
+                                               &= a^2\sigma^2+((a-1)\theta +b)^2  \\
+                \end{align*}
+                \begin{itemize}
+                    \item[(i)]
+                        \(a=0\) is admissible, since this is the best predictor when \(b=\theta\), as we can see from the risk:
+                        \[R(\hat\theta^{0,b},\theta) = \theta^2 +b^2 + 2(-1)b\theta = 2\theta^2 -2\theta^2 = 0 \] 
+                        If a estimator $\tilde\theta$ is not uniformly $\theta=b$, then it will have positive risk, so \(R(\hat\theta^{0,b},\theta)< R(\tilde\theta,\theta)\), meaning $\hat\theta^{0,b}$ must be admissible. 
+                    \item[(ii)]
+                        \(\hat\theta^{a,b}\) for \(a<0\) is not admissible, by this line of reasoning. If \(a<0\), the \(0<\left(\frac{1}{a-1}\right)^2<1\), so                      
+                        \begin{align*}
+                            R(\hat\theta^{a,b},\theta) &= a^2\sigma^2+((a-1)\theta +b)^2  \\
+                            R(\hat\theta^{a,b},\theta) &>\left(\frac{1}{a-1}\right)^2\left(a^2\sigma^2+\left((a-1)\theta +b\right)^2\right)  \\
+                            R(\hat\theta^{a,b},\theta) &>\left(\frac{a}{a-1}\right)^2\sigma^2+\left(\theta +\frac{b}{a-1}\right)^2  \\
+                            R(\hat\theta^{a,b},\theta) &>\left(-\theta -\frac{b}{a-1}\right)^2  \\
+                            R(\hat\theta^{a,b},\theta) &>R(\hat\theta^{0,\frac{-b}{a-1}},\theta)  \\
+                        \end{align*}
+                    \item[(iii)]
+                        \(\hat\theta^{a,b}\) for \(a>1\) is not admissible since, for all $\theta$,
+                        \[R(\hat\theta^{a,b},\theta)=a^2\sigma^2+((a-1)\theta +b)^2>\sigma^2+b^2 = R(\hat\theta^{1,b},\theta) \]
+                    \item[(iv)]+
+                        If \(a=1\) and \(b\neq0\), then \(\hat\theta^{a,b}\) is not admissible, since, for all $\theta$ 
+                        \[R(\hat\theta^{1,b},\theta)=\sigma^2+b^2>\sigma^2 = R(Z,\theta)\]
+                \end{itemize}
                 \smallskip
-                As we showed in part a, $R(Z,\theta)=n\sigma^2>R(\hat\theta^{JS,v},\theta)$ when $n\geq3, so $\hat\theta = Z$ is not admissable. However, there are certainly cases where \(R(\hat\theta^{JS,v},\theta)\) is not admissable. Take for instance the example of $\theta_i=c$ for some constant $c$. The mean of $Z$ of has risk \(R(\bar Z,\theta) = \frac{\sigma^2}{n} < \)
-                
+                When $n\geq 3$, part a) proves that, for all $\theta$,
+                \[R(Z,\theta)=n\sigma^2>R(\hat\theta^{JS,v},\theta)\]
+                So $Z=\hat\theta$ is not admissible.
+                \smallskip
+                As (i) showed, for any particular $\theta$, A linear estimate like $\hat\theta^{a,b}$ is not admissible if $a<0$. Since the generalized James-Stein estimator is of this form, and can have a negative $a$, we can make a strictly improved version of it. This estimator would be equal to the generalize James-Stein estimator when it has a non-negative $b$, and \(\hat\theta^{0,\frac{-b}{a-1}}\), for the $b$ and $a$ from the generalized James-Stein estimator when it wasn't.As proved in (ii), this estimator would have the same risk when $a\geq0$, and would be strictly less risk when it wasn't. Thus, we can conclude the generalized James-Stein estimator is not admissible.
+            \item[c)]
+                Running the three estimates (all results in radians), I got a total risk of $17.867$ with the MLE, $16.636$ with the normal James-Stein estimator ($v=0$), and $5.280$ with the generalized James-Stein estimator with $v=\bar Z= -3.317$. Unsurprisingly with a data set that is not centered around $0$, we see a huge improvement with the generalized James-Stein method set to the population mean over the MLE and original James-Stein estimators.
+            \item[d)]
+                $\frac{9}{45}$ is almost certainly a less risky estimate. This is because there is no reason to expect that the portion of imported cars seen in Chicago and $18$ players batting averages have the same variance. Since this violates an assumption of the James-Stein estimator, it would be inappropriate to use it.
         \end{itemize}
+    \item[2.]
+        \begin{itemize}
+            \item[a)]
+                For both log counts, I used a linear model that included the season as factor, working day as a factor, the interaction of season and working day as a factor, weather as factor, day label as a continuous variable, and hours separation from 5pm as a continuous variable. In total, I got a RMSLE of $1872.738$ for the registered users and $2163.457$ for the casual non-registered users.
+            \item[b)]
+                These are the fits of the two local linear regressions on the mean hourly transformed counts by day: \\
+                \includegraphics[width=9cm]{hw2_2b_reg_plot}
+                \includegraphics[width=9cm]{hw2_2b_cas_plot}
+                With the new local linear regression and the linear model predicted on its residuals, I got RMSLE of $1828.168$ for the registered users and $1875.078$ for the casual non-registered users.
+            \item[b)]
+
+        \end{itemize}
+    \item[3.]
+        Starting with the bias:
+        \begin{align*}
+            bias(\hat p_n(x_0,y_0)) &= p(x_0,y_0) - \E(\hat p_n(x_0,y_0)) \\
+                                    &= p(x_0,y_0) - \frac{1}{h^2}\iint K\left(\frac{x_0-t}{h}\right)K\left(\frac{y_0-q}{h}\right)p(q,t)\,dt\,dq \\ 
+                                    &= \frac{1}{h^2}\iint K\left(\frac{x_0-t}{h}\right)K\left(\frac{y_0-q}{h}\right)(p(q,t)-p(x_0,y_0))\,dt\,dq \\ 
+                                    &\leq \frac{1}{h^2}\iint K\left(\frac{x_0-t}{h}\right)K\left(\frac{y_0-q}{h}\right)L(\lvert t - x_0 \rvert^\beta +\lvert q - y_0 \rvert^\beta )\,dt\,dq \\ 
+                                    &\leq \iint K\left(t\right)K\left(q\right)L(\lvert ht \rvert^\beta +\lvert hq \rvert^\beta )\,dt\,dq \\ 
+                                    &\leq 4Lh^\beta\iint_{\R^+\times\R^+} K\left(t\right)K\left(q\right)(t^\beta + q^\beta )\,dt\,dq \\ 
+                                    &\leq h^\beta c_1\\ 
+        \end{align*}
+        Since each $X_i$ is iid and the kernel estimator is linear, we can decompose the variance:
+        \begin{align*}
+            \var\left(\hat p_n(x_0,y_0)\right) &= \frac{1}{nh^4}\var\left(K\left(\frac{X_i-x_0}{h}\right)K\left(\frac{Y_i-y_0}{h}\right)\right) \\
+                                               &= \frac{1}{nh^4}\iint \left( K\left(\frac{x-x_0}{h}\right)K\left(\frac{y-y_0}{h}\right) - \iint K\left(\frac{x_0-t}{h}\right)K\left(\frac{y_0-q}{h}\right)p(q,t)\,dt\,dq\right)^2 p(x,y)\,dx\,dy \\
+        \end{align*}
+    \item[4.]
+        \begin{itemize}
+            \item[a)]
+                Here are the histograms of the variable densities. The number of bins was chosen between 1 and 200 based on cross validation score.\\
+                \includegraphics[width=9cm]{hw2_4a_Ba_hist}
+                \includegraphics[width=9cm]{hw2_4a_Ca_hist} \\ 
+                \includegraphics[width=9cm]{hw2_4a_Fe_hist} 
+                \includegraphics[width=9cm]{hw2_4a_K_hist}   \\
+                \includegraphics[width=9cm]{hw2_4a_Mg_hist}
+                \includegraphics[width=9cm]{hw2_4a_Na_hist}  \\
+                \includegraphics[width=9cm]{hw2_4a_RI_hist} 
+                \includegraphics[width=9cm]{hw2_4a_Si_hist}  \\
+            \item[b)]
+                These are the density estimates with bandwidth picked by cross validation. The Gaussian Kernel's bandwidth was picked with R's built in unbiased cross validation tool, while the other two I calculated manually on a series of points around the optimal Gaussian bandwidth, picking the smallest estimated risk. In general, the Gaussian seemed to go with the higher bandwidth, producing the smoother estimate, but that may be in part due to a failure in my implementation of cross validation. Certainly it is smoother than the other two kernels by construction, since they are $0$ except over a closed interval. 
+                \includegraphics[width=9cm]{hw2_4b_Ba_den}
+                \includegraphics[width=9cm]{hw2_4b_Ca_den} \\ 
+                \includegraphics[width=9cm]{hw2_4b_Fe_den} 
+                \includegraphics[width=9cm]{hw2_4b_K_den}   \\
+                \includegraphics[width=9cm]{hw2_4b_Mg_den}
+                \includegraphics[width=9cm]{hw2_4b_Na_den}  \\
+                \includegraphics[width=9cm]{hw2_4b_RI_den} 
+                \includegraphics[width=9cm]{hw2_4b_Si_den}  \\
+            \item[c)]
+                Cross validation seems to do poorly with variables with one or a few large point masses. We see this several times with a large number of points being at $0$. This is because cross validation rewards the estimator for having an extremely sharp peak around these point masses, even though the rest of the distribution suffers. One might view these as almost two separate distributions. A better way to estimate these sort of variables would be to predict the point mass separately, remove those points, and then run the density estimate on the rest of the distribution.
+
+
+        \end{itemize}                                          
 \end{itemize}
 \end{document}
