@@ -152,7 +152,10 @@ Homework 2 \hfill Aaron Maurer
                 \includegraphics[width=9cm]{hw2_2b_reg_plot}
                 \includegraphics[width=9cm]{hw2_2b_cas_plot}
                 With the new local linear regression and the linear model predicted on its residuals, I got RMSLE of $1828.168$ for the registered users and $1875.078$ for the casual non-registered users.
-            \item[b)]
+            \item[c)]
+                I ran a generalized additive model with just smoothed functions for daylabel, humidity, temp, windspeed, and hour. The end result was that I got a RMSLE of $1352.043$ for registered customers and $1326.217$ for casual customers.
+            \item[d)]
+                For the solution data set I turned in, I predicted the total counts with an additive linear model predicting the log of the total counts with smoothed daylabel, humidity, temp, wind speed, hour, and categorical of working day, and weather interacted with season.
 
         \end{itemize}
     \item[3.]
@@ -169,8 +172,12 @@ Homework 2 \hfill Aaron Maurer
         Since each $X_i$ is iid and the kernel estimator is linear, we can decompose the variance:
         \begin{align*}
             \var\left(\hat p_n(x_0,y_0)\right) &= \frac{1}{nh^4}\var\left(K\left(\frac{X_i-x_0}{h}\right)K\left(\frac{Y_i-y_0}{h}\right)\right) \\
-                                               &= \frac{1}{nh^4}\iint \left( K\left(\frac{x-x_0}{h}\right)K\left(\frac{y-y_0}{h}\right) - \iint K\left(\frac{x_0-t}{h}\right)K\left(\frac{y_0-q}{h}\right)p(q,t)\,dt\,dq\right)^2 p(x,y)\,dx\,dy \\
+                                               &= \frac{1}{nh^4} \E\left(\left(\iint K\left(\frac{X-x_0}{h}\right)K\left(\frac{Y-y_0}{h}\right)p(t,q) - K\left(\frac{x_0-t}{h}\right)K\left(\frac{y_0-q}{h}\right)p(t,q)\,dt\,dq\right)\right)^2 \\
+                                               &\leq \frac{1}{nh^4} \E\left(\left(\iint K\left(\frac{X-t}{h}\right)K\left(\frac{Y-q}{h}\right)p(t,q)\,dt\,dq\right)\right)^2 \\
         \end{align*}
+        And here is where I am stuck. However, if we had an expression for variance, then the mean squared error would be 
+        \[bias(\hat p_n(x_0,y_0))^2 + \var\left(\hat p_n(x_0,y_0)\right) \leq h^{2\beta}c_1 + \var\left(\hat p_n(x_0,y_0)\right)\]
+        Differentiating the right side of that with respect to $h$ and setting it to $0$, we would find the optimal $h$. That would have a leading term of the order $h^{2\beta-1}$, at least assuming the bias has the larger $h$ power. Then, we would expect to see $h$ shrink with $cn^\frac{-1}{2\beta+1}$., dictating $R$ converge at a rate of $O(n^\frac{2\beta}{2\beta+1})$. 
     \item[4.]
         \begin{itemize}
             \item[a)]
