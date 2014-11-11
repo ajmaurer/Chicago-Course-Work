@@ -1,0 +1,127 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%% AMS PACKAGES - Chances are you will want some or all of these if writing a math dissertation.
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, enumerate, multicol, graphicx, listings}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+STAT 374 HW3 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+\begin{itemize}
+    \item[1.]
+        \begin{itemize}
+            \item[a)]
+                \begin{align*}
+                    \E[\hat p_{n,s}(x)] &= \E\left[\frac{1}{nh^{s+1}}\sum_{i=1}^n K\left(\frac{X_i-x}{h}\right)\right] \\
+                                        &= \frac{1}{h^{s+1}}\int K\left(\frac{u-x}{h}\right)p(u) du\\
+                                        &= \frac{1}{h^{s}}\int K\left(u\right)p(x+hu) du\\
+                                        &= \frac{1}{h^{s}}\int K(u)\left(\sumj \frac{(hu)^j}{j!}p^{(j)}(x)\right) du\\
+                                        &= \sum_{j=1}^{l-1}\frac{h^{j-s}}{j!}p^{(j)}(x)\int K(u)u^j du + \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x)\right) du\\
+                                        &= p^{(s)}(x)+ \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x)\right) du
+                \end{align*}
+                Using the Lagrange form of the remainder of a taylor series, for some $\xi\in(x,x+hu)$,
+                \[\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) = \frac{(hu)^l}{l!}p^{(l)}(\xi)\]
+                By the conditionts of the H{\"o}lder class,
+                \begin{align*}
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq \frac{(hu)^l}{l!}(L\vert \xi - x\vert^{\beta-l} + \vert p(x)\vert) \\
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq \frac{(hu)^l}{l!}(L\vert hu\vert^{\beta-l}  + \vert p(x)\vert) \\
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq h^\beta\frac{u^l\vert u \vert^{\beta-l}L}{l!}+ u^l\frac{h^l}{l!}\vert p(x)\vert \\
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq h^\beta f_1(u)+ u^lf_2(x) \\
+                \end{align*}
+                For \(f_1(u):=\frac{u^l\vert u \vert^{\beta-l}L}{l!}\) and \(f_2(x):=\frac{h^l}{l!}\vert p(x)\vert\). By similar logic, we also get
+                \begin{align*}
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\geq -\frac{(hu)^l}{l!}(L\vert \xi - x\vert^{\beta-l} + \vert p(x)\vert) \\
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\geq -h^\beta f_1(u)- u^lf_2(x) 
+                \end{align*}
+
+                Plugging these into our expression for \(\E[\hat p_{n,s}(x)]\), we get that 
+                \begin{align*}
+                    \E[\hat p_{n,s}(x)] &= p^{(s)}(x)+ \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x)\right) du \\
+                    \vert \E[\hat p_{n,s}(x)]-p^{(s)}(x) \vert &\leq \frac{1}{h^{s}}\int K(u) (h^\beta f_1(u)+ u^lf_2(x)) du \\
+                                                                &\leq h^{\beta-s}\int K(u) f_1(u) du + \frac{f_2(x)}{h^{s}}\int K(u) u^l du\\
+                                                                &\leq h^{\beta-s}c
+                \end{align*}
+
+                For \(c:=\int K(u) f_1(u) du\), showing the bias is bounded as desired.
+        \end{itemize}
+    \item[2.]
+        \begin{itemize}
+            \item[a)]
+                \begin{align*}
+                    L_F(x)&=\lim_{\epsilon\to 0} \frac{T((1-\epsilon)F+\epsilon\delta_x)-T(F)}{\epsilon} \\
+                    L_F(x)&=\lim_{\epsilon\to 0} \frac{((1-\epsilon)F(b)+\epsilon\delta_x(b))-((1-\epsilon)F(a)+\epsilon\delta_x(a))-(F(b)-F(a))}{\epsilon} \\
+                    L_F(x)&=\lim_{\epsilon\to 0} \frac{\epsilon(I_{[x,\infty)}(b)-I_{[x,\infty)}(a))-\epsilon (F(b)-F(a))}{\epsilon} \\
+                    L_F(x)&= I_{[a,b)}(x)-T(F) \\
+                \end{align*}
+            \item[b)]
+                \begin{align*}
+                    \hat{se}(\hat \theta) &= \frac{\hat \tau}{\sqrt{n}} \\
+                    \hat{se}(\hat \theta) &= \frac{1}{n^\frac{3}{2}}\sum_{i=1}^n(I_{[a,b)}(X_i)-T(\hat F_n))^2 \\
+                    \hat{se}(\hat \theta) &= \frac{1}{n^\frac{3}{2}}\sum_{i=1}^n(I_{[a,b)}(X_i)-\hat F_n(b)+\hat F_n(a))^2 \\
+                    \hat{se}(\hat \theta) &= \frac{1}{\sqrt{n}}\left((\hat F_n(b)-\hat F_n(a))(1-\hat F_n(b)+\hat F_n(a))^2+(1-\hat F_n(b)+\hat F_n(a))(\hat F_n(b)-\hat F_n(a))^2\right) \\
+                    \hat{se}(\hat \theta) &= \frac{1}{\sqrt{n}}\left((\hat F_n(b)-\hat F_n(a)+1- \hat F_n(b)+\hat F_n(a))(\hat F_n(b)-\hat F_n(a))(1-\hat F_n(b)+\hat F_n(a))\right) \\
+                    \hat{se}(\hat \theta) &= \frac{1}{\sqrt{n}}\left((\hat F_n(b)-\hat F_n(a))(1-\hat F_n(b)+\hat F_n(a))\right) \\
+                \end{align*}
+            \item[c)]
+                An approximate \(1-\alpha\) confidence interval is given by 
+                \[\hat \theta \pm z_{\frac{\alpha}{2}}\hat{se}(\hat \theta) = F_n(b)-\hat F_n(a) \pm z_{\frac{\alpha}{2}}\frac{1}{\sqrt{n}}\left((\hat F_n(b)-\hat F_n(a))(1-\hat F_n(b)+\hat F_n(a))\right)\]
+            \item[d)]
+                To estimate \(se(\hat \theta)\), one would draw a sample, with replacement, of $n$ from the $X_i$s. For each of these samples, $\hat\theta$ would be calculated (this is the portion of the sample in \([a,b)\). Then, \(se(\hat \theta)\) is the standard deviation of $\hat\theta$ among all the samples.
+
+        \end{itemize}
+\end{itemize}
+\end{document}
