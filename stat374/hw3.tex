@@ -123,5 +123,17 @@ STAT 374 HW3 \hfill Aaron Maurer
                 To estimate \(se(\hat \theta)\), one would draw a sample, with replacement, of $n$ from the $X_i$s. For each of these samples, $\hat\theta$ would be calculated (this is the portion of the sample in \([a,b)\). Then, \(se(\hat \theta)\) is the standard deviation of $\hat\theta$ among all the samples.
 
         \end{itemize}
+    \item[4.]
+        \begin{itemize}
+            \item[a)]
+                To get the analytical distribution of \(\hat \theta\), its easiest to start by calculating the distribution function. For any $x\in[0,\theta]$
+                \begin{align*}
+                    P(\hat \theta \leq x) &= P(X_1\leq x \cap ... \cap X_n\leq x) \\
+                    P(\hat \theta \leq x) &= \prod_{i=1}^n P(X_i\leq x) \\
+                    P(\hat \theta \leq x) &= \prod_{i=1}^n \left(\frac{x}{\theta}\right)^n
+                \end{align*}
+                Differentiating both sides, we get the distribution function \(f(x)=\frac{nx^{n-1}}{\theta^n}\)
+        \end{itemize}
+
 \end{itemize}
 \end{document}
