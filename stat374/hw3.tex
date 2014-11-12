@@ -73,9 +73,9 @@ STAT 374 HW3 \hfill Aaron Maurer
                                         &= \sum_{j=1}^{l-1}\frac{h^{j-s}}{j!}p^{(j)}(x)\int K(u)u^j du + \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x)\right) du\\
                                         &= p^{(s)}(x)+ \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x)\right) du
                 \end{align*}
-                Using the Lagrange form of the remainder of a taylor series, for some $\xi\in(x,x+hu)$,
+                Using the Lagrange form of the remainder of a Taylor series, for some $\xi\in(x,x+hu)$,
                 \[\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) = \frac{(hu)^l}{l!}p^{(l)}(\xi)\]
-                By the conditionts of the H{\"o}lder class,
+                By the conditions of the H{\"o}lder class,
                 \begin{align*}
                     \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq \frac{(hu)^l}{l!}(L\vert \xi - x\vert^{\beta-l} + \vert p(x)\vert) \\
                     \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq \frac{(hu)^l}{l!}(L\vert hu\vert^{\beta-l}  + \vert p(x)\vert) \\
@@ -97,6 +97,24 @@ STAT 374 HW3 \hfill Aaron Maurer
                 \end{align*}
 
                 For \(c:=\int K(u) f_1(u) du\), showing the bias is bounded as desired.
+            \item[b)]
+                Combining the bounds on bias squared and variance from part a) to get the risk, we get
+                \begin{align*}
+                    \mbox{max}(\L^2(\hat P_{n,s}(x))) &= c^2h^{2(\beta-s)}+\frac{c'}{nh^{2s+1}} \\
+                    \frac{d}{dh}\mbox{max}((\L^2(\hat P_{n,s}(x))) &= 2(\beta-s)c^2h^{2(\beta-s)-1}-\frac{(2s+1)c'}{nh^{2s+2}} 
+                \end{align*}
+                Then, this risk bound is minimized when its derivative is at $0$, so for the optimal $h$,
+                \begin{align*}
+                    0 &= 2(\beta-s)c^2h^{2(\beta-s)-1}-\frac{(2s+1)c'}{nh^{2s+2}} \\
+                    \frac{(2s+1)c'}{2(\beta-s)c^2}\frac{1}{n} &= h^{2\beta+1} \\
+                    \left(\frac{(2s+1)c'}{2(\beta-s)c^2}\right)^\frac{1}{2\beta+1}n^{-\frac{1}{2\beta+1}} &= h 
+                \end{align*}
+                Plugging this into the original risk function, and defining a new constant \(c_1=\left(\frac{(2s+1)c'}{2(\beta-s)c^2}\right)^\frac{1}{2\beta+1}\), we get
+                \begin{align*}
+                    \mbox{max}(\L^2(\hat P_{n,s}(x)))  &= c^2c_1^{2(\beta-s)}n^{\frac{2(\beta-s)}{2\beta+1}}-\frac{c'}{c^{2s+1}}n^{\frac{2s+1-2\beta+1}{2\beta+1}} \\
+                    \mbox{max}(\L^2(\hat P_{n,s}(x))) &= \left(c^2c_1^{2(\beta-s)}+\frac{c'}{c^{2s+1}}\right)n^{\frac{2(\beta-s)}{2\beta+1}}
+                \end{align*}
+                So the maximum risk is of order \(O\left(n^{\frac{2(\beta-s)}{2\beta+1}}\right)\).
         \end{itemize}
     \item[2.]
         \begin{itemize}
@@ -123,6 +141,24 @@ STAT 374 HW3 \hfill Aaron Maurer
                 To estimate \(se(\hat \theta)\), one would draw a sample, with replacement, of $n$ from the $X_i$s. For each of these samples, $\hat\theta$ would be calculated (this is the portion of the sample in \([a,b)\). Then, \(se(\hat \theta)\) is the standard deviation of $\hat\theta$ among all the samples.
 
         \end{itemize}
+    \item[3.]
+        \begin{itemize}
+            \item[a)]
+                I fit a kernel density estimate with a Gaussian kernel and bandwidth chosen by the Normal Reference Rule. I didn't use cross validation, since the rounding in the magnitudes made it so that cross validation would default to an arbitrarily small bandwidth (as we discovered in our last homework).
+                \begin{center}
+                    \includegraphics[width=9cm]{hw3_3_a}
+                \end{center}
+            \item[b)]
+                Below I have plotted the estimated CDF along with a $95\%$ confidence interval. This band is generated from \(\hat F(x) \pm \sqrt{\frac{1}{2n}\log\left(\frac{2}{.05}\right)}\), winsorized above at $1$ and below at $0$.
+                \begin{center}
+                    \includegraphics[width=9cm]{hw3_3_b}
+                \end{center}
+            \item[b)]
+                Using the density from problem a, we get estimate for \(F(4.6)-F(4.3)\) of 
+                \[\int_{4.3}^{4.6} f(x)dx = .533 \]
+                Using the plug-in estimator, we get \(\hat F(4.6) - \hat F(4.3)=.526\). Then, using the result from problem 2, we get an approximate confidence interval of \(.526\pm z_{.025}\frac{.526(1-.526)}{\sqrt{1000}} = (.522,.530)\). 
+
+        \end{itemize}
     \item[4.]
         \begin{itemize}
             \item[a)]
@@ -132,8 +168,45 @@ STAT 374 HW3 \hfill Aaron Maurer
                     P(\hat \theta \leq x) &= \prod_{i=1}^n P(X_i\leq x) \\
                     P(\hat \theta \leq x) &= \prod_{i=1}^n \left(\frac{x}{\theta}\right)^n
                 \end{align*}
-                Differentiating both sides, we get the distribution function \(f(x)=\frac{nx^{n-1}}{\theta^n}\)
+                Differentiating both sides, we get the distribution function \(f(x)=\frac{nx^{n-1}}{\theta^n}\). Below, I drew a sample of $50$ from a uniform with $\theta=1$, and then preformed a parametric and nonparametric bootstrap of $\hat\theta$: \\
+                \includegraphics[width=9cm]{hw3_4_a_np}
+                \includegraphics[width=9cm]{hw3_4_a_p} \\
+                As you can see, the parametric bootstrap gives a distribution fairly close to the analytic one (just shifted a little to the left), while the nonparametric bootstrap fails to do so, having the majority of the point mass at the max from the original sample.
+            \item[b]
+                Since in the parametric case \(X_i^*\sim \mbox{Uniform}(0,\hat\theta)\),
+                \begin{align*}
+                    P(\hat\theta^*=\hat\theta) &= P(\exists i, X_i^*=\hat\theta\cap \forall j, X_j^*\leq\hat\theta) \\
+                    &\leq P(\exists i, X_i^*=\hat\theta) \\
+                    &\leq \prod_{i=1}^n (1-P(X_i^*=\hat\theta)) \\
+                    &\leq 0
+                \end{align*}
+                On the other hand, in the nonparametric case,
+                \begin{align*}
+                    P(\hat\theta^*=\hat\theta) &= P(\exists i, X_i^*=\hat\theta\cap \forall j, X_j^*\leq\hat\theta) \\
+                    &= P(\exists i, X_i^*=\hat\theta) \\
+                    &= 1-P(\forall i, X_i^*\neq\hat\theta) \\
+                    &= 1-\left(1-\frac{1}{n}\right)^{n} \\
+                \end{align*}
+                For $n=50$, this gives us $.636$, but in the limiting case, we get 
+                \begin{align*}
+                    \lim_{n\to\infty}P(\hat\theta^*=\hat\theta)&= 1-\lim_{n\to\infty}\left(1-\frac{1}{n}\right)^{n}  \\
+                                                               &= 1-\lim_{n\to\infty}\left(\frac{n}{n-1}\right)^{-n}  \\
+                                                               &= 1-\lim_{n\to\infty}\left(1+\frac{1}{n-1}\right)^{-n}  \\
+                                                               &= 1-\lim_{n\to\infty}\left(1+\frac{1}{n-1}\right)\left(1+\frac{1}{n-1}\right)^{-n+1}  \\
+                                                               &= 1-\frac{1}{e}  \\
+                                                               &\approx .632  \\
+                \end{align*}
         \end{itemize}
+    \item[5.]
+        \begin{itemize}
+            \item[a)]
+                For this model, the bootstrapped $95\%$ confidence interval for \(\theta\) I got was \((.240,.282)\), and the "true" $\theta$, which was the result of running the experiment for $n=500$, was $.264$. Thus, the confidence interval included the "true" parameter, and also the real \(\theta=.25\).
+            \item[b)]
+                For this model, my confidence interval was \(-.280,.120)\) and the "true" $\theta$ was \(.023\). Thus, the confidence interval covered the "true" parameter and also the real parameter \(\theta=0\).
+            \item[c)]
+                For this model, my confidence interval was \((.282,.482)\) with the "true" $\theta=.865\). Thus, my confidence interval was far below the "true" $\theta$, and even farther below the actual $\theta$ of $0$. 
+        \end{itemize}
+
 
 \end{itemize}
 \end{document}
