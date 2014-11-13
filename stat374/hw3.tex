@@ -66,37 +66,44 @@ STAT 374 HW3 \hfill Aaron Maurer
         \begin{itemize}
             \item[a)]
                 \begin{align*}
-                    \E[\hat p_{n,s}(x)] &= \E\left[\frac{1}{nh^{s+1}}\sum_{i=1}^n K\left(\frac{X_i-x}{h}\right)\right] \\
-                                        &= \frac{1}{h^{s+1}}\int K\left(\frac{u-x}{h}\right)p(u) du\\
-                                        &= \frac{1}{h^{s}}\int K\left(u\right)p(x+hu) du\\
-                                        &= \frac{1}{h^{s}}\int K(u)\left(\sumj \frac{(hu)^j}{j!}p^{(j)}(x)\right) du\\
-                                        &= \sum_{j=1}^{l-1}\frac{h^{j-s}}{j!}p^{(j)}(x)\int K(u)u^j du + \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x)\right) du\\
-                                        &= p^{(s)}(x)+ \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x)\right) du
+                    \E[\hat p_{n,s}(x_0)] &= \E\left[\frac{1}{nh^{s+1}}\sum_{i=1}^n K\left(\frac{X_i-x_0}{h}\right)\right] \\
+                                        &= \frac{1}{h^{s+1}}\int K\left(\frac{u-x_0}{h}\right)p(u) du\\
+                                        &= \frac{1}{h^{s}}\int K\left(u\right)p(x_0+hu) du\\
+                                        &= \frac{1}{h^{s}}\int K(u)\left(\sum_{j=0}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0)\right) du\\
+                                        &= \sum_{j=0}^{l-1}\frac{h^{j-s}}{j!}p^{(j)}(x_0)\int K(u)u^j du + \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0)\right) du\\
+                                        &= p^{(s)}(x_0)+ \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0)\right) du
                 \end{align*}
-                Using the Lagrange form of the remainder of a Taylor series, for some $\xi\in(x,x+hu)$,
-                \[\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) = \frac{(hu)^l}{l!}p^{(l)}(\xi)\]
+                Using the Lagrange form of the remainder of a Taylor series, for some $\xi\in(x_0,x_0+hu)$,
+                \[\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0) = \frac{(hu)^l}{l!}p^{(l)}(\xi)\]
                 By the conditions of the H{\"o}lder class,
                 \begin{align*}
-                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq \frac{(hu)^l}{l!}(L\vert \xi - x\vert^{\beta-l} + \vert p(x)\vert) \\
-                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq \frac{(hu)^l}{l!}(L\vert hu\vert^{\beta-l}  + \vert p(x)\vert) \\
-                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq h^\beta\frac{u^l\vert u \vert^{\beta-l}L}{l!}+ u^l\frac{h^l}{l!}\vert p(x)\vert \\
-                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\leq h^\beta f_1(u)+ u^lf_2(x) \\
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0) &\leq \frac{(hu)^l}{l!}(L\vert \xi - x_0\vert^{\beta-l} + \vert p(x_0)\vert) \\
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0) &\leq \frac{(hu)^l}{l!}(L\vert hu\vert^{\beta-l}  + \vert p(x_0)\vert) \\
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0) &\leq h^\beta\frac{u^l\vert u \vert^{\beta-l}L}{l!}+ u^l\frac{h^l}{l!}\vert p(x_0)\vert \\
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0) &\leq h^\beta f_1(u)+ u^lf_2(x_0) \\
                 \end{align*}
-                For \(f_1(u):=\frac{u^l\vert u \vert^{\beta-l}L}{l!}\) and \(f_2(x):=\frac{h^l}{l!}\vert p(x)\vert\). By similar logic, we also get
+                For \(f_1(u):=\frac{u^l\vert u \vert^{\beta-l}L}{l!}\) and \(f_2(x_0):=\frac{h^l}{l!}\vert p(x_0)\vert\). By similar logic, we also get
                 \begin{align*}
-                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\geq -\frac{(hu)^l}{l!}(L\vert \xi - x\vert^{\beta-l} + \vert p(x)\vert) \\
-                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x) &\geq -h^\beta f_1(u)- u^lf_2(x) 
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0) &\geq -\frac{(hu)^l}{l!}(L\vert \xi - x_0\vert^{\beta-l} + \vert p(x_0)\vert) \\
+                    \sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0) &\geq -h^\beta f_1(u)- u^lf_2(x_0) 
                 \end{align*}
 
-                Plugging these into our expression for \(\E[\hat p_{n,s}(x)]\), we get that 
+                Plugging these into our expression for \(\E[\hat p_{n,s}(x_0)]\), we get that 
                 \begin{align*}
-                    \E[\hat p_{n,s}(x)] &= p^{(s)}(x)+ \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x)\right) du \\
-                    \vert \E[\hat p_{n,s}(x)]-p^{(s)}(x) \vert &\leq \frac{1}{h^{s}}\int K(u) (h^\beta f_1(u)+ u^lf_2(x)) du \\
-                                                                &\leq h^{\beta-s}\int K(u) f_1(u) du + \frac{f_2(x)}{h^{s}}\int K(u) u^l du\\
+                    \E[\hat p_{n,s}(x_0)] &= p^{(s)}(x_0)+ \frac{1}{h^{s}}\int K(u)\left(\sum_{j=l}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0)\right) du \\
+                    \vert \E[\hat p_{n,s}(x_0)]-p^{(s)}(x_0) \vert &\leq \frac{1}{h^{s}}\int K(u) (h^\beta f_1(u)+ u^lf_2(x_0)) du \\
+                                                                &\leq h^{\beta-s}\int K(u) f_1(u) du + \frac{f_2(x_0)}{h^{s}}\int K(u) u^l du\\
                                                                 &\leq h^{\beta-s}c
                 \end{align*}
 
-                For \(c:=\int K(u) f_1(u) du\), showing the bias is bounded as desired.
+                For \(c:=\int K(u) f_1(u) du\), showing the bias is bounded as desired. To bound the variance term, we have that
+                \begin{align*}
+                    \var\left(\hat p_{n,s}(x_0)\right) &= \frac{1}{nh^{2s+2}}\var\left(K\left(\frac{X_i-x_0}{h}\right)\right) \\
+                                                     &= \frac{1}{nh^{2s+2}}\left(\E\left[K\left(\frac{X_i-x_0}{h}\right)^2\right]-\E\left[K\left(\frac{X_i-x_0}{h}\right)\right]^2\right) \\
+                                                     &\leq \frac{1}{nh^{2s+2}}\left(h\int K^2(u)\left(\sum_{j=0}^\infty \frac{(hu)^j}{j!}p^{(j)}(x_0)\right)du-\left(h^{s+1}p^{(s)}(x_0)+ h^{\beta+1}c\right)^2\right) \\
+                                                     &\leq \frac{p(x_0)}{nh^{2s+1}}\int K^2(u)du + O\left(\frac{1}{n}\right)
+                \end{align*}
+                So \(\var\left(\hat p_{n,s}(x_0)\right)\) is bounded by \(\frac{c'}{nh^{2s+1}}\) for \(c'>0\).
             \item[b)]
                 Combining the bounds on bias squared and variance from part a) to get the risk, we get
                 \begin{align*}
