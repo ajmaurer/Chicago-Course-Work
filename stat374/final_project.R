@@ -8,8 +8,8 @@ library('reshape2')
 library('chron')
 
 # Turns on different parts of the code
-clean.data <- FALSE
-data.sum   <- TRUE 
+clean.data <- TRUE 
+data.sum   <- FALSE
 par.reg    <- FALSE
 nonpar.reg <- FALSE
 
@@ -36,6 +36,11 @@ if (clean.data) {
     ### Merge the two data sets. Weather is only missing for a few hours, so we just drop them
     rob.data <- merge(hourly.robberies,hourly.weather,by=c("date","hour"),all.y=TRUE,all.x=FALSE)
     rob.data$robberies[is.na(rob.data$robberies)] <- 0
+    # Mark weekend/holidays
+    rob.data$nonworkday <- is.weekend(rob.data$date) | is.holiday(rob.data$date)
+    # Pick a 20% subset as our test data set
+    rob.data$test.set <- FALSE
+    rob.data$test.set[sample.int(nrow(rob.data),size=floor(nrow(rob.data)*.2))] <- TRUE 
     rm(hourly.weather,hourly.robberies)
     save(rob.data,file="final_project/hourly_robberies.RData")
     
