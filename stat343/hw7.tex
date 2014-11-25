@@ -140,12 +140,25 @@ STAT 343 Homework 6 \hfill Aaron Maurer
     \item[4.]
         As I think we had to show on the midterm,
         \begin{align*}
-            H&= X(X^TX)^{-1}X^T //
-            H&= QR(R^TQ^TQR)^{-1}R^TQ^T //
-            H&= QR(R^TR)^{-1}R^TQ^T //
-            H&= QRR^{-1}(R^T)^{-1}R^TQ^T //
+            H&= X(X^TX)^{-1}X^T \\
+            H&= QR(R^TQ^TQR)^{-1}R^TQ^T \\
+            H&= QR(R^TR)^{-1}R^TQ^T \\
+            H&= QRR^{-1}(R^T)^{-1}R^TQ^T \\
             H&= QQ^T
         \end{align*}
+        As was discussed with added variable plots, for an additional variable $X_i$ added to a regression, if $e_{(-i)}$ are the residuals from the regression excluding $X_i$ and $e$ are the residuals from the regression including it,
+        \begin{align*}
+            e_{(-i)} &= \hat\beta_i (I-H) X_i + e \\ 
+            e_{(-i)} &= \hat\beta_i (I-QQ^T) X_i - e \\ 
+        \end{align*}
+        From simple linear regression, since \(e_{(-i)}\) has mean $0$, it must be the case that \(\hat\beta_i=\frac{\cov((I-QQ^T) X_i,e_{(-i)})}{\var((I-QQ^T) X_i)}\). Plugging this in, we get
+        \begin{align*}
+            e_{(-i)} &= \frac{\cov((I-QQ^T) X_i,e_{(-i)})}{\var((I-QQ^T) X_i)} (I-QQ^T) X_i - e \\ 
+            e &= e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \\ 
+            \|e\|^2 &= \left\|e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \right \|^2
+            RSS &= \left\|e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \right \|^2
+        \end{align*}
+        Thus, 
  
 
 \end{itemize}
