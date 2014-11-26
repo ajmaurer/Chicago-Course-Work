@@ -8,6 +8,8 @@ library('xtable')
 library('nlme')
 library('quantreg')
 library('splines')
+library('rpart')
+library('randomForest')
 
 #digits of precision
 d<- 3
@@ -77,6 +79,74 @@ print(xtable(summary(temp.cs.lm),digits=d),type="latex",file="hw7/hw7_1_e.tex")
 pdf("hw7/hw7_1_e.pdf")
 matplot(aatemp$year, cbind(aatemp$temp,temp.cs.lm$fit),type="pl",pch=20,lty=1,col=1,xlim=c(1850,2000),ylab="Temperature",xlab="Year",main="Cubic Spline Fit")
 dev.off()
+
+#####################
+# Problem 2 
+#####################
+data(ozone)
+
+### a)
+oz.lm<-lm(O3~temp+humidity+ibh, data=ozone)
+print(xtable(summary(oz.lm),digits=d),type="latex",file="hw7/hw7_2_a.tex")
+
+pdf("hw7/hw7_2_a.pdf")
+boxcox(oz.lm,plotit=TRUE, lambda=seq(0,.5,.1))
+title(main="Box-Cox")
+dev.off()
+
+lam<-.25
+oz.t.lm<-lm(O3^lam ~temp+humidity+ibh, data=ozone)
+print(xtable(summary(oz.t.lm),digits=d),type="latex",file="hw7/hw7_2_a_trans.tex")
+
+### b)
+oz.t.rt<-rpart(O3^lam ~temp+humidity+ibh, data=ozone)
+oz.t.rf<-randomForest(O3^lam ~temp+humidity+ibh, data=ozone)
+
+pdf("hw7/hw7_2_b_tree.pdf")
+plot(oz.t.rt,main="Regression Tree")
+text(oz.t.rt)
+dev.off()
+
+#Linear diagnoistics
+pre<-predict(oz.t.lm)
+res<-residuals(oz.t.lm)
+pdf("hw7/hw7_2_b_lm_res.pdf")
+plot(pre,res,xlab="Predicted",ylab="Residual",main="Linear Model Residual Plot")
+lines(predict(loess(res~pre)))
+dev.off()
+pdf("hw7/hw7_2_b_lm_qq.pdf")
+qqnorm(res,ylab="Linear Model Residual Quantiles",main="Linear Model Residual QQ Plot")
+qqline(res)
+dev.off()
+
+#regression tree diagnoistics
+pre<-predict(oz.t.rt)
+res<-residuals(oz.t.rt)
+pdf("hw7/hw7_2_b_rt_res.pdf")
+plot(pre,res,xlab="Predicted",ylab="Residual",main="Regression Tree Residual Plot")
+lines(predict(loess(res~pre)))
+dev.off()
+pdf("hw7/hw7_2_b_rt_qq.pdf")
+qqnorm(res,ylab="Regression Tree Residual Quantiles",main="Regression Tree Residual QQ Plot")
+qqline(res)
+dev.off()
+
+# Random Forrest diagnoistics
+pre<-predict(oz.t.rf)
+res<-ozone$O3^lam-predict(oz.t.rf)
+pdf("hw7/hw7_2_b_rf_res.pdf")
+plot(pre,res,xlab="Predicted",ylab="Residual",main="Random Forrest Residual Plot")
+lines(predict(loess(res~pre)))
+dev.off()
+pdf("hw7/hw7_2_b_rf_qq.pdf")
+qqnorm(res,ylab="Random Forrest Residual Quantiles",main="Random Forrest Residual QQ Plot")
+qqline(res)
+dev.off()
+
+
+
+
+
 
 
 

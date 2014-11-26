@@ -137,6 +137,24 @@ STAT 343 Homework 6 \hfill Aaron Maurer
                 \end{center}
         \end{itemize}
     \item[2.]
+        \begin{itemize}
+            \item[a)]
+                After running the model on the untransformed data, we seem to see a substantial improvement from transformation. The log-likelihood for box-cox is maximized right around $\lambda=.25$, with a confidence interval that excluded $1$, so I transformed the data using $.25$. The end result is an improvement in $R^2$ from $.681$ to $.713$.
+                \smallskip
+                The untransformed linear model:
+                \FloatBarrier
+                \input{hw7/hw7_2_a}
+                \FloatBarrier                
+                \begin{center}
+                    \includegraphics[width=9cm]{hw7/hw7_2_a} 
+                \end{center}
+                The transformed linear model:
+                \FloatBarrier
+                \input{hw7/hw7_2_a_trans}
+                \FloatBarrier                
+            \item[b)]
+        \end{itemize}
+
     \item[4.]
         As I think we had to show on the midterm,
         \begin{align*}
@@ -146,19 +164,19 @@ STAT 343 Homework 6 \hfill Aaron Maurer
             H&= QRR^{-1}(R^T)^{-1}R^TQ^T \\
             H&= QQ^T
         \end{align*}
-        As was discussed with added variable plots, for an additional variable $X_i$ added to a regression, if $e_{(-i)}$ are the residuals from the regression excluding $X_i$ and $e$ are the residuals from the regression including it,
+        As was discussed with added variable plots, for an additional variable $X_i$ added to a regression, if $\hat e_{(-i)}$ are the residuals from the regression excluding $X_i$ and $\hat e$ are the residuals from the regression including it,
         \begin{align*}
-            e_{(-i)} &= \hat\beta_i (I-H) X_i + e \\ 
-            e_{(-i)} &= \hat\beta_i (I-QQ^T) X_i - e \\ 
+            \hat e_{(-i)} &= \hat\beta_i (I-H) X_i + \hat e \\ 
+            \hat e_{(-i)} &= \hat\beta_i (I-QQ^T) X_i + \hat e \\ 
         \end{align*}
-        From simple linear regression, since \(e_{(-i)}\) has mean $0$, it must be the case that \(\hat\beta_i=\frac{\cov((I-QQ^T) X_i,e_{(-i)})}{\var((I-QQ^T) X_i)}\). Plugging this in, we get
+        From simple linear regression, since \(\hat e_{(-i)}\) has mean $0$, it must be the case that \(\hat\beta_i=\frac{\cov((I-QQ^T) X_i,\hat e_{(-i)})}{\var((I-QQ^T) X_i)}\). Plugging this in, we get
         \begin{align*}
-            e_{(-i)} &= \frac{\cov((I-QQ^T) X_i,e_{(-i)})}{\var((I-QQ^T) X_i)} (I-QQ^T) X_i - e \\ 
-            e &= e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \\ 
-            \|e\|^2 &= \left\|e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \right \|^2
-            RSS &= \left\|e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \right \|^2
+            \hat e_{(-i)} &= \frac{\cov((I-QQ^T) X_i,e_{(-i)})}{\var((I-QQ^T) X_i)} (I-QQ^T) X_i + \hat e \\ 
+            \hat e &= \hat e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,\hat e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \\ 
+            \|\hat e\|^2 &= \left\|\hat e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,\hat e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \right \|^2 \\
+            RSS &= \left\|\hat e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,\hat e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \right \|^2
         \end{align*}
-        Thus, 
+        Thus, we can minimize the $RSS$ by minimizing choosing the variable $X_i$ such that the quantity on the right is minimized.
  
 
 \end{itemize}
