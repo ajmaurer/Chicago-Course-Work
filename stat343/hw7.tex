@@ -153,7 +153,46 @@ STAT 343 Homework 6 \hfill Aaron Maurer
                 \input{hw7/hw7_2_a_trans}
                 \FloatBarrier                
             \item[b)]
+                Comparing the linear fit to the regression tree and the random forest, it appears that the latter two fit slightly better than the former. As we look at the residuals, both the regression tree and the random forest are nearly perfectly distributed around 0 through out the predicted range (for the random tree this is of course by construction), while the residuals for the linear model do not quite seem to be at the lower end of the predicted range. As well, while the linear model residuals deviate from a normal distribution towards the upper end of their range, the regression tree and random forest have residuals that are normally distributed pretty well throughout. \\
+                \smallskip
+                This is the regression tree I fit:
+                \begin{center}
+                    \includegraphics[width=9cm]{hw7/hw7_2_b_tree} 
+                \end{center}
+                The transformed linear regression: \\
+                    \includegraphics[width=9cm]{hw7/hw7_2_b_lm_res} 
+                    \includegraphics[width=9cm]{hw7/hw7_2_b_lm_qq} \\ 
+                The regression tree: \\
+                    \includegraphics[width=9cm]{hw7/hw7_2_b_rt_res} 
+                    \includegraphics[width=9cm]{hw7/hw7_2_b_rt_qq} \\ 
+                The random forest: \\
+                    \includegraphics[width=9cm]{hw7/hw7_2_b_rf_res} 
+                    \includegraphics[width=9cm]{hw7/hw7_2_b_rf_qq} \\ 
+
         \end{itemize}
+    \item[3.]
+        \item[a)]
+            I applied backwards elimination, working with a critical value of $.2$. Doing this, I eliminated three variables and kept the rest.
+            \smallskip
+            This was the order I eliminated variables in, and their p-value when I eliminated them:\\
+            \FloatBarrier
+            \input{hw7/hw7_3_a_excl}
+            \FloatBarrier                
+            The end result was this regression: \\
+            \FloatBarrier
+            \input{hw7/hw7_3_a_lm}
+            \FloatBarrier                
+        \item[b)]
+            Going by forward selection, again with a critical value of $.2$, I ended up with the same model gotten previously by backwards selection. 
+            \smallskip
+            This was the order I included variables in, and their p-value when I included them:\\
+            \FloatBarrier
+            \input{hw7/hw7_3_b_incl}
+            \FloatBarrier                
+            The end result was this regression: \\
+            \FloatBarrier
+            \input{hw7/hw7_3_b_lm}
+            \FloatBarrier                
 
     \item[4.]
         As I think we had to show on the midterm,
@@ -164,7 +203,7 @@ STAT 343 Homework 6 \hfill Aaron Maurer
             H&= QRR^{-1}(R^T)^{-1}R^TQ^T \\
             H&= QQ^T
         \end{align*}
-        As was discussed with added variable plots, for an additional variable $X_i$ added to a regression, if $\hat e_{(-i)}$ are the residuals from the regression excluding $X_i$ and $\hat e$ are the residuals from the regression including it,
+        As was discussed with added variable plots, for an additional variable $X_i$ added to a regression, if $\hat e_{(-i)}$ are the residuals from the regression excluding $X_i$, $\hat e$ are the residuals from the regression including it, and $\beta_i$ is what the coefficient would be on $X_i$ if it was included in the regression, then
         \begin{align*}
             \hat e_{(-i)} &= \hat\beta_i (I-H) X_i + \hat e \\ 
             \hat e_{(-i)} &= \hat\beta_i (I-QQ^T) X_i + \hat e \\ 
@@ -176,8 +215,13 @@ STAT 343 Homework 6 \hfill Aaron Maurer
             \|\hat e\|^2 &= \left\|\hat e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,\hat e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \right \|^2 \\
             RSS &= \left\|\hat e_{(-i)} - \frac{\cov\left((I-QQ^T) X_i,\hat e_{(-i)}\right)}{\var\left((I-QQ^T) X_i\right)} (I-QQ^T) X_i \right \|^2
         \end{align*}
-        Thus, we can minimize the $RSS$ by minimizing choosing the variable $X_i$ such that the quantity on the right is minimized.
- 
+        Thus, we can minimize the $RSS$ by choosing the variable $X_i$ such that the quantity on the right is minimized.
+    \item[5.]
+        $RSS$ will be increased the least by removing the variable which has the highest p-value. \\
+        \smallskip
+        {\bf Explanation:} If $RSS_{(-i)}$ is the residual sum of squares for a model excluding variable $i$, we want to pick $i$ such that $RSS_{(-i)}-RSS$ is smallest. Obviously, the same $i$ will minimize
+        \[ F= \frac{\frac{RSS_{(-i)}-RSS}{p-(p-1)}}{\frac{RSS}{n-p}}\]
+        This will in turn maximize the p-value for the F test comparing the model to the model excluding variable $i$. However, as we know, this p-value is equivalent to the p-value from the t test in the regression summary for variable $i$. Thus, this variable, when removed, will result in the smallest increase in $RSS$.
 
 \end{itemize}
 \end{document}

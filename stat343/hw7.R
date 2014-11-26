@@ -103,7 +103,7 @@ oz.t.rt<-rpart(O3^lam ~temp+humidity+ibh, data=ozone)
 oz.t.rf<-randomForest(O3^lam ~temp+humidity+ibh, data=ozone)
 
 pdf("hw7/hw7_2_b_tree.pdf")
-plot(oz.t.rt,main="Regression Tree")
+plot(oz.t.rt,main="Regression Tree",uniform=TRUE)
 text(oz.t.rt)
 dev.off()
 
@@ -113,9 +113,10 @@ res<-residuals(oz.t.lm)
 pdf("hw7/hw7_2_b_lm_res.pdf")
 plot(pre,res,xlab="Predicted",ylab="Residual",main="Linear Model Residual Plot")
 lines(predict(loess(res~pre)))
+legend('topright',"LOESS Fit",lty=1)
 dev.off()
 pdf("hw7/hw7_2_b_lm_qq.pdf")
-qqnorm(res,ylab="Linear Model Residual Quantiles",main="Linear Model Residual QQ Plot")
+qqnorm(res,ylab="Linear Model Residual Quantiles",xlab="Normal Theoretical Quantiles",main="Linear Model Residual QQ Plot")
 qqline(res)
 dev.off()
 
@@ -125,9 +126,10 @@ res<-residuals(oz.t.rt)
 pdf("hw7/hw7_2_b_rt_res.pdf")
 plot(pre,res,xlab="Predicted",ylab="Residual",main="Regression Tree Residual Plot")
 lines(predict(loess(res~pre)))
+legend('topright',"LOESS Fit",lty=1)
 dev.off()
 pdf("hw7/hw7_2_b_rt_qq.pdf")
-qqnorm(res,ylab="Regression Tree Residual Quantiles",main="Regression Tree Residual QQ Plot")
+qqnorm(res,ylab="Regression Tree Residual Quantiles",xlab="Normal Theoretical Quantiles",main="Regression Tree Residual QQ Plot")
 qqline(res)
 dev.off()
 
@@ -137,11 +139,83 @@ res<-ozone$O3^lam-predict(oz.t.rf)
 pdf("hw7/hw7_2_b_rf_res.pdf")
 plot(pre,res,xlab="Predicted",ylab="Residual",main="Random Forrest Residual Plot")
 lines(predict(loess(res~pre)))
+legend('topright',"LOESS Fit",lty=1)
 dev.off()
 pdf("hw7/hw7_2_b_rf_qq.pdf")
-qqnorm(res,ylab="Random Forrest Residual Quantiles",main="Random Forrest Residual QQ Plot")
+qqnorm(res,ylab="Random Forrest Residual Quantiles",xlab="Normal Theoretical Quantiles",main="Random Forrest Residual QQ Plot")
 qqline(res)
 dev.off()
+
+#####################
+# Problem 3 
+#####################
+data(prostate)
+crit<-.2
+
+### a)
+exclude<-NULL
+excl.pval<-NULL
+go<-TRUE
+p.lm<-lm(lpsa~.,data=prostate)
+
+while (go) {
+    p.lm<-lm(lpsa~.,data=prostate[!(names(prostate) %in% exclude)])
+    pvals<-summary(p.lm)$coefficients[-1,4]
+    max.ind <- which.max(pvals)
+    max.pval <- pvals[max.ind]
+    if (max.pval>crit) {
+        excl.pval<-c(excl.pval,max.pval)
+        exclude<-c(exclude,names(max.ind))
+    }
+    else { 
+        go<-FALSE
+    }
+}
+ecl.ma<-cbind(1:length(excl.pval),excl.pval)
+colnames(ecl.ma)<-c("Order","p-value")
+print(xtable(summary(p.lm),digits=d),type="latex",file="hw7/hw7_3_a_lm.tex")
+print(xtable(ecl.ma,digits=d),type="latex",file="hw7/hw7_3_a_excl.tex")
+
+### b)
+
+crit<-.2
+include<-NULL
+incl.pvals<-NULL
+remaining<-1:8
+go<-TRUE
+
+while (go) {
+    mpval<-1
+    for (nv in remaining) {
+        p.lm<-lm(lpsa~.,data=prostate[c(include,nv,9)])
+        pval<-summary(p.lm)$coefficients[length(include)+2,4]
+        if (mpval>pval) {
+            bv   <-nv
+            mpval<-pval
+        }
+    }
+    if (mpval<crit) {
+        include<-c(include,bv)
+        incl.pvals<-c(incl.pvals,mpval)
+        remaining<-remaining[-which(remaining==bv)]
+    }
+    else {
+        go<-FALSE
+    }
+}
+names(pvals)<-names(prostate)[include]
+incl.ma <- cbind(1:length(incl.pvals),incl.pvals)
+rownames(incl.ma)<-names(prostate)[include]
+colnames(incl.ma)<-c("Order","p-value")
+
+p.lm<-lm(lpsa~.,data=prostate[c(include,9)])
+
+print(xtable(summary(p.lm),digits=d),type="latex",file="hw7/hw7_3_b_lm.tex")
+print(xtable(incl.ma,digits=d),type="latex",file="hw7/hw7_3_b_incl.tex")
+
+       
+
+
 
 
 
