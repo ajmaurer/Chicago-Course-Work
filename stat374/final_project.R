@@ -11,8 +11,8 @@ library('chron')
 clean.data <- FALSE 
 data.sum   <- FALSE
 par.reg    <- FALSE 
-nonpar.reg <- FALSE
-eval.fit   <- TRUE 
+nonpar.reg <- TRUE
+eval.fit   <- FALSE 
 
 # par.reg options
 cross.validate <- FALSE
@@ -101,9 +101,12 @@ if (nonpar.reg) {
         load(file="final_project/hourly_robberies.RData")
     }
     
+    # Data to run regression on
     rd<-rob.data[rob.data$test.set,]
+    
     # Transform the count data
     rd$logrob<-log(rd$robberies+1)
+
     ### Don't want a discontinuity at 12am, so add back in data from prior and next day to get from -24 to 48 hours
     rd.m <- rd
     rd.m$date<-rd.m$date+1
@@ -112,37 +115,47 @@ if (nonpar.reg) {
     rd.p$date<-rd.p$date-1
     rd.p$hour<-rd.p$hour+24
     rd<-rbind(rd.m,rd,rd.p)
+    rd$workday <- !(is.weekend(rd$date) | is.holiday(rd$date))
+    rm(rd.m,rd.p)
 
     # Want to select bandwith and scale for second variable (effectively two bandwiths). Test a grid of values and pick the best one. Don't care about hours outside 0-23. 
     if (cross.validate) {
         sub<-rd$hour>=0 & rd$hour<24
         cv.score<-function(nn,s2,data,subset) {
-            cv.fit<-fitted(rob.ll<-locfit(logrob~lp(temp,hour,deg=1,nn=nn,scale=c(1,s2)),kern="gauss",data=data),what="coef",cv=TRUE)[subset]
+            cv.fit<-fitted(locfit(logrob~lp(temp,hour,deg=1,nn=nn,scale=c(1,s2)),kern="gauss",data=data),what="coef",cv=TRUE)[subset]
             return(sum((data$logrob[subset]-cv.fit)^2)/sum(subset))
         }
-        nnvals<-seq(.02,.06,.005)
-        svals<-seq(.02,.1,.01)
-        cv.mat<-NULL
+        nnvals<-seq(.02,.1,.01)
+        svals<-seq(.06,.2,.01)
+        cv.mat.w<-NULL
+        cv.mat.nw<-NULL
         for (s in svals) {
-            cv.mat<-cbind(cv.mat,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub),mc.cores=4))
+            cv.mat.w<-cbind(cv.mat.w,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub & rd$workday),mc.cores=4))
+            cv.mat.nw<-cbind(cv.mat.nw,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub & !rd$workday),mc.cores=4))
         }
-        ind<-which(cv.mat==min(cv.mat),arr.ind=TRUE)
-        nnval<-nnvals[ind[1]]
-        s2<-svals[ind[2]]
+        ind.w<-which(cv.mat.w==min(cv.mat.w),arr.ind=TRUE)
+        nnval.w<-nnvals[ind.w[1]]
+        s2.w<-svals[ind.w[2]]
+        ind.nw<-which(cv.mat.nw==min(cv.mat.nw),arr.ind=TRUE)
+        nnval.nw<-nnvals[ind.nw[1]]
+        s2.nw<-svals[ind.nw[2]]
     }
     else {
         # These values were found from previous cross validation
-        nnval<-.045
-        s2<-.06
+        nnval.w<-.03
+        s2.w<-.09
+        nnval.nw<-.03
+        s2.nw<-.14
     }
 
     # Fit local linear model 
-    rob.ll<-locfit(logrob~lp(temp,hour,deg=1,nn=nnval,scale=c(1,s2)),kern="gauss",data=rd)
+    rob.ll.w<-locfit(logrob~lp(temp,hour,deg=1,nn=nnval.w,scale=c(1,s2.w)),kern="gauss",data=rd,subset=workday)
+    rob.ll.nw<-locfit(logrob~lp(temp,hour,deg=1,nn=nnval.nw,scale=c(1,s2.nw)),kern="gauss",data=rd,subset=!workday)
 
     # Confidence intervals
     #crit(rob.ll,...)
 
-    save(rob.ll,file="final_project/local_linear_model.RData")
+    save(rob.ll.w,rob.ll.nw,file="final_project/local_linear_model.RData")
 
 }
 if (eval.fit) {
