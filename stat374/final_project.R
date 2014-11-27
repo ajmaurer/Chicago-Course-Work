@@ -10,8 +10,12 @@ library('chron')
 # Turns on different parts of the code
 clean.data <- FALSE 
 data.sum   <- FALSE
-par.reg    <- TRUE 
+par.reg    <- FALSE 
 nonpar.reg <- FALSE
+eval.fit   <- TRUE 
+
+# par.reg options
+cross.validate <- FALSE
 
 ###### Data cleaning
 if (clean.data) {
@@ -84,7 +88,64 @@ if (par.reg) {
     if (!exists("rob.data")) {
         load(file="final_project/hourly_robberies.RData")
     }
+
+    ### Poisson model, selected based on Akaike Criteria
     rob.poi<-glm(glm(robberies~as.factor(hour)+as.factor(floor(hour/3))*workday+as.factor(floor(hour/3))*log(temp+10),family=poisson(link=log),data=rob.data,subset=test.set))
+
+    save(rob.poi,file="final_project/poisson_model.RData")
+}
+
+###### Non-Parametric Model
+if (nonpar.reg) {
+    if (!exists("rob.data")) {
+        load(file="final_project/hourly_robberies.RData")
+    }
+    
+    rd<-rob.data[rob.data$test.set,]
+    # Transform the count data
+    rd$logrob<-log(rd$robberies+1)
+    ### Don't want a discontinuity at 12am, so add back in data from prior and next day to get from -24 to 48 hours
+    rd.m <- rd
+    rd.m$date<-rd.m$date+1
+    rd.m$hour<-rd.m$hour-24
+    rd.p <- rd
+    rd.p$date<-rd.p$date-1
+    rd.p$hour<-rd.p$hour+24
+    rd<-rbind(rd.m,rd,rd.p)
+
+    # Want to select bandwith and scale for second variable (effectively two bandwiths). Test a grid of values and pick the best one. Don't care about hours outside 0-23. 
+    if (cross.validate) {
+        sub<-rd$hour>=0 & rd$hour<24
+        cv.score<-function(nn,s2,data,subset) {
+            cv.fit<-fitted(rob.ll<-locfit(logrob~lp(temp,hour,deg=1,nn=nn,scale=c(1,s2)),kern="gauss",data=data),what="coef",cv=TRUE)[subset]
+            return(sum((data$logrob[subset]-cv.fit)^2)/sum(subset))
+        }
+        nnvals<-seq(.02,.06,.005)
+        svals<-seq(.02,.1,.01)
+        cv.mat<-NULL
+        for (s in svals) {
+            cv.mat<-cbind(cv.mat,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub),mc.cores=4))
+        }
+        ind<-which(cv.mat==min(cv.mat),arr.ind=TRUE)
+        nnval<-nnvals[ind[1]]
+        s2<-svals[ind[2]]
+    }
+    else {
+        # These values were found from previous cross validation
+        nnval<-.045
+        s2<-.06
+    }
+
+    # Fit local linear model 
+    rob.ll<-locfit(logrob~lp(temp,hour,deg=1,nn=nnval,scale=c(1,s2)),kern="gauss",data=rd)
+
+    # Confidence intervals
+    #crit(rob.ll,...)
+
+    save(rob.ll,file="final_project/local_linear_model.RData")
+
+}
+if (eval.fit) {
 
 }
     
