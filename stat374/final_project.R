@@ -10,7 +10,7 @@ library('graphics')
 
 # Turns on different parts of the code
 clean.data <- F 
-data.sum   <- F
+data.sum   <- T
 par.reg    <- F
 nonpar.reg <- F 
 eval.fit   <- T
@@ -64,13 +64,13 @@ if (data.sum) {
     # Rate of robberies at different temperature ranges
     tb.w<-tapply(rd.w$robberies,list(rd.w$hour,rd.w$temp.buc),FUN=mean)
     pdf("final_project/tempbuc_w.pdf")
-    matplot(tb.w,type="l",col=rep(1,4),xlab="Hour (Military Time)",ylab="Mean Robberies Per Hour",main="Rate of Robberies at Different Temperatures, Workdays",xaxp=c(0,24,8),ylim=c(0,3),yaxp=c(0,3,6))
+    matplot(0:23,tb.w,type="l",col=rep(1,4),xlab="Hour (Military Time)",ylab="Mean Robberies Per Hour",main="Rate of Robberies at Different Temperatures, Workdays",xaxp=c(0,24,8),ylim=c(0,3),yaxp=c(0,3,6))
     legend('bottomright',c("Below 30 Degrees","30-50 Degrees","50-70 Degrees","Above 70 Degrees"),lty=1:4)
     dev.off()
 
     tb.nw<-tapply(rd.nw$robberies,list(rd.nw$hour,rd.nw$temp.buc),FUN=mean)
     pdf("final_project/tempbuc_nw.pdf")
-    matplot(tb.nw,type="l",col=rep(1,4),xlab="Hour (Military Time)",ylab="Mean Robberies Per Hour",main="Rate of Robberies at Different Temperatures, Weekend/Holiday",xaxp=c(0,24,8),ylim=c(0,3),yaxp=c(0,3,6))
+    matplot(0:23,tb.nw,type="l",col=rep(1,4),xlab="Hour (Military Time)",ylab="Mean Robberies Per Hour",main="Rate of Robberies at Different Temperatures, Weekend/Holiday",xaxp=c(0,24,8),ylim=c(0,3),yaxp=c(0,3,6))
     legend('bottomright',c("Below 30 Degrees","30-50 Degrees","50-70 Degrees","Above 70 Degrees"),lty=1:4)
     dev.off()
 
@@ -78,7 +78,7 @@ if (data.sum) {
     precip.w<-ifelse(rob.data$posprecip,ifelse(rob.data$workday,1,2),ifelse(rob.data$workday,3,4)) 
     precip.tab<-tapply(rob.data$robberies,list(rob.data$hour,precip.w),FUN=mean)
     pdf("final_project/precip.pdf")
-    matplot(precip.tab,type="l",col=rep(1,4),xlab="Hour (Military Time)",ylab="Mean Robberies Per Hour",main="Rate of Robberies With/Without Precipitation",xaxp=c(0,24,8),ylim=c(0,3),yaxp=c(0,3,6),lty=c(1,3,2,4))
+    matplot(0:23,precip.tab,type="l",col=rep(1,4),xlab="Hour (Military Time)",ylab="Mean Robberies Per Hour",main="Rate of Robberies With/Without Precipitation",xaxp=c(0,24,8),ylim=c(0,3),yaxp=c(0,3,6),lty=c(1,3,2,4))
     legend('bottomright',c("Precipitation, Workday","Precipitation, Weekend/Holiday","No Precipitation, Workday","No Precipitation, Weekend/Holiday"),lty=c(1,3,2,4))
     dev.off()
 
@@ -174,23 +174,24 @@ if (eval.fit) {
     ### Generate contours of fit. 
 
     # First generate data set to predict on
-    ntemp<-300 
-    nhour<-300
+    ntemp<-250
+    nhour<-250
     rtemp<-c(-10,100)
     rhour<-c(0,23.999)
     temp.seq<-seq(rtemp[1],rtemp[2],length.out=ntemp)
     hour.seq<-seq(rhour[1],rhour[2],length.out=nhour)
-    contour.data <-data.frame(hour=floor(rep(hour.seq,ntemp)),temp=(as.numeric(gl(ntemp,nhour))-1)*(rhour[2]-rhour[1])/(nhour-1)+rtemp[1])
+    contour.data <-data.frame(hour=rep(hour.seq,ntemp),temp=(as.numeric(gl(ntemp,nhour))-1)*(rtemp[2]-rtemp[1])/(ntemp-1)+rtemp[1])
 
     # Make matrix of predicted values for weekend/weekdays for each model
-    # Weekday
+    # Local linear
+    predmat.ll.w<-matrix(exp(predict(rob.ll.w,newdata=contour.data))-1,nrow=ntemp)
+    predmat.ll.nw<-matrix(exp(predict(rob.ll.nw,newdata=contour.data))-1,nrow=ntemp)
+    # poisson
+    contour.data$hour<-floor(contour.data$hour)
     contour.data$workday<-TRUE
     predmat.poi.w<-matrix(predict(rob.poi,newdata=contour.data),nrow=ntemp)
-    predmat.ll.w<-matrix(exp(predict(rob.ll.w,newdata=contour.data))-1,nrow=ntemp)
-    # Weekend
     contour.data$workday<-FALSE
     predmat.poi.nw<-matrix(predict(rob.poi,newdata=contour.data),nrow=ntemp)
-    predmat.ll.nw<-matrix(exp(predict(rob.ll.nw,newdata=contour.data))-1,nrow=ntemp)
 
     # make the contour plots
     pred.mats<-list(predmat.poi.w,predmat.ll.w,predmat.poi.nw,predmat.ll.nw)
@@ -202,11 +203,52 @@ if (eval.fit) {
     gray.scale<-function(n) gray(seq(1,0,length.out=n))
     for (i in 1:4) {
         pdf(paste("final_project/",names(pred.mats)[i],"_contour.pdf",sep=""))
-        filled.contour(x=hour.seq,y=temp.seq,z=pred.mats[[i]],levels=lvls,color.palette=gray.scale)
+        #filled.contour(x=hour.seq,y=temp.seq,z=pred.mats[[i]],levels=lvls,color.palette=gray.scale)
+        contour(x=hour.seq,y=temp.seq,z=pred.mats[[i]],levels=lvls)
         title(main=paste("Predicted Robberies,", pred.mats$titles[i]),xlab="Hour (Military Time)", ylab="Temperature")
         par(xaxp=c(round(rhour),8),yaxp=c(round(rtemp),11))
         dev.off()
     }
 
+    ### Generate confidence bands arounds lines showing robberies at different temperatures for a few set hours
+    # Data to predict on - just use a few sets of hours
+    hour.seq<-seq(2,23,8)
+    nhour<-length(hour.seq)
+    cb.data <-data.frame(hour=rep(hour.seq,ntemp),temp=(as.numeric(gl(ntemp,nhour))-1)*(max(temp.seq)-min(temp.seq))/(ntemp-1)+rtemp[1])
+
+    # Matrices of predicted values and bands
+    # Local linear
+    ll.w.pred<-predict(rob.ll.w,newdata=cb.data,se.fit=TRUE,band="local")
+    predmat.ll.w<-exp(matrix(cbind(ll.w.pred$fit,ll.w.pred$fit-crit(rob.ll.w)$crit.val*ll.w.pred$se.fit,ll.w.pred$fit+crit(rob.ll.w)$crit.val*ll.w.pred$se.fit),ncol=3*nhour,byrow=TRUE)) -1
+    ll.nw.pred<-predict(rob.ll.nw,newdata=cb.data,se.fit=TRUE,band="local")
+    predmat.ll.nw<-exp(matrix(cbind(ll.nw.pred$fit,ll.nw.pred$fit-crit(rob.ll.nw)$crit.val*ll.nw.pred$se.fit,ll.nw.pred$fit+crit(rob.ll.nw)$crit.val*ll.nw.pred$se.fit),ncol=3*nhour,byrow=TRUE))-1
+    # poisson
+    cb.data$hour<-floor(cb.data$hour)
+    cb.data$workday<-TRUE
+    poi.w.pred<-predict(rob.poi,newdata=cb.data,type="link",se.fit=TRUE)
+    predmat.poi.w<-exp(matrix(cbind(poi.w.pred$fit,poi.w.pred$fit-1.96*poi.w.pred$se.fit,poi.w.pred$fit+1.96*poi.w.pred$se.fit),ncol=3*nhour,byrow=TRUE))
+    cb.data$workday<-FALSE
+    poi.nw.pred<-predict(rob.poi,newdata=cb.data,type="link",se.fit=TRUE)
+    predmat.poi.nw<-exp(matrix(cbind(poi.nw.pred$fit,poi.nw.pred$fit-1.96*poi.nw.pred$se.fit,poi.nw.pred$fit+1.96*poi.nw.pred$se.fit),ncol=3*nhour,byrow=TRUE))
+
+    # make the plots
+    pred.mats<-list(predmat.poi.w,predmat.ll.w,predmat.poi.nw,predmat.ll.nw)
+    names(pred.mats)<-c("poi_w","ll_w","poi_nw","ll_nw")
+    pred.mats$titles<-c("Poisson Model, Workdays","Local Linear Model, Workdays","Poisson Model, Weekend/Holiday","Local Linear Model, Weekend/Holiday")
+    # parameters for plots
+    max.pred<-max(pred.mats[[1]],pred.mats[[2]],pred.mats[[3]],pred.mats[[4]])
+    min.pred<-min(pred.mats[[1]],pred.mats[[2]],pred.mats[[3]],pred.mats[[4]])
+    ytic<-pretty(c(max.pred,min.pred))
+    omit.3<-function(n) c(1:2,4:(n+1))
+    for (i in 1:4) {
+        pdf(paste("final_project/",names(pred.mats)[i],"_ci.pdf",sep=""))
+        matplot(x=temp.seq,y=pred.mats[[i]],type="l",lty=c(omit.3(nhour),rep(3,nhour*2)),lwd=c(rep(1,nhour),rep(.5,2*nhour)),col=rep(1,nhour*3),xlab="Temperature",ylab="Mean Robberies Per Hour",main=paste("Predicted Rate of Robberies at Different Temperatures,",pred.mats$titles[i]),ylim=c(min(ytic),max(ytic)))
+        legend('bottomright',c(paste(((hour.seq-1)%%12)+1,ifelse(hour.seq %/%12,"pm","am")),"95% CI"),lty=c(omit.3(nhour),3),lwd=c(rep(1,nhour),.5))
+        dev.off()
+    }
+
+
+
+     
 }
     
