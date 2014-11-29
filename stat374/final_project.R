@@ -6,16 +6,17 @@ library('MASS')
 library('xtable')
 library('reshape2')
 library('chron')
+library('graphics')
 
 # Turns on different parts of the code
-clean.data <- FALSE 
-data.sum   <- FALSE
-par.reg    <- FALSE 
-nonpar.reg <- TRUE
-eval.fit   <- FALSE 
+clean.data <- F 
+data.sum   <- F
+par.reg    <- F
+nonpar.reg <- F 
+eval.fit   <- T
 
 # par.reg options
-cross.validate <- FALSE
+cross.validate <- F
 
 ###### Data cleaning
 if (clean.data) {
@@ -47,7 +48,7 @@ if (clean.data) {
     rob.data$test.set[sample.int(nrow(rob.data),size=floor(nrow(rob.data)*.2))] <- TRUE 
     rm(hourly.weather,hourly.robberies)
     save(rob.data,file="final_project/hourly_robberies.RData")
-    
+
 }
 ###### Data Summary
 if (data.sum) {
@@ -90,7 +91,7 @@ if (par.reg) {
     }
 
     ### Poisson model, selected based on Akaike Criteria
-    rob.poi<-glm(glm(robberies~as.factor(hour)+as.factor(floor(hour/3))*workday+as.factor(floor(hour/3))*log(temp+10),family=poisson(link=log),data=rob.data,subset=test.set))
+    rob.poi<-glm(glm(robberies~as.factor(hour)+as.factor(floor(hour/3))*workday+as.factor(floor(hour/3))*log(temp+50),family=poisson(link=log),data=rob.data,subset=test.set))
 
     save(rob.poi,file="final_project/poisson_model.RData")
 }
@@ -119,6 +120,7 @@ if (nonpar.reg) {
     rm(rd.m,rd.p)
 
     # Want to select bandwith and scale for second variable (effectively two bandwiths). Test a grid of values and pick the best one. Don't care about hours outside 0-23. 
+    param.ll<-list() # This will be the list of parameters for fitting the model
     if (cross.validate) {
         sub<-rd$hour>=0 & rd$hour<24
         cv.score<-function(nn,s2,data,subset) {
@@ -133,32 +135,78 @@ if (nonpar.reg) {
             cv.mat.w<-cbind(cv.mat.w,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub & rd$workday),mc.cores=4))
             cv.mat.nw<-cbind(cv.mat.nw,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub & !rd$workday),mc.cores=4))
         }
+        # fitting parameters of the model
         ind.w<-which(cv.mat.w==min(cv.mat.w),arr.ind=TRUE)
-        nnval.w<-nnvals[ind.w[1]]
-        s2.w<-svals[ind.w[2]]
+        param.ll$nnval.w<-nnvals[ind.w[1]]
+        param.ll$s2.w<-svals[ind.w[2]]
         ind.nw<-which(cv.mat.nw==min(cv.mat.nw),arr.ind=TRUE)
-        nnval.nw<-nnvals[ind.nw[1]]
-        s2.nw<-svals[ind.nw[2]]
+        param.ll$nnval.nw<-nnvals[ind.nw[1]]
+        param.ll$s2.nw<-svals[ind.nw[2]]
     }
     else {
         # These values were found from previous cross validation
-        nnval.w<-.03
-        s2.w<-.09
-        nnval.nw<-.03
-        s2.nw<-.14
+        param.ll$nnval.w<-.03
+        param.ll$s2.w<-.09
+        param.ll$nnval.nw<-.03
+        param.ll$s2.nw<-.14
     }
 
     # Fit local linear model 
-    rob.ll.w<-locfit(logrob~lp(temp,hour,deg=1,nn=nnval.w,scale=c(1,s2.w)),kern="gauss",data=rd,subset=workday)
-    rob.ll.nw<-locfit(logrob~lp(temp,hour,deg=1,nn=nnval.nw,scale=c(1,s2.nw)),kern="gauss",data=rd,subset=!workday)
+    rob.ll.w<-locfit(logrob~lp(temp,hour,deg=1,nn=param.ll$nnval.w,scale=c(1,param.ll$s2.w)),kern="gauss",data=rd,subset=workday)
+    rob.ll.nw<-locfit(logrob~lp(temp,hour,deg=1,nn=param.ll$nnval.nw,scale=c(1,param.ll$s2.nw)),kern="gauss",data=rd,subset=!workday)
 
-    # Confidence intervals
-    #crit(rob.ll,...)
-
-    save(rob.ll.w,rob.ll.nw,file="final_project/local_linear_model.RData")
+    save(param.ll,rob.ll.w,rob.ll.nw,file="final_project/local_linear_model.RData")
 
 }
 if (eval.fit) {
+    # Load data 
+    if (!exists("rob.data")) {
+        load(file="final_project/hourly_robberies.RData")
+    }
+    # Load models
+    if (!exists("rob.ll.w")) {
+        load(file="final_project/local_linear_model.RData")
+    }
+    if (!exists("rob.poi")) {
+        load(file="final_project/poisson_model.RData")
+    }
+
+    ### Generate contours of fit. 
+
+    # First generate data set to predict on
+    ntemp<-300 
+    nhour<-300
+    rtemp<-c(-10,100)
+    rhour<-c(0,23.999)
+    temp.seq<-seq(rtemp[1],rtemp[2],length.out=ntemp)
+    hour.seq<-seq(rhour[1],rhour[2],length.out=nhour)
+    contour.data <-data.frame(hour=floor(rep(hour.seq,ntemp)),temp=(as.numeric(gl(ntemp,nhour))-1)*(rhour[2]-rhour[1])/(nhour-1)+rtemp[1])
+
+    # Make matrix of predicted values for weekend/weekdays for each model
+    # Weekday
+    contour.data$workday<-TRUE
+    predmat.poi.w<-matrix(predict(rob.poi,newdata=contour.data),nrow=ntemp)
+    predmat.ll.w<-matrix(exp(predict(rob.ll.w,newdata=contour.data))-1,nrow=ntemp)
+    # Weekend
+    contour.data$workday<-FALSE
+    predmat.poi.nw<-matrix(predict(rob.poi,newdata=contour.data),nrow=ntemp)
+    predmat.ll.nw<-matrix(exp(predict(rob.ll.nw,newdata=contour.data))-1,nrow=ntemp)
+
+    # make the contour plots
+    pred.mats<-list(predmat.poi.w,predmat.ll.w,predmat.poi.nw,predmat.ll.nw)
+    names(pred.mats)<-c("poi_w","ll_w","poi_nw","ll_nw")
+    pred.mats$titles<-c("Poisson Model, Workdays","Local Linear Model, Workdays","Poisson Model, Weekend/Holiday","Local Linear Model, Weekend/Holiday")
+    # parameters for plots
+    max.pred<-max(pred.mats[[1]],pred.mats[[2]],pred.mats[[3]],pred.mats[[4]])
+    lvls<-pretty(c(0,max.pred),20)
+    gray.scale<-function(n) gray(seq(1,0,length.out=n))
+    for (i in 1:4) {
+        pdf(paste("final_project/",names(pred.mats)[i],"_contour.pdf",sep=""))
+        filled.contour(x=hour.seq,y=temp.seq,z=pred.mats[[i]],levels=lvls,color.palette=gray.scale)
+        title(main=paste("Predicted Robberies,", pred.mats$titles[i]),xlab="Hour (Military Time)", ylab="Temperature")
+        par(xaxp=c(round(rhour),8),yaxp=c(round(rtemp),11))
+        dev.off()
+    }
 
 }
     
