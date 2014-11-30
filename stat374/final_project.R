@@ -10,13 +10,20 @@ library('graphics')
 
 # Turns on different parts of the code
 clean.data <- F 
-data.sum   <- T
-par.reg    <- F
+data.sum   <- F 
+par.reg    <- F 
 nonpar.reg <- F 
-eval.fit   <- T
+eval.fit   <- T 
 
 # par.reg options
-cross.validate <- F
+cross.validate <- T
+procs <- 2
+
+# global function
+# I'd be shocked if there isn't a time/date function to convert military time to 12 hour time with am/pm, but I'm too lazy to find it
+oclock<-function(h) paste(((as.numeric(h)-1)%%12)+1,ifelse(as.numeric(h) %/%12,"pm","am"),sep="")
+# Returns a sequence of colors along gray scale, since color printing is a scam
+gray.scale<-function(n) gray(seq(1,0,length.out=n))
 
 ###### Data cleaning
 if (clean.data) {
@@ -74,6 +81,17 @@ if (data.sum) {
     legend('bottomright',c("Below 30 Degrees","30-50 Degrees","50-70 Degrees","Above 70 Degrees"),lty=1:4)
     dev.off()
 
+    # Bar plot of counts at different times
+    hour.seq<-seq(2,23,8)
+    rob.ct.w<-table(rd.w$hour[rd.w$hour %in% hour.seq],rd.w$robberies[rd.w$hour %in% hour.seq])
+    rob.ct.nw<-table(rd.nw$hour[rd.nw$hour %in% hour.seq],rd.nw$robberies[rd.nw$hour %in% hour.seq])
+    pdf("final_project/ct_dist_w.pdf")
+    barplot(rob.ct.w,main="Distribution of Robbery Counts, Workdays",xlab="Number of Robberies During Hour",ylab="Occurrences in Data",col=gray.scale(length(hour.seq)),legend=oclock(rownames(rob.ct.w)),beside=TRUE)
+    dev.off()
+    pdf("final_project/ct_dist_nw.pdf")
+    barplot(rob.ct.nw,main="Distribution of Robbery Counts, Workdays",xlab="Number of Robberies During Hour",ylab="Occurrences in Data",col=gray.scale(length(hour.seq)),legend=oclock(rownames(rob.ct.nw)),beside=TRUE)
+    dev.off()
+
     # Effect of precipitation
     precip.w<-ifelse(rob.data$posprecip,ifelse(rob.data$workday,1,2),ifelse(rob.data$workday,3,4)) 
     precip.tab<-tapply(rob.data$robberies,list(rob.data$hour,precip.w),FUN=mean)
@@ -91,7 +109,7 @@ if (par.reg) {
     }
 
     ### Poisson model, selected based on Akaike Criteria
-    rob.poi<-glm(glm(robberies~as.factor(hour)+as.factor(floor(hour/3))*workday+as.factor(floor(hour/3))*log(temp+50),family=poisson(link=log),data=rob.data,subset=test.set))
+    rob.poi<-glm(robberies~as.factor(hour)+as.factor(floor(hour/3))*workday+as.factor(floor(hour/3))*log(temp+50),family=poisson(link=log),data=rob.data,subset=!test.set)
 
     save(rob.poi,file="final_project/poisson_model.RData")
 }
@@ -103,7 +121,7 @@ if (nonpar.reg) {
     }
     
     # Data to run regression on
-    rd<-rob.data[rob.data$test.set,]
+    rd<-rob.data[!rob.data$test.set,]
     
     # Transform the count data
     rd$logrob<-log(rd$robberies+1)
@@ -127,13 +145,13 @@ if (nonpar.reg) {
             cv.fit<-fitted(locfit(logrob~lp(temp,hour,deg=1,nn=nn,scale=c(1,s2)),kern="gauss",data=data),what="coef",cv=TRUE)[subset]
             return(sum((data$logrob[subset]-cv.fit)^2)/sum(subset))
         }
-        nnvals<-seq(.02,.1,.01)
-        svals<-seq(.06,.2,.01)
+        nnvals<-seq(.01,.2,.01)
+        svals<-seq(.01,.2,.01)
         cv.mat.w<-NULL
         cv.mat.nw<-NULL
         for (s in svals) {
-            cv.mat.w<-cbind(cv.mat.w,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub & rd$workday),mc.cores=4))
-            cv.mat.nw<-cbind(cv.mat.nw,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub & !rd$workday),mc.cores=4))
+            cv.mat.w<-cbind(cv.mat.w,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub & rd$workday),mc.cores=procs))
+            cv.mat.nw<-cbind(cv.mat.nw,mcmapply(cv.score,nn=nnvals,MoreArgs=list(s2=s,data=rd,subset=sub & !rd$workday),mc.cores=procs))
         }
         # fitting parameters of the model
         ind.w<-which(cv.mat.w==min(cv.mat.w),arr.ind=TRUE)
@@ -142,20 +160,19 @@ if (nonpar.reg) {
         ind.nw<-which(cv.mat.nw==min(cv.mat.nw),arr.ind=TRUE)
         param.ll$nnval.nw<-nnvals[ind.nw[1]]
         param.ll$s2.nw<-svals[ind.nw[2]]
+        save(param.ll,file="final_project/ll_param.RData")
     }
     else {
         # These values were found from previous cross validation
-        param.ll$nnval.w<-.03
-        param.ll$s2.w<-.09
-        param.ll$nnval.nw<-.03
-        param.ll$s2.nw<-.14
+        load(file="final_project/ll_param.RData")
     }
+
 
     # Fit local linear model 
     rob.ll.w<-locfit(logrob~lp(temp,hour,deg=1,nn=param.ll$nnval.w,scale=c(1,param.ll$s2.w)),kern="gauss",data=rd,subset=workday)
     rob.ll.nw<-locfit(logrob~lp(temp,hour,deg=1,nn=param.ll$nnval.nw,scale=c(1,param.ll$s2.nw)),kern="gauss",data=rd,subset=!workday)
 
-    save(param.ll,rob.ll.w,rob.ll.nw,file="final_project/local_linear_model.RData")
+    save(rob.ll.w,rob.ll.nw,file="final_project/local_linear_model.RData")
 
 }
 if (eval.fit) {
@@ -189,9 +206,9 @@ if (eval.fit) {
     # poisson
     contour.data$hour<-floor(contour.data$hour)
     contour.data$workday<-TRUE
-    predmat.poi.w<-matrix(predict(rob.poi,newdata=contour.data),nrow=ntemp)
+    predmat.poi.w<-matrix(predict(rob.poi,newdata=contour.data,type="response"),nrow=ntemp)
     contour.data$workday<-FALSE
-    predmat.poi.nw<-matrix(predict(rob.poi,newdata=contour.data),nrow=ntemp)
+    predmat.poi.nw<-matrix(predict(rob.poi,newdata=contour.data,type="response"),nrow=ntemp)
 
     # make the contour plots
     pred.mats<-list(predmat.poi.w,predmat.ll.w,predmat.poi.nw,predmat.ll.nw)
@@ -200,14 +217,15 @@ if (eval.fit) {
     # parameters for plots
     max.pred<-max(pred.mats[[1]],pred.mats[[2]],pred.mats[[3]],pred.mats[[4]])
     lvls<-pretty(c(0,max.pred),20)
-    gray.scale<-function(n) gray(seq(1,0,length.out=n))
     for (i in 1:4) {
-        pdf(paste("final_project/",names(pred.mats)[i],"_contour.pdf",sep=""))
-        #filled.contour(x=hour.seq,y=temp.seq,z=pred.mats[[i]],levels=lvls,color.palette=gray.scale)
-        contour(x=hour.seq,y=temp.seq,z=pred.mats[[i]],levels=lvls)
-        title(main=paste("Predicted Robberies,", pred.mats$titles[i]),xlab="Hour (Military Time)", ylab="Temperature")
-        par(xaxp=c(round(rhour),8),yaxp=c(round(rtemp),11))
-        dev.off()
+        for (fill in c(T,F)) {
+            pdf(paste("final_project/",names(pred.mats)[i],"_contour",ifelse(fill,"_fill",""),".pdf",sep=""))
+            if (fill) filled.contour(x=hour.seq,y=temp.seq,z=pred.mats[[i]],levels=lvls,color.palette=gray.scale)
+            else    contour(x=hour.seq,y=temp.seq,z=pred.mats[[i]],levels=lvls)
+            title(main=paste("Predicted Robberies,", pred.mats$titles[i]),xlab="Hour (Military Time)", ylab="Temperature")
+            par(xaxp=c(round(rhour),8),yaxp=c(round(rtemp),11))
+            dev.off()
+        }
     }
 
     ### Generate confidence bands arounds lines showing robberies at different temperatures for a few set hours
@@ -217,38 +235,83 @@ if (eval.fit) {
     cb.data <-data.frame(hour=rep(hour.seq,ntemp),temp=(as.numeric(gl(ntemp,nhour))-1)*(max(temp.seq)-min(temp.seq))/(ntemp-1)+rtemp[1])
 
     # Matrices of predicted values and bands
+    td<-function(d) matrix(d,ncol=nhour,byrow=TRUE)
     # Local linear
     ll.w.pred<-predict(rob.ll.w,newdata=cb.data,se.fit=TRUE,band="local")
-    predmat.ll.w<-exp(matrix(cbind(ll.w.pred$fit,ll.w.pred$fit-crit(rob.ll.w)$crit.val*ll.w.pred$se.fit,ll.w.pred$fit+crit(rob.ll.w)$crit.val*ll.w.pred$se.fit),ncol=3*nhour,byrow=TRUE)) -1
+    predmat.ll.w<-exp(cbind(td(ll.w.pred$fit),td(ll.w.pred$fit-crit(rob.ll.w)$crit.val*ll.w.pred$se.fit),td(ll.w.pred$fit+crit(rob.ll.w)$crit.val*ll.w.pred$se.fit))) -1
     ll.nw.pred<-predict(rob.ll.nw,newdata=cb.data,se.fit=TRUE,band="local")
-    predmat.ll.nw<-exp(matrix(cbind(ll.nw.pred$fit,ll.nw.pred$fit-crit(rob.ll.nw)$crit.val*ll.nw.pred$se.fit,ll.nw.pred$fit+crit(rob.ll.nw)$crit.val*ll.nw.pred$se.fit),ncol=3*nhour,byrow=TRUE))-1
+    predmat.ll.nw<-exp(cbind(td(ll.nw.pred$fit),td(ll.nw.pred$fit-crit(rob.ll.nw)$crit.val*ll.nw.pred$se.fit),td(ll.nw.pred$fit+crit(rob.ll.nw)$crit.val*ll.nw.pred$se.fit))) -1
     # poisson
     cb.data$hour<-floor(cb.data$hour)
     cb.data$workday<-TRUE
     poi.w.pred<-predict(rob.poi,newdata=cb.data,type="link",se.fit=TRUE)
-    predmat.poi.w<-exp(matrix(cbind(poi.w.pred$fit,poi.w.pred$fit-1.96*poi.w.pred$se.fit,poi.w.pred$fit+1.96*poi.w.pred$se.fit),ncol=3*nhour,byrow=TRUE))
+    predmat.poi.w<-exp(cbind(td(poi.w.pred$fit),td(poi.w.pred$fit-1.96*poi.w.pred$se.fit),td(poi.w.pred$fit+1.96*poi.w.pred$se.fit)))    
     cb.data$workday<-FALSE
     poi.nw.pred<-predict(rob.poi,newdata=cb.data,type="link",se.fit=TRUE)
-    predmat.poi.nw<-exp(matrix(cbind(poi.nw.pred$fit,poi.nw.pred$fit-1.96*poi.nw.pred$se.fit,poi.nw.pred$fit+1.96*poi.nw.pred$se.fit),ncol=3*nhour,byrow=TRUE))
+    predmat.poi.nw<-exp(cbind(td(poi.nw.pred$fit),td(poi.nw.pred$fit-1.96*poi.nw.pred$se.fit),td(poi.nw.pred$fit+1.96*poi.nw.pred$se.fit)))    
 
     # make the plots
     pred.mats<-list(predmat.poi.w,predmat.ll.w,predmat.poi.nw,predmat.ll.nw)
     names(pred.mats)<-c("poi_w","ll_w","poi_nw","ll_nw")
     pred.mats$titles<-c("Poisson Model, Workdays","Local Linear Model, Workdays","Poisson Model, Weekend/Holiday","Local Linear Model, Weekend/Holiday")
     # parameters for plots
-    max.pred<-max(pred.mats[[1]],pred.mats[[2]],pred.mats[[3]],pred.mats[[4]])
-    min.pred<-min(pred.mats[[1]],pred.mats[[2]],pred.mats[[3]],pred.mats[[4]])
+    max.pred<-max(pred.mats[[1]][,1:3],pred.mats[[2]][,1:3],pred.mats[[3]][,1:3],pred.mats[[4]][,1:3])
+    min.pred<-min(pred.mats[[1]][,1:3],pred.mats[[2]][,1:3],pred.mats[[3]][,1:3],pred.mats[[4]][,1:3])
     ytic<-pretty(c(max.pred,min.pred))
-    omit.3<-function(n) c(1:2,4:(n+1))
+    lwd.ci<-.4
     for (i in 1:4) {
         pdf(paste("final_project/",names(pred.mats)[i],"_ci.pdf",sep=""))
-        matplot(x=temp.seq,y=pred.mats[[i]],type="l",lty=c(omit.3(nhour),rep(3,nhour*2)),lwd=c(rep(1,nhour),rep(.5,2*nhour)),col=rep(1,nhour*3),xlab="Temperature",ylab="Mean Robberies Per Hour",main=paste("Predicted Rate of Robberies at Different Temperatures,",pred.mats$titles[i]),ylim=c(min(ytic),max(ytic)))
-        legend('bottomright',c(paste(((hour.seq-1)%%12)+1,ifelse(hour.seq %/%12,"pm","am")),"95% CI"),lty=c(omit.3(nhour),3),lwd=c(rep(1,nhour),.5))
+        matplot(x=temp.seq,y=pred.mats[[i]],type="l",lty=c(rep(1:nhour,3)),lwd=c(rep(1,nhour),rep(lwd.ci,2*nhour)),col=rep(1,nhour*3),xlab="Temperature",ylab="Mean Robberies Per Hour",main=paste("Predicted Rate of Robberies,",pred.mats$titles[i]),ylim=c(min(ytic),max(ytic)))
+        legend('bottomright',c(oclock(hour.seq),rep("95% CI",nhour)),lty=rep(1:nhour,2),lwd=c(rep(1,nhour),rep(lwd.ci,nhour)),ncol=2)
         dev.off()
     }
 
+    ### Table of 0 vs 60 deg fits and CIs
+    temp.seq<-c(0,60)
+    hour.seq<-0:23
+    td <-data.frame(hour=rep(hour.seq,length(temp.seq)),temp=c(rep(temp.seq[1],length(hour.seq)),rep(temp.seq[2],length(hour.seq))))
+    td=rbind(td,td)
+    orig.len <-length(temp.seq)*length(hour.seq)
+    td$workday<-c(rep(T,orig.len),rep(F,orig.len))
+    poi.pred<-predict(rob.poi,newdata=td,type="link",se.fit=TRUE)
+    ll.w.pred<-predict(rob.ll.w,newdata=td,se.fit=TRUE,band="local")
+    ll.nw.pred<-predict(rob.ll.nw,newdata=td,se.fit=TRUE,band="local")
+    td$poi.lk.fit <- poi.pred$fit
+    td$poi.se.fit <- poi.pred$se.fit
+    td$poi.crit   <- 1.96
+    td$ll.lk.fit  <- ifelse(td$workday,ll.w.pred$fit,ll.nw.pred$fit)
+    td$ll.se.fit  <- ifelse(td$workday,ll.w.pred$se.fit,ll.nw.pred$se.fit)
+    td$ll.crit    <- ifelse(td$workday,crit(rob.ll.w)$crit.val,crit(rob.ll.nw)$crit.val)
+    td[,paste("poi.",c("fit","lb","ub"),sep="")]<-exp(cbind(td$poi.lk.fit,td$poi.lk.fit-td$poi.crit*td$ll.se.fit,td$poi.lk.fit+td$poi.crit*td$ll.se.fit))
+    td[,paste("ll.",c("fit","lb","ub"),sep="")]<-exp(cbind(td$ll.lk.fit,td$ll.lk.fit-td$ll.crit*td$ll.se.fit,td$ll.lk.fit+td$ll.crit*td$ll.se.fit)) - 1
 
+    mats<-list(NULL,NULL,NULL,NULL)
+    mats$names<-c("poi_w","poi_nw","ll_w","ll_nw")
+    mats$wk<-c(TRUE,FALSE,TRUE,FALSE)
+    mats$pf<-c("poi","poi","ll","ll")
+    prefixes<-c("Lower Bound,","Estimate,","Upper Bound")
+    endings<-paste(temp.seq,"Degrees")
+    for (i in 1:4) {
+        mats[[i]]<-t(as.matrix(td[td$workday==mats$wk[i],paste(mats$pf[i],c(".lb",".fit",".ub"),sep="")]))
+        mats[[i]]<-rbind(mats[[i]][,1:length(hour.seq)],mats[[i]][,(length(hour.seq)+1):(2*length(hour.seq))])
+        mats[[i]]<-rbind(mats[[i]],mats[[i]][5,]-mats[[i]][2,])
+        rownames(mats[[i]])<-c(outer(prefixes,endings,FUN=paste),"Estimated Difference")
+        colnames(mats[[i]])<-oclock(0:23)
+        print(xtable(mats[[i]],digits=3),type="latex",file=paste("final_project/",mats$names[i],"_0_60_fit.tex",sep=""))
+    }
 
-     
+    # Root mean squared error of estimates
+    cell.mean<-lm(robberies~workday*hour*temp,data=rob.data,subset=!rob.data$test)
+    test<-rob.data[rob.data$test,]
+    test$logrob<-log(test$robberies+1)
+    test$ll.lpred<-ifelse(test$workday,predict(rob.ll.w,newdata=test),predict(rob.ll.nw,newdata=test))
+    test$poi.lpred<-log(predict(rob.poi,newdata=test,type="response")+1)
+    test$cell.mean.lpred<-log(predict(cell.mean,newdata=test)+1)
+    poi.rmsle<-sqrt(sum((test$poi.lpred-test$logrob)^2)/nrow(test))
+    ll.rmsle<-sqrt(sum((test$ll.lpred-test$logrob)^2)/nrow(test))
+    cell.mean.rmsle<-sqrt(sum((test$cell.mean.lpred-test$logrob)^2)/nrow(test))
+    rmsle<-c(poi.rmsle,ll.rmsle,cell.mean.rmsle)
+    names(rmsle)<-c("Poisson RMSLE","Local Linear RMSLE","Cell Mean")
+    write.table(rmsle,file='final_project/rmsle.txt')
+        
 }
-    

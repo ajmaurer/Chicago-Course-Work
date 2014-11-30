@@ -1,0 +1,97 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%% AMS PACKAGES - Chances are you will want some or all of these if writing a math dissertation.
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, enumerate, multicol, graphicx, listings}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\setlength{\parindent}{1cm}
+
+\title{Opening a Cold Case \\ {\large Investigating how Temperature Affects The Rate of Robberies}}
+\date{December 2, 2014}
+\author{Aaron Maurer}
+
+\begin{document}
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction and Objective} 
+
+With the onset of winter in Chicago, the temperature drops, and residents must concern themselves with a range of new dangers. Roads can be icy and dangerous. Heavy snow can collapse power lines and buildings. And frostbite becomes a concern on exposed skin. However, it may be the case that cold weather mitigates other dangers. When its frigid out, do criminals stay inside as well? \par
+
+To partially investigate this question I have endeavored to quantify how the rate at which robberies occur in the city of Chicago varies with temperature. Robbery, defined as taking property from a person, without their consent, by force or threat of force\footnote{As opposed to theft, which is the taking property without consent but not necessarily by violent means, and burglary, which is breaking into a structure so as to commit a crime (whether or not a crime such as theft is committed)}, includes what is probably the most common outdoor crime, mugging. It would seem natural then that the rate at which robberies occurred would be sensitive to the weather. The this rate is distinct from one's risk of being robbed should they go outside, since it may be the case crime drops when fewer people are outside to be robbed. However, a better understanding of the former should also provide intuition for the latter question.
+\par
+
+\section{Data} 
+The Chicago city government publishes a data set of which includes every crime reported to the police in the city, going back to 2001\footnote{City of Chicago. (2014). \textit{ Crimes - 2001 to present}. Retrieved from https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2}. I made use of the subset of this data which had a date recorded for the crime during 2011, 2012, or 2013, and which had a primary description of "Robbery", per the Illinois Uniform Crime Reporting Code. These crimes include both successful and attempted armed robbery, unarmed robbery, and vehicular hijacking. For each crime, the data set has additional information on where it occurred in the city, more detailed information about the crime, whether the crime was domestic, and if it resulted in an arrest. I, however, simply aggregated the total number of reported robberies that occurred anywhere in the city during each hour of each day during the time period. \par
+I combined this hourly data with top of the hour weather data from O'Hare International Airport\footnote{Midwest Regional Climate Center. (2014). \textit{Unedited Hourly Data - Top of the Hour Observations - O'Hare International Airport}. Retrieved from mrcc.isws.illinois.edu/CLIMATE/ucld/ucld\_hrlyTop\_getdata1.jsp?WBAN=94846}. This data is a series of meteorological data, including temperature, accumulated precipitation, humidity, and wind speed, almost always measured once during a particular hour at 51 minutes after that hour. When there were multiple entries for an hour, I chose the first at 51 minutes which had the temperature recorded, or the first chronologically which had the temperature recorded if that was missing, discarding the rest. This was taken as the temperature for the city for a particular day and hour, and was matched with the hourly robbery counts. The small number ($\approx 10$) of hours for which there was no recorded temperature from O'Hare were excluded. The end result was $26,263$ hourly observations of temperature and reported robbery count, covering almost all of 2011-2013. \par
+Examining this data, it is obvious that the most important feature in determining the number of robberies is the time of day, to a lesser extent, time of week. Figure 1 speaks to this effect, displaying an average by hour of the day for different temperature ranges and workday versus holiday/weekend. The mean number of robberies peaks between 6pm and 3am, possibly twice in that span, with its minimum around 6am, with the peak mean 4 to 5 times as high as the trough. This corresponds roughly to typical people's schedules; there are the most robberies during the period where people have gotten off of work for the evening, and the least when the fewest people are awake early in the morning. During the weekend, the trough and peak tend to move later, as people are up later or sleep in. \par
+\begin{figure}[h]
+    {\bf Figure 1} \\
+    \includegraphics[width=9cm]{final_project/tempbuc_w}
+    \includegraphics[width=9cm]{final_project/tempbuc_nw}
+    \textit{Note: With fewer observations, the Weekend/Holiday series can be expected to be noisier}
+\end{figure}
+The effect of temperature seems to be less than this, and also varies with the time of day. During the middle of the day (8am to 3pm or so), it appears that the effect of temperature is at most minimal. One of the most interesting features is that in the evening, there actually appear to be fewer robberies between 6pm and 7pm when it is warm, with a much higher rate before and after. This is likely due to the changes in people's schedules that occurs when days are longer and the weather is warm. However, the strongest effect seems to be that there are far fewer robberies in the late evening and early morning when its cold. \par
+\begin{figure}[h]
+    {\bf Figure 2} \\
+    \includegraphics[width=9cm]{final_project/ct_dist_w}
+    \includegraphics[width=9cm]{final_project/ct_dist_nw}
+\end{figure}
+Looking at the distribution for a sample of hours in Figure 2, we once again see the effect of time of day and workday versus weekend/holiday. However, we also see a data set which seems to have, as one would hope for with count data, a Poisson distribution.
+
+\section{Parametric Model} 
+This 
+
+
+\end{document}
