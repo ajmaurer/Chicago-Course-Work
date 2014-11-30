@@ -1,0 +1,128 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+STAT 374, Homework 4 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+\begin{itemize} 
+    \item[1.]
+        \begin{itemize} 
+            \item[(a)] Averaging over $100$ simulations where $500$ points
+were drawn from a normal means model with each mean equal to $2$, the average
+risk of th mean was $1.016$, and the average risk of the isotonic regression
+was $6.159$. As one might expect, since the MLE makes a stronger and correct
+assumption, it has lower risk. However, the monotone regression still has
+fairly low risk.
+            \item[(b)] I estimated the risk for every fourth $n$ betwen 20 and
+200. For each, I averged over 500 simulations. It seems that the risks are
+proportional; the regression on the linear function seems to have about $25\%$
+less risk than the step function for each $n$, with both risks growing at a
+slower rate than linear, possibly proportional to \(\frac{log(n)}{n}\).
+                \begin{center}
+                    \includegraphics[width=9cm]{hw4/1_b} 
+                \end{center}
+
+
+            \item[(c)] Let $c(x_n)$ be the concave sequence of points evaluated at points $x_n$, and let $s(x_n)$ be a corresponding convex sequence. I will attempt to show that if $s(x_n)$ is not linear, it can not be the best fit. We can break this problem down into three cases.
+                \begin{itemize}
+                    \item[case 1:] If $s(x_n)>c(x_n)$ for all $x$, then there is trivially a better fit $s(x_n)-c$, where $c$ is the minimum distance between the two sequences. This will reduce the problem to the next case.
+                    \item[case 2:] $s(x_n)=c(x_n)$ for at least one $n$, but it is never the case $s(x_n)<c(x_n)$. Let $s(x_1)=c(x_1)$. Since $s$ and $c$ are respectively convex and concave, there exists a line passing through $s(x_1)=c(x_1)$ such that $s(x_n)\geq l(x_n) \geq c(x_n) \, \forall n$. If $s(x_n)$ isn't itself a line, then there will be a $n$ for which their is strict inequality on the left hand side, making $l$ a superior fit to $s$.
+                    \item[case 3:] $s(x_n)<c(x_n)$ for some $n$. Let us flesh
+out $s(x_n)$ and $c(x_n)$, such that $s(x)$ and $c(x)$ are piecewise linear
+functions connecting the points of the respective sequences. These functions
+are necessarily also convex and concave respectively. We once again have three
+cases:
+                        \begin{itemize}
+                            \item[case 3.1:] If $s(x)$ and $c(x)$ never intersect, a shift as in case 1 will achieve a superior fit and reduce the problem to the next case.
+                            \item[case 3.2:]  
+                            \item[case 3.3:] If they $s(x)$ and $c(x)$ intersect at multiple points, we can choose two intersection points $a<b$. Let $l$ be the line passing through them. It is a secant line for both $s$ and $c$, so by their respective convexity/concavity, $c(x)\geq l(x) \geq s(x)$ on $[a,b]$ and $c(x)\leq l(x) \leq s(x)$ elsewhere. Thus, if $c(x)\neq l(x)$ for some $x$, then $l$ is a superior fit to the function $s$. Since $s$ and $c$ are linear between the $x_n$, this can only arise if $s(x_n)\neq l(x_n)$ for some $n$, making $l(x_n)$ a superior fit to $c(x_n)$.
+
+                        \end{itemize}
+                \end{itemize}
+        \end{itemize}
+    \item[2.]
+        I have computed the mean squared error for each of the methods:
+        \FloatBarrier
+        \input{hw4_2} 
+        \FloatBarrier
+        \begin{itemize}
+            \item[(a)]
+                At a low level of noise, the wavelet methods all preform better than the local linear model. With low noise, their ability to accurately match the fine features of the Doppler function win out. None of them preform terribly though. On the other hand, once the noise increases, the James Stein and Universal Threshold methods get worse much quicker than Sure Shrink and local linear, which are comparatively much better. This is likely since it becomes harder to distinguish feature from noise. In both cases, the James Stein is worse than the Universal Threshold, and Local Linear loses out to Sure Shrink. As the graphs note the distinction between local linear regression and Sure Shrink are hard to pick out by eye  \\
+                \includegraphics[width=9cm]{hw4/2_ab_pt1} 
+                \includegraphics[width=9cm]{hw4/2_ab_pt01} \\
+            \item[(b)]
+                On the other hand, once there are occasional spikes in the variance, the local linear model preforms the best. As the graph shows, it preforms more smoothing on the occasional spikes than the Sure Shrink, which likely has them identified as true features.
+                \begin{center}
+                    \includegraphics[width=9cm]{hw4/2_ab_bimodal} 
+                \end{center}
+    \item[3.]
+            
+        \end{itemize}
+
+        
+\end{itemize}
+
+\end{document}

@@ -5,8 +5,14 @@
 \pdfpageheight 11in
 \setlength\parindent{0in}
 
-%% AMS PACKAGES - Chances are you will want some or all of these if writing a math dissertation.
-\usepackage{amsmath, amscd, amssymb, amsthm, multirow, enumerate, multicol, graphicx, listings}
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
 \newcommand{\Z}{\mathbb{Z}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\Q}{\mathbb{Q}}
@@ -91,7 +97,58 @@ The effect of temperature seems to be less than this, and also varies with the t
 Looking at the distribution for a sample of hours in Figure 2, we once again see the effect of time of day and workday versus weekend/holiday. However, we also see a data set which seems to have, as one would hope for with count data, a Poisson distribution.
 
 \section{Parametric Model} 
-This 
+This observation points to the obvious parametric model to fit to the data, a Poisson regression model\footnote{A generalized linear model with a Poisson distribution and log link fit by maximum likelihood}. This is a natural choice, and generally considered the first parametric model to try for count data, if not the default. Its assumptions are several fold. First, it assumes that data is Poisson distributed around a particular mean, which arises when counting the sum of infrequent and independent occurrences in which a large number of these events could, in theory, occur. This assumption seems fairly safe; robberies are infrequent, and though one criminal could be responsible for multiple robberies, this effect overall can be expected to be trivial in such a large city. The less safe assumption is that the mean of this distribution can be predicted by the product of exponential functions of the set of predictors. It isn't obvious that this is true, but it is mathematically convenient, constricting the mean to positive numbers. \par
+Choosing this as my model, I tried a number of specifications on an $80\%$ training subset of the data. These included various interactions of hour, as a factor and bucketed, temperature as a continuous variable, and workday versus weekend/holiday as a factor. Choosing the specification that had the best trade off of number of parameters versus likelihood, as dictated by the Akaike Information Criteria, I settled on an specification that included as predictors:
+\begin{itemize}
+    \item Hour of the day as a factor 
+    \item Three hour buckets as a factor interacted with workday as a factor
+    \item Three hour buckets as a factor interacted with the log of the sum temperature plus $50$.
+\end{itemize}
+
+Implicit in this set up is that the effect of temperature within a particular hour is assumed to be monotone. \par
+\begin{figure}[h]
+    {\bf Figure 3} \\
+    \includegraphics[width=9cm]{final_project/poi_w_contour_fill}
+    \includegraphics[width=9cm]{final_project/poi_nw_contour_fill}
+\end{figure}
+
+
+The estimates of the coefficients themselves are not particularly elucidating; the overall effect is best displayed graphically, such as through the heat maps in Figure 3. Here, we see the model capturing several of the features we noticed earlier. The predicted robbery rate is quite low in the late evening and early morning when it is cold, and rises quickly with the temperature, especially on the weekend. A bit later (6am or so), the crime rate is low, and throughout the middle of the day it only rises slightly with temperature. The early evening is the only area that seems outright strange; high values are predicted at low temperatures, and drops off somewhat as the temperature increases. This questionable, but is likely an artifact of the assumed monotone relationship between temperature and robbery rate paired with the small dip between higher and lower temperatures in this range. \par
+This is displayed again for different three hours individually in Figure 4 along with confidence intervals. Here, we see again the patterns listed above, but also that the model predicts these big swings in robbery rate due to temperature with a great deal of certainty. Particularly, at 2am, the confidence intervals for two predictions with as little as 20 degrees separation don't overlap, asserting that they are different with much higher confidence than $95\%$. \par
+
+\begin{figure}[h]
+    {\bf Figure 4} \\
+    \includegraphics[width=9cm]{final_project/poi_w_ci}
+    \includegraphics[width=9cm]{final_project/poi_nw_ci}
+\end{figure}
+
+The main danger with a Poisson regression model, such as this, is that if the predicted mean function may not be able to capture fully how the mean varies. This would most likely be due to insufficient predictors being included. The result may be larger variance around the predicted mean than allowed for with the Poisson Distribution, invalidating the model. In this case, should the rest of the assumptions hold, a negative binomial regression can be used, which can be derived as a certain sum of Poisson distributions with varying means, as could be the case should the mean not be perfectly predicted by the predictors. This makes the Poisson model a particular example of a negative binomial, and a formal test can be used to decide if the additional parameter of a negative binomial is needed. Such a test might well have indicated that I should have used a negative binomial regression here, but given time constraints and a lack of familiarity, I simply went with the Poisson model. \par
+Additionally, as with nonparametric models, a better tool for evaluating the fit of a particular specification of the model may have been cross validation rather than Akaike Information Criteria, since it gives a more direct estimate of over fitting. However, this model appears to under fit if anything, so cross validation may not have made such a large difference
+
+\section{Nonparametric Model} 
+To model this data with a nonparametric model, I ran separate local linear regressions on workdays and weekends/holidays, with each predicting the log of the sum number of robberies plus one with hour and temperature simultaneously. As with the Poisson model, I fit on an $80\%$ training subset. In fitting it, I used a Gaussian kernel, individual bandwidths for each point such that a constant portion of the total data was closer to the point than the bandwidth, and a relative scaling factor for the variables to determine which points were included in the neighborhood (essentially making a second component of the bandwidth for the second variable). These two values were chosen from a grid of values based on which resulting model had the lowest cross validation score. \par
+The reasoning and justification for these choices are as such:
+\begin{itemize}
+    \item The kernel doesn't make a great deal of difference, so the choice was arbitrary. 
+    \item Since I am particularly interested in how temperatures on the extreme edge of my data effect the robbery rate, I need a model with low boundary bias, making a local linear fit superior to a simpler kernel regression.
+    \item Predicting log robberies nicely constrains the prediction to positive counts, which is what it should be in the real world.
+    \item As the initial plots have shown, there seem to be fairly distinct trends between workdays and not workdays, so two separate models seemed more appropriate than one.
+    \item Also as observed earlier, the relationship between temperature and robberies doesn't seem constant by time of day, so it would likely be insufficient to model it separately, as would be the result from a general additive model that included separate local linear models for hour and temperature
+    \item The observations are not equally spaced out over their range, so one bandwidth for all the points wouldn't smooth enough on the extremes or too much in the middle. Instead, by dictating the bandwidth such it defined a neighborhood with a set number of neighbors, the amount of smoothing was comparable across the data points.
+    \item Including a scaling factor for the second variable is essential, since the units of the two variables aren't comparable.
+\end{itemize} \par
+With this model, I am only really relying on two assumptions. First, the number or robberies as a particular time and temperature is related to the number of robberies at close time and temperatures, which is obvious. Second, I am assuming the true function is sufficiently smooth that some kind of linear fit in a  neighborhood can be used to give a reasonable prediction. If, for instance, the function had peaks and troughs more often than I had data, this method would fall apart. However, this seems unlikely from observing the data. \par
+The parameters
+\begin{figure}[h]
+    {\bf Figure 5} \\
+    \includegraphics[width=9cm]{final_project/ll_w_contour_fill}
+    \includegraphics[width=9cm]{final_project/ll_nw_contour_fill}
+\end{figure}
+\begin{figure}[h]
+    {\bf Figure 6} \\
+    \includegraphics[width=9cm]{final_project/ll_w_ci}
+    \includegraphics[width=9cm]{final_project/ll_nw_ci}
+\end{figure}
 
 
 \end{document}
