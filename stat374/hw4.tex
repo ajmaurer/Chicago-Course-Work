@@ -86,18 +86,14 @@ slower rate than linear, possibly proportional to \(\frac{log(n)}{n}\).
                 \end{center}
 
 
-            \item[(c)] Let $c(x_n)$ be the concave sequence of points evaluated at points $x_n$, and let $s(x_n)$ be a corresponding convex sequence. I will attempt to show that if $s(x_n)$ is not linear, it can not be the best fit. We can break this problem down into three cases.
+            \item[(c)] Let $c(x_n)$ be the concave sequence of points evaluated at points $x_n$, and let $s(x_n)$ be a corresponding convex sequence. I will attempt to show that if $s(x_n)$ is not linear, it is superseded by some linear function. We can break this problem down into three cases.
                 \begin{itemize}
-                    \item[case 1:] If $s(x_n)>c(x_n)$ for all $x$, then there is trivially a better fit $s(x_n)-c$, where $c$ is the minimum distance between the two sequences. This will reduce the problem to the next case.
+                    \item[case 1:] If $s(x_n)>c(x_n)$ for all $x$, then there is trivially a better fit $s(x_n)-c$, where $c$ is the minimum distance between the two sequences. This improved fit is of the next case, so if there is a superseding linear fit for it, there is one for this case as well.
                     \item[case 2:] $s(x_n)=c(x_n)$ for at least one $n$, but it is never the case $s(x_n)<c(x_n)$. Let $s(x_1)=c(x_1)$. Since $s$ and $c$ are respectively convex and concave, there exists a line passing through $s(x_1)=c(x_1)$ such that $s(x_n)\geq l(x_n) \geq c(x_n) \, \forall n$. If $s(x_n)$ isn't itself a line, then there will be a $n$ for which their is strict inequality on the left hand side, making $l$ a superior fit to $s$.
-                    \item[case 3:] $s(x_n)<c(x_n)$ for some $n$. Let us flesh
-out $s(x_n)$ and $c(x_n)$, such that $s(x)$ and $c(x)$ are piecewise linear
-functions connecting the points of the respective sequences. These functions
-are necessarily also convex and concave respectively. We once again have three
-cases:
+                    \item[case 3:] $s(x_n)<c(x_n)$ for some $n$. Let us flesh out $s(x_n)$ and $c(x_n)$, such that $s(x)$ and $c(x)$ are piecewise linear functions connecting the points of each sequence. These functions are necessarily also convex and concave respectively. We once again have three cases:
                         \begin{itemize}
                             \item[case 3.1:] If $s(x)$ and $c(x)$ never intersect, a shift as in case 1 will achieve a superior fit and reduce the problem to the next case.
-                            \item[case 3.2:]  
+                            \item[case 3.2:] If $s(x)$ and $c(x)$ intersect exactly once, we can replace $s(x_n)$ with $s(x_n)+c$ for $n$ such that $s(x_n)<c(x_n)$, where $c$ is the minimum distance between the sequences on this set. This action will preserve convexity while creating an improved fit (the distance is strictly reduced), and reduces this case to the next case. 
                             \item[case 3.3:] If they $s(x)$ and $c(x)$ intersect at multiple points, we can choose two intersection points $a<b$. Let $l$ be the line passing through them. It is a secant line for both $s$ and $c$, so by their respective convexity/concavity, $c(x)\geq l(x) \geq s(x)$ on $[a,b]$ and $c(x)\leq l(x) \leq s(x)$ elsewhere. Thus, if $c(x)\neq l(x)$ for some $x$, then $l$ is a superior fit to the function $s$. Since $s$ and $c$ are linear between the $x_n$, this can only arise if $s(x_n)\neq l(x_n)$ for some $n$, making $l(x_n)$ a superior fit to $c(x_n)$.
 
                         \end{itemize}
@@ -118,9 +114,68 @@ cases:
                 \begin{center}
                     \includegraphics[width=9cm]{hw4/2_ab_bimodal} 
                 \end{center}
+        \end{itemize}
     \item[3.]
+        \begin{itemize}
+            \item[(a)]
+                I have plotted out all of the fits in the graph below. The isotonic regression provides a good fit only over through day 25 or so, when the observed values cease to be monotone. After that, the shorter fits do a reasonable job over the middle part, which is essentially flat. However, the more data the regression is fit on where the trend actually seems to be decreasing, the worse the regression preforms. Assuming the error terms are symmetrically distributed, one would expect at worst $50\%$ of the observations to fall below the actual series. One could thus generate a test statistic based on how the number of times, as the function is generated step by step, the function is forced to drop in response to a lower observed value within a particular range. This statistic would be approximately binomially distributed (though there is additional uncertainty due to the function being noisy), and a critical value could be generated from this to determine whether the range isn't monotone.
+                \begin{center}
+                    \includegraphics[width=9cm]{hw4/3_a} 
+                \end{center}
+            \item[(b)] 
+                The series of local linear fits are generally pretty good. However, as they are fit in increasingly noisy parts of the data, they have a greater amount of uncertainty, since the confidence interval is fit with a constant variance assumption.
+                    \includegraphics[width=9cm]{hw4/3_b25day} 
+                    \includegraphics[width=9cm]{hw4/3_b50day}  \\
+                    \includegraphics[width=9cm]{hw4/3_b75day} 
+                    \includegraphics[width=9cm]{hw4/3_b85day}  \\
+                    \includegraphics[width=9cm]{hw4/3_b171day} 
+            \item[(c)]
+                The Haar wavelet fit is below. Its fit is comparable on the relatively smooth portion of the series. However, in the noisy section to the end, it mostly clings to the large fluctuations in the data, while the others averaged them out in one way or another. Since these fluctuations are due to the small number of surviving flies, rather than a reflection of the true rate, this constitutes a worse fit.
+                \begin{center}
+                    \includegraphics[width=9cm]{hw4/3_c} 
+                \end{center}
+                {\textbf My Code:}
+               \lstinputlisting[firstline=181,lastline=210]{hw4.R}
+            \item[(d)]
+                The Daubechies wavelet fit, much like the Haar, clings to closely to the observed data when the noise accounts for large swings, but otherwise has a similar, somewhat smoother, fit over the relatively calm part of the data.
+                \begin{center}
+                    \includegraphics[width=9cm]{hw4/3_d} 
+                \end{center}
             
         \end{itemize}
+    \item[4.]
+        \begin{itemize}
+            \item[(a)]
+                \begin{align*}
+                    \E(\mu \vert \mathcal{D}_n) &= \int_{\R^d} \mu  p(\mu \vert \mathcal{D}_n) \, d\mu \\
+                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu  p(\mathcal{D}_n \vert \mu) \pi(\mu) \, d\mu}{\int_{\R^d}p(\mathcal{D}_n \vert \mu) \pi(\mu) \, d\mu} \\
+                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu \prod_{i=1}^n \frac{1}{2\pi}e^{-\|x_i-\mu\|^2}  \, d\mu}{\int_{\R^d}\prod_{i=1}^n\frac{1}{2\pi} e^{-\|x_i-\mu\|^2} \, d\mu}  \\
+                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu \frac{1}{2\pi} e^{-\sum_{i=1}^n\|x_i-\mu\|^2}  \, d\mu}{\int_{\R^d}\frac{1}{2\pi}e^{-\sum_{i=1}^n\|x_i-\mu\|^2} \, d\mu}  \\
+                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu \frac{1}{2\pi} e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2 -n\left(\sum_{i=1}^n\frac{\|x_i\|^2}{n}-\left\|\sum_{i=1}^n\frac{x_i}{n}\right\|^2\right)}  \, d\mu}{\int_{\R^d}\frac{1}{2\pi}e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2 -n\left(\sum_{i=1}^n\frac{\|x_i\|^2}{n}-\left\|\sum_{i=1}^n\frac{x_i}{n}\right\|^2\right)} \, d\mu}  \\
+                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu \frac{1}{2\pi} e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2}  \, d\mu}{\int_{\R^d}\frac{1}{2\pi}e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2} \, d\mu}  \\
+                    \E(\mu \vert \mathcal{D}_n) &= \int_{\R^d} \mu \frac{1}{2\pi} e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2}  \, d\mu\\
+                    \E(\mu \vert \mathcal{D}_n) &= \sum_{i=1}^n\frac{x_i}{n}\\
+                \end{align*}
+        \item[(b)]
+                Let \(y_i=\|x_i\|^2\) and \(\mathcal{H}_n={y_1,...,y_n}\). Since each component of each $x_i$  is independent of the others (because there is $0$ covariance and the distribution is multivariate normal), we may conclude that the $y_i$ have a $\chi^2$ distribution with $d$ degrees of freedom and a noncentrality parameter of $\|\mu\|^2$. Thus,
+            \begin{align*}
+                p(\theta\vert \mathcal{H}_n) &= \frac{p(\mathcal{H}_n \vert \theta)p(\theta)}{p(\mathcal{H}_n)} \\
+                p(\theta\vert \mathcal{H}_n) &= \frac{\prod_{i=1}^n p(y_i \vert \theta)\int_{\R^d} p(\theta \vert \mu) p(\mu) d\mu}{\int_{\R^d}p(\mathcal{H}_n\vert \mu)p(\mu)} \\
+                p(\theta\vert \mathcal{H}_n) &= \frac{\prod_{i=1}^n p(y_i \vert \theta)\int_{\R^d} I_{\{\|x\|^2=\theta\}}(\mu) d\mu}{\int_{\R^d}\prod_{i=1}^n p(y_i \vert \theta) d\mu)} \\
+            \end{align*}
+        \end{itemize}
+    \item[5.]
+        \begin{itemize}
+            \item[(a)]
+                \begin{align*}
+                    \sum_{j=1}^n w_j &= V_1 + \sum_{j=2}^n V_j \prod_{i=1}^{j-1}(1-V_i) \\
+                    \sum_{j=1}^n w_j &= 1 - \prod_{j=1}^{n}(1-V_i) \\
+                    \sum_{j=\infty}^n w_j &= 1 - \prod_{j=1}^{\infty}(1-V_j) \\
+                \end{align*}
+                
+        \end{itemize}
+
+        
 
         
 \end{itemize}

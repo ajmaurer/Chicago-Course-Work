@@ -9,14 +9,17 @@ library('chron')
 library('graphics')
 library('Iso')
 library('wavelets')
+library('wavethresh')
 
 ### Problems
 problem1<-F
 problem2<-F
 problem3<-T
+problem4<-F
+problem5<-F
 
 ### Options
-procs<-2
+procs<-4
 
 ############# Problem 1
 if (problem1) {
@@ -136,6 +139,94 @@ if (problem2) {
     
 ############# Problem 3
 if (problem3) {
+    eps<-.001
+    flies<-read.table("hw4/flies.dat",header=T)
+    flies$logm<-log(flies$mort.rate+eps)
+
+    ### a
+    iso.mat<-matrix(,nrow=90,ncol=5)
+    iso.mat[,1]<-flies$logm[1:90]
+    days<-c(25,50,75,85)
+    for (d in 1:4) {
+        func<-pava(flies$logm[1:days[d]],long.out=T,stepfun=T)$h
+        iso.mat[,(d+1)]<-func(0:90)[-1]
+    }
+
+    pdf('hw4/3_a.pdf')
+    matplot(y=iso.mat,x=flies$day[1:90],type="l",col=rep(1,5),lty=1:5,xlab="Day",ylab="Log Mortality Rate",main="Isotonic Fit")
+    legend('bottom',c("Actual",paste(days,"Day Fit")),lty=1:5)
+    dev.off()
+ 
+    ### b
+    cv.score<-function(h) {
+        cv.fit<-fitted(locfit(logm~lp(day,deg=1,h=h),kern="gauss",ev=dat(),data=flies),what="coef",cv=TRUE,maxk=2000)
+        return(sum((y-cv.fit)^2)/n)
+    }
+    hseq<-exp(seq(-2,3,.25))
+    cv.mat.w<-mcmapply(cv.score,h=hseq,mc.cores=procs)
+    h<-hseq[cv.mat.w==min(cv.mat.w)]
+
+    days<-c(25,50,75,85,171)
+    for (d in days) {
+        predmat.ll<-matrix(,nrow=d+1,ncol=4)
+        m.ll<-predict(locfit(logm~lp(day,deg=1,h=h),kern="gauss",ev=dat(),data=flies[1:(d+1),]),se.fit=T)
+        predmat.ll<-cbind(flies$logm[1:(d+1)],m.ll$fit,m.ll$fit-crit(rob.ll.w)$crit.val*m.ll$se.fit,m.ll$fit+crit(rob.ll.w)$crit.val*m.ll$se.fit)
+        pdf(paste('hw4/3_b',d,'day.pdf',sep=""))
+        matplot(x=flies$day[1:(d+1)],y=predmat.ll,col=rep(1,4),type="l",lty=c(1,2,3,3),xlab="Day",,ylab="Log Mortality Rate",main=paste(d,"Day Local Linear Fit"))
+        legend('bottom',c("Actual","Predicted","95% CI"),lty=1:3)
+        dev.off()
+    }
+
+    ### c
+    soft.thresh<-function(x,t) sign(x)*ifelse(abs(x)-t>0,abs(x)-t,0)
+    J<-7
+    n<-2^J
+
+    fs<-flies[1:n,]
+    alpha<-mean(fs$logm)
+
+    Z<-list()
+    haar<-list()
+    siv<-list()
+    for (j in 0:(J-1)) {
+        # The full sequence of haar waveletes at a particular level
+        haar[[j+1]]<-2^(j/2)*rep(c(rep(-1,2^(J-j-1)),rep(1,2^(J-j-1))),2^j)
+        # This identifies disitinct haar waveletes within the full sequence
+        siv[[j+1]]<-ceiling(1:n/(2^(J-j)))
+        # Generates the initial estimate of the coefficients 
+        Z[[j+1]]<-(1/n)* aggregate(fs$logm*haar[[j+1]],by=list(siv[[j+1]]),FUN=sum)$x
+    }
+    # MAD
+    sigma<-sqrt(n)*median(abs(Z[[J]]-median(Z[[J]])))/.6745
+    # use universal threshold
+    lambda<-sigma*sqrt(2*log(n)/n)
+    beta<-list()
+    Yhat<-rep(alpha,n)
+    for (j in 0:(J-1)) {
+        #apply threshold to get estimates
+        beta[[j+1]]<-soft.thresh(Z[[j+1]],lambda)
+        # Add the jth level of haar wavelets on
+        Yhat<-Yhat+haar[[j+1]]*rep(beta[[j+1]],rep(2^(J-j),2^j))
+    }
+
+    wav.mat<-cbind(fs$logm,Yhat)
+    pdf('hw4/3_c.pdf')
+    matplot(y=wav.mat,x=fs$day,type="l",col=c(1,1),lty=c(1,2),xlab="Day",ylab="Log Mortality Rate",main="Haar Wavelet Fit")
+    legend('bottom',c("True Rate","Haar Wavelet Fit"),lty=c(1,2))
+    dev.off()
+    
+    ### d
+    da.wav<-wd(fs$logm,family="DaubLeAsymm",filter.number=8)
+    da.wav.thr<-threshold(da.wav,type="soft",policy="universal")
+    da.wav.mat<-cbind(fs$logm,wr(da.wav.thr))
+    pdf('hw4/3_d.pdf')
+    matplot(y=da.wav.mat,x=fs$day,col=c(1,1),type="l",lty=c(1,2),xlab="Day",ylab="Log Mortality Rate",main="Daubechies Wavelet Fit")
+    legend('topright',c("True Rate","Daubechies Wavelet Fit"),lty=c(1,2))
+    dev.off()
+
+        
+    
+    
 }
 
 
