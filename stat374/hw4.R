@@ -15,8 +15,8 @@ library('wavethresh')
 problem1<-F
 problem2<-F
 problem3<-F
-problem4<-T
-problem5<-F
+problem4<-F
+problem5<-T
 
 ### Options
 procs<-4
@@ -245,5 +245,68 @@ if (problem4) {
     dev.off()
 }
 
+############# Problem 5 
+if (problem5) {
+    dirc<-function(rfunc,alpha,n,...) {
+        step.mat<-matrix(,nrow=n,ncol=2)
+        step.mat[,1]<-rfunc(n,...)
+        V<-rbeta(n,1,alpha) 
+        step.mat[,2]<-cumprod(c(1,1-V))[-(n+1)]*V
+        order.mat <- step.mat[order(step.mat[,1]),] 
+        return(stepfun(order.mat[,1],cumsum(c(0,order.mat[,2]))))
+    }
+    
+    ### d
+    alpha<-c(1,1,1,5,5,5,20,20,50,50)
+    n<-200
+    pp<-seq(-4,4,length.out=300)
+    mat<-matrix(,nrow=300,10)
+    for (i in 1:10) {
+        func<-dirc(rnorm,alpha[i],n)
+        mat[,i]<-func(pp)
+    }
+    pdf('hw4/5_d.pdf')
+    matplot(x=pp,y=mat,type="l",col=rep(1,10),lty=c(1,1,1,2,2,2,3,3,4,4),main="Dirchlet Processes",xlab="x",ylab="Cumulative Probability")
+    legend('bottomright',paste("Alpha = ",c(1,5,20,50)),lty=1:4)
+    dev.off()
 
+    ### e
+    pp<-seq(-7,17,length.out=300)
+    type2<-list()
+    for (n in c(10,25,100)) {
+        #i
+        mat<-matrix(,nrow=300,ncol=3)
+        X<-sort(rnorm(n,5,3))
+        mat[,1]<-stepfun(X,(0:n)/n)(pp)
+        e<-sqrt(log(2/.05)/(2*n))
+        mat[,2]<-pmax(mat[,1]-e,0)
+        mat[,3]<-pmin(mat[,1]+e,1)
+        pdf(paste('hw4/5_ei',n,'.pdf',sep=""))
+        matplot(mat,pp,type="l",col=rep(1,3),lty=c(1,3,3),main=paste("Emperical Distribution & DKW, N=",n),xlab="x",ylab="Cumulative Probability")
+        dev.off()
+        
+        #ii 
+        alpha<-100
+        posterior<-function(x,X,func,alpha,N,...) {
+            return((N/(N+alpha))*stepfun(X,(0:N)/N)(x)+(alpha/(N+alpha))*func(x,...))
+        }
+        rposterior<-function(num,X,func,alpha,N,...) {
+            return(ifelse(runif(n)>(N/(N+alpha)),sample(X,n,replace=TRUE),func(n,...)))
+        }
+        post<-posterior(pp,X,pnorm,alpha,n)
+        test<-replicate(100,dirc(rposterior,alpha,n=100,num=100,X=X,func=rnorm,alpha=alpha,mean=0,sd=1)(pp))
+        ub<-apply(test,1,quantile,.95)
+        lb<-apply(test,1,quantile,.05)
+        mat<-cbind(post,ub,lb,replicate(4,dirc(rposterior,alpha,100,num=100,X=X,func=rnorm,alpha=alpha,mean=0,sd=1)(pp)))
+        for (i in 2:ncol(mat)) mat[,i]<-mat[,i]/max(mat[,i])
+        pdf(paste('hw4/5_eii',n,'.pdf',sep=""))
+        matplot(y=mat,x=pp,type="l",col=rep(1,3),lty=c(1,3,3,rep(2,4)),main=paste("Posterior, N=",n),xlab="x",ylab="Cumulative Probability")
+        legend('bottomright',c("Posterior","Additional Draws","CI"),lty=1:3)
+        dev.off()
+    }
+        
+        
+        
+        
+}
 

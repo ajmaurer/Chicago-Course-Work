@@ -206,7 +206,6 @@ slower rate than linear, possibly proportional to \(\frac{log(n)}{n}\).
                     \lim_{n\to\infty}P\left(\sum_{j=1}^n w_j<1-\epsilon\right) &\leq 0
                 \end{align*}
                 Thus, the weights sum to 1 with probability 1.
-        \end{itemize}
             \item[(b)]
                 If $X\sim F$ and $X_0\sim F_0$, let $F(x)=P(x\leq X)$ and $F_0(x)=P(x\leq X_0)$                
                     \begin{align*}
@@ -216,14 +215,7 @@ slower rate than linear, possibly proportional to \(\frac{log(n)}{n}\).
                         \E(F(x)) &= \E(\sum_{j=1}^\infty w_jF_0(x)) \\
                         \E(F(x)) &= F_0(x) 
                     \end{align*}
-                So we may conclude \(\E(F)=F_0\). Additionally, 
-                    \begin{align*}
-                        \var(F(x)) &= \E(F(x)^2) - \E(F(x))^2 \\
-                        \var(F(x)) &= \var\left(\sumj w_jI_{\{z\leq s_j\}}(x)\right) \\
-                        \var(F(x)) &= \E(F(x)^2) - \E(F(x))^2 \\
-                        \var(F(x)) &= \E\left(\left(\sumj w_jI_{\{z\leq s_j\}}(x)\right)^2\right) - F_0(x)^2 \\
-                        \var(F(x)) &= \sumj\sumk \E\left(w_jw_kI_{\{z\leq s_j\}}(x)I_{\{z\leq s_k\}}(x)\right) - F_0(x)^2 
-                    \end{align*}
+                So we may conclude \(\E(F)=F_0\). To see that the prior gets more concentrated around $F_0$ as $\alpha$ increases, we only need demonstrate that the probability the drawn distribution cumulative distribution function function differs by more than $\epsilon$ from $F_0$ is decreasing as $\alpha$ increases. To do this, we note that this probability is the sum of the probabilities that the difference is achieved in exactly a certain number of steps of the stick break algorithm. This probability, conditioned on a particular sum of weights, decreases as the sum of weights decreases. Thus, since the probability of a partial sum of weights having reached a particular length decreases with $\alpha$ (as the expected size of the weights decreases), the probability of the difference occurring in a particular number of steps decreases as well, and in turn the probability of achieving that difference in any number of steps.
                 \item[(c)]
                     \begin{align*}
                         P\left(\sup_x\left\vert \bar F_n(x)-F(x)\right\vert>\epsilon\right) &=P\left(\sup_x\left\vert \frac{n}{n+\alpha}F_n(x)+\frac{\alpha}{n+\alpha}F_0(x)-F(x)\right\vert>\epsilon\right) \\
@@ -239,6 +231,22 @@ slower rate than linear, possibly proportional to \(\frac{log(n)}{n}\).
                         \end{cases}
                     \]
                     If the prior is really poor and $n$ isn't sufficiently large, the posterior can be arbitrarily bad.
+
+                \item[(d)] These are my plots:
+                    \begin{center}
+                        \includegraphics[width=9cm]{hw4/5_d} 
+                    \end{center}
+                \item[(e)] 
+                    \begin{itemize}
+                        \item[i.] These are the plots, for $\alpha=100$ \\
+                            \includegraphics[width=9cm]{hw4/5_ei10} 
+                            \includegraphics[width=9cm]{hw4/5_ei25}  \\
+                            \includegraphics[width=9cm]{hw4/5_ei100}
+                    \end{itemize}[i.] These are the plots of the posteriors, their CIs, and the draws from them, with $\alpha=100$ \\
+                            \includegraphics[width=9cm]{hw4/5_eii10} 
+                            \includegraphics[width=9cm]{hw4/5_eii25}  \\
+                            \includegraphics[width=9cm]{hw4/5_eii100}
+        \end{itemize}
         
         
                     
