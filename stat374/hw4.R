@@ -14,8 +14,8 @@ library('wavethresh')
 ### Problems
 problem1<-F
 problem2<-F
-problem3<-T
-problem4<-F
+problem3<-F
+problem4<-T
 problem5<-F
 
 ### Options
@@ -223,10 +223,27 @@ if (problem3) {
     matplot(y=da.wav.mat,x=fs$day,col=c(1,1),type="l",lty=c(1,2),xlab="Day",ylab="Log Mortality Rate",main="Daubechies Wavelet Fit")
     legend('topright',c("True Rate","Daubechies Wavelet Fit"),lty=c(1,2))
     dev.off()
-
-        
-    
     
 }
+############# Problem 4 
+if (problem4) {
+    n<-10
+    d<-1000
+    b<-1000
+    est<-matrix(,nrow=b,ncol=2)
+    for (i in 1:b) {
+        x<-replicate(n,rnorm(d))
+        xbar<-apply(x,1,mean)
+        est[i,]<-sum(xbar^2)+c(d/n,-d/n)  
+    }
+    pdf('hw4/4_bayes.pdf')
+    lim<-c(min(est),max(est))
+    hist(est[,1],main="Bayes Estimate",xlab="Prediction",xlim=lim)
+    dev.off()
+    pdf('hw4/4_freq.pdf')
+    hist(est[,2],main="Frequentist Estimate",xlab="Prediction",xlim=lim)
+    dev.off()
+}
+
 
 

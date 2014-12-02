@@ -147,33 +147,101 @@ slower rate than linear, possibly proportional to \(\frac{log(n)}{n}\).
         \begin{itemize}
             \item[(a)]
                 \begin{align*}
-                    \E(\mu \vert \mathcal{D}_n) &= \int_{\R^d} \mu  p(\mu \vert \mathcal{D}_n) \, d\mu \\
-                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu  p(\mathcal{D}_n \vert \mu) \pi(\mu) \, d\mu}{\int_{\R^d}p(\mathcal{D}_n \vert \mu) \pi(\mu) \, d\mu} \\
-                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu \prod_{i=1}^n \frac{1}{2\pi}e^{-\|x_i-\mu\|^2}  \, d\mu}{\int_{\R^d}\prod_{i=1}^n\frac{1}{2\pi} e^{-\|x_i-\mu\|^2} \, d\mu}  \\
-                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu \frac{1}{2\pi} e^{-\sum_{i=1}^n\|x_i-\mu\|^2}  \, d\mu}{\int_{\R^d}\frac{1}{2\pi}e^{-\sum_{i=1}^n\|x_i-\mu\|^2} \, d\mu}  \\
-                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu \frac{1}{2\pi} e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2 -n\left(\sum_{i=1}^n\frac{\|x_i\|^2}{n}-\left\|\sum_{i=1}^n\frac{x_i}{n}\right\|^2\right)}  \, d\mu}{\int_{\R^d}\frac{1}{2\pi}e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2 -n\left(\sum_{i=1}^n\frac{\|x_i\|^2}{n}-\left\|\sum_{i=1}^n\frac{x_i}{n}\right\|^2\right)} \, d\mu}  \\
-                    \E(\mu \vert \mathcal{D}_n) &= \frac{\int_{\R^d} \mu \frac{1}{2\pi} e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2}  \, d\mu}{\int_{\R^d}\frac{1}{2\pi}e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2} \, d\mu}  \\
-                    \E(\mu \vert \mathcal{D}_n) &= \int_{\R^d} \mu \frac{1}{2\pi} e^{-n\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2}  \, d\mu\\
-                    \E(\mu \vert \mathcal{D}_n) &= \sum_{i=1}^n\frac{x_i}{n}\\
+                    P(\mu \vert \mathcal{D}_n) &= \frac{\mathcal{L}_n(\mu) \pi(\mu)}{\int_{\R^d}\mathcal{L}_n(\mu) \pi(\mu) \, d\mu} \\
+                    P(\mu \vert \mathcal{D}_n) &= \frac{\prod_{i=1}^n \frac{1}{\sqrt{(2\pi)^d}}\exp\left(-\frac{1}{2}\|x_i-\mu\|^2\right)}{\int_{\R^d}\prod_{i=1}^n\frac{1}{\sqrt{(2\pi)^d}} \exp\left(-\frac{1}{2}\|x_i-\mu\|^2\right) \, d\mu}  \\
+                    P(\mu \vert \mathcal{D}_n) &= \frac{ \exp\left(-\frac{1}{2}\sum_{i=1}^n\|x_i-\mu\|^2\right)}{\int_{\R^d}\exp\left(-\frac{1}{2}\sum_{i=1}^n\|x_i-\mu\|^2\right) \, d\mu}  \\
+                    P(\mu \vert \mathcal{D}_n) &= \frac{ \exp\left(-\frac{n}{2}\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2 -\frac{n}{2}\left(\sum_{i=1}^n\frac{\|x_i\|^2}{n}-\left\|\sum_{i=1}^n\frac{x_i}{n}\right\|^2\right)\right)}{\int_{\R^d}\exp\left(-\frac{n}{2}\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2 -\frac{n}{2}\left(\sum_{i=1}^n\frac{\|x_i\|^2}{n}-\left\|\sum_{i=1}^n\frac{x_i}{n}\right\|^2\right)\right) \, d\mu}  \\
+                    P(\mu \vert \mathcal{D}_n) &= \frac{ \exp\left(-\frac{n}{2}\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2\right)  \, d\mu}{\int_{\R^d}\exp\left(-\frac{n}{2}\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2\right)}  \\
+                    P(\mu \vert \mathcal{D}_n) &= \sqrt{\frac{n^d}{(2\pi)^d}} \exp\left(-\frac{n}{2}\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2\right) \\
                 \end{align*}
+                So, we can conclude that the posterior is distributed as \(N\left(\sum_{i=1}^n\frac{x_i}{n},\frac{1}{n}I_d\right)\).
         \item[(b)]
-                Let \(y_i=\|x_i\|^2\) and \(\mathcal{H}_n={y_1,...,y_n}\). Since each component of each $x_i$  is independent of the others (because there is $0$ covariance and the distribution is multivariate normal), we may conclude that the $y_i$ have a $\chi^2$ distribution with $d$ degrees of freedom and a noncentrality parameter of $\|\mu\|^2$. Thus,
+                By the previous result, the posterior for $\mu$ is normally distributed with a covariance matrix of $\frac{1}{n}I_d$. This implies that each $\mu_i$ is independent from the others (since they have covariance $0$ and the function is multivariate normal. Accordingly, if $Z\sim N(0,I_d)$, then \(\mu \sim \sum_{i=1}^n\frac{x_i}{n}+\frac{Z}{n}\). Thus, $\|n\mu\|^2=n\theta$ has a non-central $\chi^2$ distribution with $d$ degrees of freedom and noncentrality parameter \(\|\sum_{i=1}^n{x_i}\|^2\). This in turn means that $\theta\sim \frac{\chi^2}{n}$ distribution with the same offset parameter and degrees of freedom, so its mean is \(\tilde\theta=\frac{\|\sum_{i=1}^n{x_i}\|^2+d}{n}=\|\bar X_n\|^2 + \frac{d}{n}\).
+        \item[(c)]
+            Plugging in the values I've already derived,
             \begin{align*}
-                p(\theta\vert \mathcal{H}_n) &= \frac{p(\mathcal{H}_n \vert \theta)p(\theta)}{p(\mathcal{H}_n)} \\
-                p(\theta\vert \mathcal{H}_n) &= \frac{\prod_{i=1}^n p(y_i \vert \theta)\int_{\R^d} p(\theta \vert \mu) p(\mu) d\mu}{\int_{\R^d}p(\mathcal{H}_n\vert \mu)p(\mu)} \\
-                p(\theta\vert \mathcal{H}_n) &= \frac{\prod_{i=1}^n p(y_i \vert \theta)\int_{\R^d} I_{\{\|x\|^2=\theta\}}(\mu) d\mu}{\int_{\R^d}\prod_{i=1}^n p(y_i \vert \theta) d\mu)} \\
+                \frac{\E_\mu\vert \theta - \tilde \theta\vert^2}{\E_\mu\vert \theta - \hat \theta\vert^2} &= \frac{\E_\mu\vert \theta - \|\bar X_n\|^2 - \frac{d}{n}\vert^2}{\E_\mu\vert \theta - \|\bar X_n\|^2 + \frac{d}{n}\vert^2} \\ 
+                \frac{\E_\mu\vert \theta - \tilde \theta\vert^2}{\E_\mu\vert \theta - \hat \theta\vert^2} &= \frac{\E_\mu\vert \theta - \|\bar X_n\|^2 + \frac{d}{n} - 2\frac{d}{n}\vert^2}{\E_\mu\vert \theta - \|\bar X_n\|^2 + \frac{d}{n}\vert^2} \\
+                \frac{\E_\mu\vert \theta - \tilde \theta\vert^2}{\E_\mu\vert \theta - \hat \theta\vert^2} &= \frac{\E_\mu\left((\theta - \|\bar X_n\|^2 + \frac{d}{n})^2 - 4\frac{d}{n}(\theta - \|\bar X_n\|^2 + \frac{d}{n})+4\frac{d^2}{n^2}\right)}{2d+4\theta} \\
+                \frac{\E_\mu\vert \theta - \tilde \theta\vert^2}{\E_\mu\vert \theta - \hat \theta\vert^2} &= \frac{2d+4\theta+4\frac{d^2}{n^2}}{2d+4\theta} \\
+                \frac{\E_\mu\vert \theta - \tilde \theta\vert^2}{\E_\mu\vert \theta - \hat \theta\vert^2} &= 1+\frac{4d^2}{n^2(2d+4\theta)} \\
             \end{align*}
+            Which clearly goes to infinity, for any set $n$, as $d$ goes to infinity.
+        \item[(d)]
+                \begin{align*}
+                    P(\mu \vert \mathcal{D}_n) &= \frac{\mathcal{L}_n(\mu) \pi(\mu)}{\int_{\R^d}\mathcal{L}_n(\mu) \pi(\mu) \, d\mu} \\
+                    P(\mu \vert \mathcal{D}_n) &= \frac{\prod_{i=1}^n \frac{1}{\sqrt{(2\pi)^d}}\exp\left(-\frac{1}{2}\|x_i-\mu\|^2\right)\frac{1}{\sqrt{(2\pi\tau^2)^d}}\exp\left(-\frac{1}{2\tau^2}\|\mu\|^2\right)}{\int_{\R^d}\prod_{i=1}^n\frac{1}{\sqrt{(2\pi)^d}} \exp\left(-\frac{1}{2}\|x_i-\mu\|^2\right) \frac{1}{\sqrt{(2\pi\tau^2)^d}}\exp\left(-\frac{1}{2\tau^2}\|\mu\|^2\right)\, d\mu}  \\
+                    P(\mu \vert \mathcal{D}_n) &= \frac{ \exp\left(-\frac{1}{2}\sum_{i=1}^n\|x_i-\mu\|^2-\frac{1}{2\tau^2}\|\mu\|^2\right)}{\int_{\R^d}\exp\left(-\frac{1}{2}\sum_{i=1}^n\|x_i-\mu\|^2-\frac{1}{2\tau^2}\|\mu\|^2\right) \, d\mu}  \\
+                    P(\mu \vert \mathcal{D}_n) &= \frac{ \exp\left(-\frac{n}{2}\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2 -\frac{1}{2\tau^2}\|\mu\|^2 -\frac{n}{2}\left(\sum_{i=1}^n\frac{\|x_i\|^2}{n}-\left\|\sum_{i=1}^n\frac{x_i}{n}\right\|^2\right)\right)}{\int_{\R^d}\exp\left(-\frac{n}{2}\|\mu-\sum_{i=1}^n\frac{x_i}{n}\|^2-\frac{1}{2\tau^2}\|\mu\|^2 -\frac{n}{2}\left(\sum_{i=1}^n\frac{\|x_i\|^2}{n}-\left\|\sum_{i=1}^n\frac{x_i}{n}\right\|^2\right)\right) \, d\mu}  \\
+                    P(\mu \vert \mathcal{D}_n) &= \frac{ \exp\left(-\frac{n+\tau^2}{n2\tau^2}\|\mu-\frac{\tau^2}{n+\tau^2}\sum_{i=1}^n\frac{x_i}{n}\|^2\right)  \, d\mu}{\int_{\R^d}\exp\left(-\frac{n+\tau^2}{n2\tau^2}\|\mu-\frac{\tau^2}{n+\tau^2}\sum_{i=1}^n\frac{x_i}{n}\|^2\right)}  \\
+                    P(\mu \vert \mathcal{D}_n) &= \sqrt{\frac{1}{(2\pi)^d}\left(\frac{n+\tau^2}{n\tau^2}\right)^d} \exp\left(-\frac{n+\tau^2}{n2\tau^2}\left\|\mu-\frac{\tau^2}{n+\tau^2}\sum_{i=1}^n\frac{x_i}{n}\right\|^2\right) \\
+                \end{align*}
+                So, we can conclude that the posterior is distributed as \(N\left(\frac{\tau^2}{n+\tau^2}\sum_{i=1}^n\frac{x_i}{n},\frac{n\tau^2}{n+\tau^2}I_d\right)\). This means that \(\frac{n+\tau^2}{n\tau^2}\mu \sim \frac{n+\tau^2}{n\tau^2}\frac{\tau^2}{n+\tau^2}\sum_{i=1}^n\frac{x_i}{n} + Z\), so $\theta$ is distributed as a non-centralized \(\chi^2\frac{n\tau^2}{n+\tau^2}\) distribution with non-centrality parameter \(\left(\frac{\tau^2}{n+\tau^2}\right)^2\left\|\bar X_n\right\|^2\). Accordingly, \(\tilde \theta = \left(\frac{\tau^2}{n+\tau^2}\right)^2\left\|\bar X_n\right\|^2+\frac{\tau^2}{n+\tau^2}\frac{d}{n}\). Plugging this into the formula from c, we get:
+                \begin{align*}
+                    \frac{\E_\mu\vert \theta - \tilde \theta\vert^2}{\E_\mu\vert \theta - \hat \theta\vert^2} &= \frac{\E_\mu\left\vert \theta - \left(\frac{\tau^2}{n+\tau^2}\right)^2\left\|\bar X_n\right\|^2+\frac{\tau^2}{n+\tau^2}\frac{d}{n}\right\vert^2}{\E_\mu\vert \theta - \|\bar X_n\|^2 + \frac{d}{n}\vert^2}  \\
+                    \frac{\E_\mu\vert \theta - \tilde \theta\vert^2}{\E_\mu\vert \theta - \hat \theta\vert^2} &= \frac{2d+4\theta + \E_\mu\left[\left(\left(1- \left(\frac{\tau^2}{n+\tau^2}\right)^2\right)\left\|\bar X_n\right\|^2+\left(1+\frac{\tau^2}{n+\tau^2}\right)\frac{d}{n}\right)^2\right]}{2d+4\theta}  \\
+                    \frac{\E_\mu\vert \theta - \tilde \theta\vert^2}{\E_\mu\vert \theta - \hat \theta\vert^2} &= \frac{O(d^2)}{2d+4\theta} 
+                \end{align*}
+                This quantity once again goes to infinity for a given $n$ while $d$ goes to infinity.
+        \item[(e)] These are the histograms: \\
+            \includegraphics[width=9cm]{hw4/4_bayes} 
+            \includegraphics[width=9cm]{hw4/4_freq} 
+        \item[(f)] Obviously, the frequentest estimate preforms far better than the Bayesian estimate. It appears to be the case that the mean of a posterior, even with a uniform prior, can be biased. 
+
         \end{itemize}
     \item[5.]
         \begin{itemize}
             \item[(a)]
+                Let $\epsilon = .9^{k}$ for some $k\in\N$. Let \(Y_n=\vert\{i:i\leq n,V_i>.1\}\vert\) Since, for any $\alpha$, $P(V_j<.1)<1$,
                 \begin{align*}
                     \sum_{j=1}^n w_j &= V_1 + \sum_{j=2}^n V_j \prod_{i=1}^{j-1}(1-V_i) \\
                     \sum_{j=1}^n w_j &= 1 - \prod_{j=1}^{n}(1-V_i) \\
-                    \sum_{j=\infty}^n w_j &= 1 - \prod_{j=1}^{\infty}(1-V_j) \\
+                    P\left(\sum_{j=1}^n w_j<1-\epsilon\right) &= P\left(1 - \prod_{j=1}^{n}(1-V_i)<1-\epsilon\right) \\
+                    P\left(\sum_{j=1}^n w_j<1-\epsilon\right) &= P\left(\prod_{j=1}^{n}(1-V_i)>\epsilon\right) \\
+                    P\left(\sum_{j=1}^n w_j<1-\epsilon\right) &\leq P\left(\prod_{j=1}^{n}.9I_{x>.1}(V_j)>\epsilon\right) \\
+                    P\left(\sum_{j=1}^n w_j<1-\epsilon\right) &\leq P\left(.9^{Y_n} >\epsilon\right) \\
+                    P\left(\sum_{j=1}^n w_j<1-\epsilon\right) &\leq P\left(Y_n < k\right) \\
+                    P\left(\sum_{j=1}^n w_j<1-\epsilon\right) &\leq P\left(V_j<.1\right)^{n-k} \\
+                    \lim_{n\to\infty}P\left(\sum_{j=1}^n w_j<1-\epsilon\right) &\leq \lim_{n\to\infty}p\left(V_j<.1\right)^{n-k} \\
+                    \lim_{n\to\infty}P\left(\sum_{j=1}^n w_j<1-\epsilon\right) &\leq 0
                 \end{align*}
-                
+                Thus, the weights sum to 1 with probability 1.
         \end{itemize}
+            \item[(b)]
+                If $X\sim F$ and $X_0\sim F_0$, let $F(x)=P(x\leq X)$ and $F_0(x)=P(x\leq X_0)$                
+                    \begin{align*}
+                        \E(F(x)) &= \E(\sum_{j=1}^\infty w_j I{\{z<x\}}(s_j)) \\
+                        \E(F(x)) &= \sum_{j=1}^\infty \E(w_j)\E(I{\{z<x\}}(s_j)) \\
+                        \E(F(x)) &= \sum_{j=1}^\infty \E(w_j)F_0(x) \\
+                        \E(F(x)) &= \E(\sum_{j=1}^\infty w_jF_0(x)) \\
+                        \E(F(x)) &= F_0(x) 
+                    \end{align*}
+                So we may conclude \(\E(F)=F_0\). Additionally, 
+                    \begin{align*}
+                        \var(F(x)) &= \E(F(x)^2) - \E(F(x))^2 \\
+                        \var(F(x)) &= \var\left(\sumj w_jI_{\{z\leq s_j\}}(x)\right) \\
+                        \var(F(x)) &= \E(F(x)^2) - \E(F(x))^2 \\
+                        \var(F(x)) &= \E\left(\left(\sumj w_jI_{\{z\leq s_j\}}(x)\right)^2\right) - F_0(x)^2 \\
+                        \var(F(x)) &= \sumj\sumk \E\left(w_jw_kI_{\{z\leq s_j\}}(x)I_{\{z\leq s_k\}}(x)\right) - F_0(x)^2 
+                    \end{align*}
+                \item[(c)]
+                    \begin{align*}
+                        P\left(\sup_x\left\vert \bar F_n(x)-F(x)\right\vert>\epsilon\right) &=P\left(\sup_x\left\vert \frac{n}{n+\alpha}F_n(x)+\frac{\alpha}{n+\alpha}F_0(x)-F(x)\right\vert>\epsilon\right) \\
+                        P\left(\sup_x\left\vert \bar F_n(x)-F(x)\right\vert>\epsilon\right) &\leq P\left(\sup_x\left\vert \frac{n}{n+\alpha}F_n(x)-\frac{n}{n+\alpha}F(x)\right\vert + \sup_x\left\vert \frac{\alpha}{n+\alpha}F_0(x)-\frac{\alpha}{n+\alpha}F(x)\right\vert>\epsilon\right) \\
+                        P\left(\sup_x\left\vert \bar F_n(x)-F(x)\right\vert>\epsilon\right) &\leq P\left(\frac{n}{n+\alpha}\sup_x\left\vert F_n(x)-F(x)\right\vert + \frac{\alpha}{n+\alpha}\sup_x\left\vert F_0(x)-F(x)\right\vert>\epsilon\right) \\
+                        P\left(\sup_x\left\vert \bar F_n(x)-F(x)\right\vert>\epsilon\right) &\leq P\left(\frac{n}{n+\alpha}\sup_x\left\vert F_n(x)-F(x)\right\vert>\epsilon - \frac{\alpha}{n+\alpha}\sup_x\left\vert F_0(x)-F(x)\right\vert\right)
+                    \end{align*}
+                    Thus, using the DKW inequality,
+                    \[ P\left(\sup_x\left\vert \bar F_n(x)-F(x)\right\vert>\epsilon\right)\leq 
+                        \begin{cases}
+                            2e^{-2n\left(\epsilon - \frac{\alpha}{n+\alpha}\sup_x\left\vert F_0(x)-F(x)\right\vert \right)^2} & \text{if } \epsilon > \frac{\alpha}{n+\alpha}\sup_x\left\vert F_0(x)-F(x)\right\vert \\
+                            1 & \text{otherwise}
+                        \end{cases}
+                    \]
+                    If the prior is really poor and $n$ isn't sufficiently large, the posterior can be arbitrarily bad.
+        
+        
+                    
 
         
 
