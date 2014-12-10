@@ -188,36 +188,36 @@ if (prob2) {
     }
 
     ### b) bootstrap to determine whether q most extreme points are outliers
-    q<-10
-    b<-2000
-    sigma<-summary(cch.lm)$sigma
-    Yhat<-predict(cch.lm)
-    X<-as.matrix(cch[1:4])
+    q <- 10
+    b <- 2000
+    sigma <- summary(cch.lm)$sigma
+    Yhat <- predict(cch.lm)
+    X <- as.matrix(cch[1:4])
 
     # i. using cook distance
-    cook.boot <-function(sigma,Yhat,X,q) {
-        cooks<-sort(cooks.distance(lm(rnorm(length(Yhat),Yhat,sigma)~X)),decreasing=T)
+    cook.boot  <- function(sigma,Yhat,X,q) {
+        cooks <- sort(cooks.distance(lm(rnorm(length(Yhat),Yhat,sigma)~X)),decreasing=T)
         return(cooks[1:q])
     }
-    cook.mat<-t(replicate(b,cook.boot(sigma,Yhat,X,q)))
-    sort.cook.mat<-apply(cook.mat,2,sort)
-    x<-1-(1:b)/b
-    ymax<-sort.cook.mat[ceiling(.995*b),1]
+    cook.mat <- t(replicate(b,cook.boot(sigma,Yhat,X,q)))
+    sort.cook.mat <- apply(cook.mat,2,sort)
+    x <- 1-(1:b)/b
+    ymax <- sort.cook.mat[ceiling(.995*b),1]
     pdf('final/2bi_plot.pdf')
     matplot(y=sort.cook.mat,x=x,lty=rep(2:6,2),col=rep(1,10),type="l",xlim=c(0,.1),ylim=c(0,ymax),xlab="P-Value",ylab="Critical Value",main="Critical Value, q-th Largest Cook's Distance")
-    xseq<-seq(.01,.1,.01)
-    yseq<-rep(NULL,10)
+    xseq <- seq(.01,.1,.01)
+    yseq <- rep(NULL,10)
     for (i in 1:length(xseq)) {
-        yseq[i]<-sort.cook.mat[ceiling((1-xseq[i])*b),i]
+        yseq[i] <- sort.cook.mat[ceiling((1-xseq[i])*b),i]
     }
     text(x=xseq,y=yseq,pos=rep(4,10),labels=c("1st","2nd","3rd",paste(4:10,"th",sep="")),offset=-.6)
     dev.off()
 
-    cook.crits<-sort.cook.mat[ceiling(b*(1-c(.01,.05,.1))),]
-    rownames(cook.crits)<-c(".01",".05",".1")
-    colnames(cook.crits)<-1:10
-    cook.lar<-sort(cooks.distance(cch.lm),decreasing=T)[1:10]
-    names(cook.lar)<-1:10
+    cook.crits <- sort.cook.mat[ceiling(b*(1-c(.01,.05,.1))),]
+    rownames(cook.crits) <- c(".01",".05",".1")
+    colnames(cook.crits) <- 1:10
+    cook.lar <- sort(cooks.distance(cch.lm),decreasing=T)[1:10]
+    names(cook.lar) <- 1:10
     
     print("10 largest cook values")
     print(round(cook.lar,4))
@@ -227,30 +227,30 @@ if (prob2) {
     print(t(cook.crits)<cook.lar)
 
 
-    # i. using studetnized residual
-    rstud.boot <-function(sigma,Yhat,X,q) {
-        rstuds<-sort(abs(rstudent(lm(rnorm(length(Yhat),Yhat,sigma)~X))),decreasing=T)
+    # ii. using studetnized residual
+    rstud.boot <- function(sigma,Yhat,X,q) {
+        rstuds <- sort(abs(rstudent(lm(rnorm(length(Yhat),Yhat,sigma)~X))),decreasing=T)
         return(rstuds[1:q])
     }
-    rstud.mat<-t(replicate(b,rstud.boot(sigma,Yhat,X,q)))
-    sort.rstud.mat<-apply(rstud.mat,2,sort)
-    x<-1-(1:b)/b
-    ymax<-sort.rstud.mat[ceiling(.995*b),1]
+    rstud.mat <- t(replicate(b,rstud.boot(sigma,Yhat,X,q)))
+    sort.rstud.mat <- apply(rstud.mat,2,sort)
+    x <- 1-(1:b)/b
+    ymax <- sort.rstud.mat[ceiling(.995*b),1]
     pdf('final/2bii_plot.pdf')
     matplot(y=sort.rstud.mat,x=x,lty=rep(2:6,2),col=rep(1,10),type="l",xlim=c(0,.1),ylim=c(0,ymax),xlab="P-Value",ylab="Critical Value",main="Critical Value, q-th Largest Absolute Studentized Residual")
-    xseq<-seq(.01,.1,.01)
-    yseq<-rep(NULL,10)
+    xseq <- seq(.01,.1,.01)
+    yseq <- rep(NULL,10)
     for (i in 1:length(xseq)) {
-        yseq[i]<-sort.rstud.mat[ceiling((1-xseq[i])*b),i]
+        yseq[i] <- sort.rstud.mat[ceiling((1-xseq[i])*b),i]
     }
     text(x=xseq,y=yseq,pos=rep(4,10),labels=c("1st","2nd","3rd",paste(4:10,"th",sep="")),offset=-.6)
     dev.off()
 
-    rstud.crits<-sort.rstud.mat[ceiling(b*(1-c(.01,.05,.1))),]
-    rownames(rstud.crits)<-c(".01",".05",".1")
-    colnames(rstud.crits)<-1:10
-    lar.rstud<-sort(abs(rstudent(cch.lm)),decreasing=T)[1:10]
-    names(lar.rstud)<-1:10
+    rstud.crits <- sort.rstud.mat[ceiling(b*(1-c(.01,.05,.1))),]
+    rownames(rstud.crits) <- c(".01",".05",".1")
+    colnames(rstud.crits) <- 1:10
+    lar.rstud <- sort(abs(rstudent(cch.lm)),decreasing=T)[1:10]
+    names(lar.rstud) <- 1:10
 
     print("10 largest absolute studetnized residuals")
     print(round(lar.rstud,4))
