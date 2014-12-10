@@ -160,7 +160,9 @@ STATS 343 Final \hfill Aaron Maurer
                         \lstinputlisting[firstline=24,lastline=25]{final/2_out.txt} 
                         To the respective critical values: \\
                         \lstinputlisting[firstline=27,lastline=30]{final/2_out.txt} 
-                        We see that they all fall outside of the critical values for all confidence levels, so we would reject them all as outliers for all confidence levels.
+                        We see that they all fall outside of the critical values for all confidence levels, so we would reject them all as outliers for all confidence levels. \\
+                        {\bf My R Code:}
+                        \lstinputlisting[firstline=191,lastline=214,breaklines=true]{final.R} 
 
                     \item[ii.]
                         Using the method described above, once again for 2000 total boots, but this time for studentized residuals, I have once again plotted the critical values. The same issue for critical values close to 0 exists.
@@ -171,7 +173,11 @@ STATS 343 Final \hfill Aaron Maurer
                         \lstinputlisting[firstline=44,lastline=45]{final/2_out.txt} 
                         To the respective critical values: \\
                         \lstinputlisting[firstline=47,lastline=50]{final/2_out.txt} 
-                        We see that they all fall outside of the critical values for all confidence levels, so we would reject them all as outliers for all confidence levels. This fits with the simpler Bonferroni Critical value we used before; since it is conservative, and each of these falls above it, it stands to reason a sharper test would reject them to.
+                        We see that they all fall outside of the critical values for all confidence levels, so we would reject them all as outliers for all confidence levels. This fits with the simpler Bonferroni Critical value we used before; since it is conservative, and each of these falls above it, it stands to reason a sharper test would reject them to. \\
+                        {\bf My R Code:}
+                        \lstinputlisting[firstline=231,lastline=247,breaklines=true]{final.R} 
+
+                    
                 \end{itemize}
             \item[c)]
                 From what we've seen, these few extreme points clearly don't fit the assumptions for the simple linear model on the variables we have, which in general seems appropriate for the vast majority of the data, so in that sense they are certainly outliers to that model. However, they are not necessarily outliers due to mismeasurement or some other factor such that they should be thrown out as impossible to include in a linear model. For instance, it may be the case that they represent periods during which their was a mechanical breakdown of some sort. If this were true, we could include them in the model if we had information about mechanical failures at the power plant to include in the model. Then they may well fit the assumptions for a standard linear model. 
