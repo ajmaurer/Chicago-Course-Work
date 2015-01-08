@@ -1,0 +1,62 @@
+
+Call:
+lm(formula = PE ~ ., data = cch)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-43.435  -3.166  -0.118   3.201  17.778 
+
+Coefficients:
+              Estimate Std. Error  t value Pr(>|t|)    
+(Intercept) 454.609274   9.748512   46.634  < 2e-16 ***
+AT           -1.977513   0.015289 -129.342  < 2e-16 ***
+V            -0.233916   0.007282  -32.122  < 2e-16 ***
+AP            0.062083   0.009458    6.564 5.51e-11 ***
+RH           -0.158054   0.004168  -37.918  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 4.558 on 9563 degrees of freedom
+Multiple R-squared:  0.9287,	Adjusted R-squared:  0.9287 
+F-statistic: 3.114e+04 on 4 and 9563 DF,  p-value: < 2.2e-16
+
+[1] "10 largest cook values"
+     1      2      3      4      5      6      7      8      9     10 
+0.0147 0.0105 0.0103 0.0090 0.0049 0.0040 0.0034 0.0033 0.0032 0.0028 
+[1] "Critical values"
+         1      2      3      4      5      6      7      8      9     10
+.01 0.0064 0.0044 0.0035 0.0031 0.0028 0.0026 0.0024 0.0023 0.0022 0.0021
+.05 0.0053 0.0037 0.0031 0.0028 0.0025 0.0024 0.0022 0.0021 0.0020 0.0020
+.1  0.0047 0.0034 0.0029 0.0026 0.0024 0.0023 0.0021 0.0020 0.0020 0.0019
+[1] "Cook Value - Do Extreme Points Fall Above Critical Values?"
+    .01  .05   .1
+1  TRUE TRUE TRUE
+2  TRUE TRUE TRUE
+3  TRUE TRUE TRUE
+4  TRUE TRUE TRUE
+5  TRUE TRUE TRUE
+6  TRUE TRUE TRUE
+7  TRUE TRUE TRUE
+8  TRUE TRUE TRUE
+9  TRUE TRUE TRUE
+10 TRUE TRUE TRUE
+[1] "10 largest absolute studetnized residuals"
+     1      2      3      4      5      6      7      8      9     10 
+9.5778 9.4874 8.4487 6.8353 6.8207 6.2335 5.9248 5.7459 5.7025 5.2078 
+[1] "Critical values"
+         1      2      3      4      5      6      7      8      9     10
+.01 4.8538 4.3641 4.0935 3.9498 3.8352 3.7377 3.6629 3.5958 3.5537 3.5135
+.05 4.5815 4.1244 3.9495 3.8115 3.7102 3.6448 3.5793 3.5292 3.4824 3.4456
+.1  4.4265 4.0395 3.8636 3.7423 3.6565 3.5908 3.5365 3.4851 3.4471 3.4075
+[1] "Studentized Residual - Do Extreme Points Fall Above Critical Values?"
+    .01  .05   .1
+1  TRUE TRUE TRUE
+2  TRUE TRUE TRUE
+3  TRUE TRUE TRUE
+4  TRUE TRUE TRUE
+5  TRUE TRUE TRUE
+6  TRUE TRUE TRUE
+7  TRUE TRUE TRUE
+8  TRUE TRUE TRUE
+9  TRUE TRUE TRUE
+10 TRUE TRUE TRUE
