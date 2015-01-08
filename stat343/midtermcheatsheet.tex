@@ -1,0 +1,183 @@
+
+\documentclass[10pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%% AMS PACKAGES - Chances are you will want some or all of these if writing a math dissertation.
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, enumerate, multicol, graphicx, listings}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\corr}{\mathrm{Corr}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+\begin{multicols}{2}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Matrix Form Linear Model} 
+{\bf Form:} \(Y=X\beta, X\in \R^{n\times p}, Y \in \R^{n}, e \in \R^{n}, \beta \in \R^{p} \)
+{\bf Assumptions:} [A1] \(Y=X\beta + e\) [A2] \(\E(e\vert X)=0\) [A3] \(\var(e_i\vert X) = \sigma^2\) [A4] \(\cov(e_i,e_j \vert X) =0\) [A5] \(e\sim N(0,\sigma I_n)\) \\
+{\bf Normal Equations:} 
+\[RSS(\beta) = \|(Y-X\beta)\|^2, SXX=\|x-\bar x\|^2, SXY = \langle x-\bar x, y-\bar y \rangle \]
+\[\hat\beta = (X^TX)^{-1}X^TY, H=X(X^TX)^{-1}X^T, \hat Y = X\hat\beta = H Y\]
+\[\hat\beta(e) = \beta + (X^TX)^{-1}X^Te \]
+{\bf Properties of H:} (i) \(\hat\epsilon = (I-H)Y\) (ii) $H$, $I-H$ symmetric, (iii) $H$, $I-H$ idempotent ($H^2=H$) (iv) $HX=X$ (v) \(\hat e \perp X\) (vi) $(I-H)X=0$ (vii) $(I-H)H=H(I-H)=0$ (viii) \(\forall a\in \R^n, Ha\perp (I-H)a\) (ix) H only has eigen values 0,1 because $Hx=x$ if $x$ in span $H$. \\
+{\bf Variance Estimate:} \(\E(\|\hat e\|) = \E(\hat e^T(I-H)\hat e) = \E(tr(\hat e \hat e^T (I-H))) = n\sigma^2(n-p)\), so
+\[\hat\sigma^2 = \frac{\hat e^T\hat e}{n-p} = \frac{RSS}{n-p} \]
+{\bf Variance $\hat\beta$:}
+\(\var(\hat\beta) = (X^TX)^{-1}X^T\var(Y)X(X^TX)^{-1} = \sigma^2(X^TX)^{-1}X^TX(X^TX)^{-1} = \sigma^2 (X^TX)^{-1} \) \\
+{\bf Gauss Markov:} If $a^TY$ is an unbiased estimator of $c^T\beta$, then \(\var(c^T\hat\beta)\leq\var(a^TY)\). Proof: first note \(c^T\beta=\E(a^TY)=a^TX\beta \rightarrow c^T=a^TX\) Thus,
+\begin{align*}
+    \var(a^TY) - \var(c^T\hat\beta) &= \var(a^T(X\beta+e)) - \var(a^TX\beta) \\
+                                    &= \var(a^Te) - \var(a^THY) \\
+                                    &= a^T\var(e)a - \var(a^THX\beta + a^THe) \\
+                                    &= \sigma^2\|a\|^2 - \var(a^THe) \\
+                                    &= \sigma^2\|a\|^2 - Ha\var(e)a^TH \\
+                                    &= \sigma^2\|a\|^2 - \sigma^2\|Ha\|^2 \\
+\end{align*}
+{\bf R-squared:} \(R^2 = 1-\frac{RSS}{SYY} = \corr(\hat y,y) \)
+
+\subsection{Inference} 
+{\bf ANOVA Table:}\\
+\begin{tabular}{l | l l l l l}
+        & df      & ss                       & ms       & F     \\
+    \hline
+    Reg & p       & $\sum(\hat Y - \bar Y)$  & SS/p                    & $F = \frac{SS/p}{\hat\sigma^2}$ \\
+    Res & n-p     & RSS                      & $\hat\sigma^2= \frac{RSS}{n-p}$   &  
+\end{tabular}
+
+{\bf Distribution Estimators:} $\hat\beta$ and $\hat\sigma^2$ independent under least squares, \(\hat\beta \sim N_p(\beta,\sigma^2(X^TX)^{-1})\), and \(\frac{\hat\sigma^2}{\sigma^2}(n-p) \sim \chi_{n-p}^2.\). Distribution of $\hat\beta$ follows from it being a linear transformation of $Y$ and variance as said earlier. \\
+Proof: Since $(I-H)$ symmetric, for $P$ orthogonal matrix of eigenvalues and $D$ matrix with eigenvalues on diagonal, \(I-H=PDP^T\). All eigenvalues are $0$ or $1$, so get
+\[I-H=PDP^T=[P_1 P_2] \left[\begin{array}{cc} I_{n-p} & \mathbf{0}\\\mathbf{0} & \mathbf{0}\end{array} \right][P_1 P_2]^T = P_1 P_1^T\]
+So, \(\var(P_1^T\hat e) = \E(P_1^T\hat e \hat e^T P_1) - \E(P_1^T \hat e)^2 = \sigma^2P_1^TP_1 = \sigma^2 I_{n-p}\). This gives us that \(\frac{1}{\sigma^2}\hat e^T \hat e = \frac{1}{\sigma^2}\hat e^T P_1 P_1^T \hat e \sim \chi_{n-p}^2\) \\
+{\bf Distribution Standardized Estimators:} \(\hat\beta_i \sim t_{n-p}\). Proof: \(\var(\hat\beta_i) = \sigma^2(X^TX)^{-1}_{ii}\) so \(SE(\hat\beta_i)=\hat\sigma\sqrt{(X^TX)^{-1}}\). Thus 
+\[\frac{\hat\beta_i - \beta_i}{SE(\hat\beta_i)} = \frac{\hat\beta_i - \beta_i}{\sqrt{\sigma^2(\hat\beta_i)}}\sqrt{\frac{\sigma^2}{\hat\sigma^2}} \sim N(0,1)\sqrt{\frac{n-p}{\chi_{n-p}^2}} \sim t_{n-p} \]
+{\bf t-test:} \(2\mathrm{P}[t_{n-p}> \frac{\hat\beta_i - \beta_i}{SE(\hat\beta_i)}]\) \\
+{\bf Prediction Interval:} 
+\[\mathrm{P}\left(\hat Y_* \in (x_*^T\hat\beta \pm t_{n-p,\alpha/2}\hat\sigma\sqrt{x_*^T(X^TX)^{-1}x_*})\right)=1-\alpha\]
+\[\mathrm{P}\left(Y_* \in (x_*^T\hat\beta \pm t_{n-p,\alpha/2}\hat\sigma\sqrt{1+x_*^T(X^TX)^{-1}x_*})\right)=1-\alpha\]
+{\bf F-test:} If you have two models where one is a subset of the other (\(span(H_1)\subset span(H_2)\)), then if \(rank(H_1)=q, rank(H_2)=p\),
+\[\frac{\frac{1}{p-q}(\|\hat e_1\|^2-\|\hat e_2\|^2)}{\frac{1}{n-p}\|\hat e_2\|^2} \sim F_{p-q,n-p}\]
+This is a one sided test. Good for testing sets of parameters.
+{\bf Joint Confidence Interval:} A \(1-\alpha\) confidence region for $\beta$ is
+\[\frac{\frac{1}{p}(\hat\beta-\beta)^T(X^TX)(\hat\beta-\beta)}{\hat\sigma^2} \leq p\hat\sigma^2 f_{p,n-p,\alpha} \]
+If $R\beta$ has rank $q$, a \(1-\alpha\) confidence region for $R\beta$ is
+\[\frac{\frac{1}{p}(R\hat\beta-R\beta)^T(R(X^TX)^{-1}R^T)^{-1}(R\hat\beta-R\beta)}{\hat\sigma^2} \leq p\hat\sigma^2 f_{q,n-p,\alpha} \]
+
+\subsection{Numerical Techniques} 
+{\bf Condition Number:} This is something to do with the effect of a small change in $Y$ on $\beta$. With
+\[cos(\theta)=\frac{\|\hat Y\|}{\|Y\|} = \frac{\|X\hat\beta\|}{\|Y\|} \]
+\[\frac{\|\Delta\hat\beta\|}{\|\hat\beta\|} \leq cond(X)\frac{1}{cos(\theta)}\frac{\|\Delta Y\|}{\|Y\|} \]
+{\bf Cholesky Factorization:} If $X$ has rank $n$, $X^TX$ has full rank, and has Cholesky factorization $LL^T$. Thus, $X^TX\hat\beta=X^TY$, which can be solved in stages $Lz=X^TY$ and then $L^T\hat\beta=z$. \\
+{\bf QR Factorization:}$\exists Q\in\R^{n\times n}, R\in\R^{p\times p}$ where $Q$ is orthogonal and $R$ is upper triangular such that 
+\[X=\left[\begin{array}{c} R\\ \mathbf{0}\end{array} \right] \]
+so we get
+\[Q^TX\hat\beta = \left[\begin{array}{c} R\\ \mathbf{0}\end{array} \right] \hat\beta \cong \left[\begin{array}{c} f\\ r \end{array} \right] = Q^TY \]
+This gives us \(RSS = \|y-X\hat\beta\|^2 = \|Q^Ty-Q^TX\hat\beta\|^2 = \|f-R\hat\beta\|^2 + \|r\|^2 \), which is minimized by \(f=R\hat\beta\).
+
+\subsection{Resampling} 
+{\bf Permutation Sampling:} Test significance of set of predictors by shuffling them over outcomes and other predictors a number of times. If $F$ statistic original model higher than all but $\alpha$ of shuffles, significant. \\
+{\bf Bootstrap:} Get confidence interval of statistic (possibly $\theta$) by drawing with replacement a number of times and calculating statistic.
+
+\subsection{Designed Experiment}
+{\bf Orthogonal Predictor:} If $X_1$, $X_2$ orthogonal, then
+\begin{align*}
+    \beta=(X^TX)^{-1}X^TY &= \left[\begin{array}{cc} X_1^TX_1 & 0 \\ 0 & X_2^TX_2 \end{array} \right]^{-1}X^TY  \\
+                          &= \left[\begin{array}{c} (X_1^TX_1)^{-1}X_1^TY \\ (X_2^TX_2)^{-1}X_2^TY \end{array} \right] 
+\end{align*}
+Estimates don't change if $X_1$ or $X_w$ removed, both less dependent other non-orthogonal vars. \\
+{\bf Randomization:} If $Z$ can't be included in regression, in an experiment, by randomly assigning it to observations, $\cov(X,Z)$ should be $0$, so effect $Z$ part of error. \\
+{\bf Lurking Variable} If $Z$ correlated with $X$, then, 
+\[\E(Y\vert x, z) = X\beta + \delta z\]
+\[\E(Z\vert x) = X\gamma\]
+so
+\[\E(Y\vert x) = X(\beta+\gamma) \]
+
+\subsection{Diagnostics}
+{\bf Non-Constant Variance:} Can Regress $\vert \hat e \vert$ on $\hat Y$ if.
+{\bf Transform:} Transform non-linear/non-constant residual data.
+\[h(Y)=\log(Y+\delta), h(Y) = \sqrt(Y)\]
+{\bf Not Normal:} QQplot, Shapiro-Wilk \\
+{\bf Correlated Error:} Durbin-Watson, where $\rho$ autocorrelation:
+\[d = \frac{\sum_{i=2}^{n} (\hat e_i - \hat e_{i-1})^2}{\sum_{i=1}^{n} \hat e_i^2} \sim 2(1-\rho) \]
+{\bf Leverage:} \(h_i=H_ii=x_i^T(X^TX)^{-1}x_i\). How strongly effects model. \\
+{\bf Outlier Test:} $\hat y_{(i)}$ excludes $i$th observation. 
+\[t_i = \frac{y_i-\hat y_{(i)}}{\sqrt{\hat\sigma_{(i)}^2(x_i^T(X_{(i)}^TX_{(i)})^{-1}x_i + 1)}}\]
+Where \(r_i = \frac{\hat e_i}{\hat \sigma\sqrt{1-h_i}} \) (studentized residuals), this gives us
+\[t_i = r_i\sqrt{\frac{n-p-1}{n-p-r_i^2}} \sim t_{n-p-1}\]
+Bonferroni Correction: reject only if  \(t_{n-p-1,\alpha/n}>t_i\). \\
+{\bf Cook Statistic:} Indicates influential point, whose removal effects fit.
+\[D_i = \frac{(\hat\beta - \hat\beta_{(i)})^T (X^TX)(\hat\beta - \hat\beta_{(i)})}{p\hat\sigma^2} = \frac{1}{p}r_i^2\frac{h_i}{1-h_i} \]
+{\bf Partial Residual Plots} Fit models, where $X_{(i)}$ excludes column $i$,
+\[Y=X_{(i)}\beta_{(i)}+q_i, X_i=X_{(i)}\gamma+s_i \]
+Plot $q_i$ in terms $s_i$. Can see leverage of points on $\beta_i$
+
+\subsection{Distributions} 
+{\bf Normal Distribution:} \(\phi(x) = \frac{1}{\sigma\sqrt{2\pi}}e^{\frac{-(x-\mu)^2}{2\sigma^2}}\), joint normal vars independent iff \(\cov(Z_1,Z_2)=0\). \\
+{\bf Multivariate Normal Distribution:} if \(X \sim N(\mu,\Sigma)\) and $\Sigma$ positive definite,
+\[f_X(x) = \frac{1}{(2\pi)^{k/2}\vert\Sigma\Vert^{1/2}}exp\left(-\frac{1}{2}(x-mu)^T\Sigma^{-1}(x-\mu)\right) \]
+{\bf Chi Square:} $k$ degree of freedom, then \(\sum_{i=1}^k Z_i^2 \sim \chi^2_k\) if $Z_i$s independent standard normals \\
+{\bf Student's T:} \(t_\nu \sim Z\sqrt{\frac{\nu}{\chi_\nu^2}}\) if $Z$ standard normal independent of $\chi_\nu^2$. \\
+{\bf F:} \(F_{d_1,d_2} \sim \frac{\chi_{d_1}^2/d_1}{\chi_{d_2}^2/d_2}\) if \(\chi_{d_1}^2\) and \(\chi_{d_2}^2\) independent.
+
+\subsection{Linear Algebra}
+{\bf Cauchy Scwarz:} \(\vert\langle x,y \rangle \vert \leq \|x\|\|y\|\). Equality iff linearly independent \\
+{\bf Triangle Inequality:} \(\|x+y\|^\leq\|x\|+\|y\|\) \\
+{\bf Rank:} Number linearly independent columns/rows. \(rk(A_{m\times n})\leq \min(m,n), rk(AB)\leq \min(rk(A),rk(B)), rk(A+B)\leq rk(A) + rk(B), Rk(AA^T=rk(A))\) \\
+{\bf Orthogonal:} $A^TA=I$. Columns $A$ orthonormal basis $R^n$, rotate/reflect vector. \(\langle Ax,Ax\rangle = \langle x, x \rangle\). \\
+{\bf Idempotent:} \(AA=A\). Projection matrix. If \(x\in span(A), Ax=x\). \\
+{\bf Determinant:} \(\vert AB \vert = \vert A\vert \vert B \vert\), if $A$ orthogonal, \(\vert A\vert = \pm 1, \vert A^TBA\vert = \vert B\vert. \) \\
+{\bf Trace:} Sum diagonal entries. \(tr(A)=tr(A^T), tr(A+B)=tr(A)+tr(B), tr(ABC)=tr(CAB)\), if $A$ idempotent, \(rk(A)=tr(A)\), if $A$ nonsingular, \(tr(A^{-1}BA)=tr(B)\). \\
+{\bf Eigenvalues:} If $A$ idempotent, \(\lambda =1,0\). If Orthogonal $\lambda$ has modulus 1 (radius in complex plane less than 1). Symmetric matrix has real eigenvalues. \\
+{\bf Positive (semi) definite:} \(x^TAx > (\geq) 0 \forall x\). $BB^T$ always positive semi definite. \\
+{\bf Eigen Decomposition:} If $A$ symmetric, \(A=P^TDP\), where $P$ matrix eigenvectors and $D$ diagonal matrix of eigenvalues. If $AB$=$BA$ and symmetric, $B=P^TD_BP$ for same $P$. \\
+{\bf Diagonally Dominant:} If each diagonal greatest entry in column, $A$ positive semi definite if $A$ symmetric and diagonals positive. Strictly diagonally dominant matrix nonsingular. \\
+{\bf Cholesky Decomposition:} If $A$ symmetric and positive definite, \(\exists L\) unique lower diagonal with positive diagonal entries such that $A=LL^T$. If $A$ only positive semi-definite, $L$ may not be unique and may have $0$ diagonal entries.
+{\bf Underdetermined Linear System:} Smallest norm solution to $Ax=y$ is \(x=A^T(AA^T)^{-1}y\).
+\end{multicols}
+\end{document}
