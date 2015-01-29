@@ -1,0 +1,187 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+STAT 345 Homework 2 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+{\bf Problem 1}
+
+\begin{itemize}
+    \item[a.]
+        \begin{align*}
+            \E[SS_A] &= \E\left[rb\sum_{j=1}^a (y_{.j.}-y_{...})^2]\right] \\
+            \E[SS_A] &= rb\sum_{j=1}^a \E[((t_{j.}+e_{.j.})-(t_{..}+e_{...}))^2] \\
+            \E[SS_A] &= rb\sum_{j=1}^a \E[(p_j+e_{.j.}-e_{...})^2] \\
+            \E[SS_A] &= rb\sum_{j=1}^a \left( \E[p_j^2] + 2\E[p_je_{.j.}]-2\E[p_je_{...}] + \E[e_{.j.}^2]- 2\E[e_{.j.}e_{...}]+ \E[e_{...}^2] \right) \\
+            \E[SS_A] &= rb\sum_{j=1}^a \left(p_j^2 + \E\left[\left(\frac{\sum_{i,k}e_{ijk}}{rb}\right)^2\right]- 2\E\left[\frac{\sum_{i,k}e_{ijk}}{rb}\frac{\sum_{i,j,k}e_{ijk}}{rab}\right]+ \E\left[\left(\frac{\sum_{i,j,k}e_{ijk}}{rab}\right)^2\right] \right) \\
+            \E[SS_A] &= rb\sum_{j=1}^a \left(p_j^2 + \frac{\sigma^2}{rb} - \frac{2\sigma^2}{rab} + \frac{\sigma^2}{rab}\right) \\
+            \E[SS_A] &= (a-1)\sigma^2 + rb\sum_{j=1}^a p_j^2\\
+        \end{align*}
+    \item[b.]
+        \begin{align*}
+            \E[SS_{A\times B}] &= \E\left[r\sum_{j,k} (y_{.jk}-y_{.j.}-y_{..k}+y_{...})^2]\right] \\
+            \E[SS_{A\times B}] &= r\sum_{j,k} \E[((pq)_{jk}+e_{.jk}-e_{.j.}-e_{..k}+e_{...})^2] \\
+            \E[SS_{A\times B}] &= r\sum_{j,k} \Big[(pq)_{jk}+\E[e_{.jk}^2]+\E[e_{.j.}^2]+\E[e_{..k}^2]+\E[e_{...}^2]-2\E[e_{.jk}e_{.j.}]-2\E[e_{.jk}e_{..k}]+2\E[e_{.jk}e_{...}] \\
+                               & \hskip 6em +2\E[e_{.j.}e_{..k}]-2\E[e_{.j.}e_{...}] -2\E[e_{..k}e_{...}] \Big] \\
+            \E[SS_{A\times B}] &= r\sum_{j,k} \left[(pq)_{jk} + \frac{\sigma^2}{r} + \frac{\sigma^2}{ra} + \frac{\sigma^2}{rb} + \frac{\sigma^2}{rab} - \frac{2\sigma^2}{rb} - \frac{2\sigma^2}{ra} + \frac{2\sigma^2}{rab} + \frac{2\sigma^2}{rab} - \frac{2\sigma^2}{rab} -  \frac{2\sigma^2}{rab} \right] \\  
+            \E[SS_{A\times B}] &= r\sum_{j,k} \left[(pq)_{jk} + \frac{\sigma^2}{r} - \frac{\sigma^2}{ra} - \frac{\sigma^2}{rb} + \frac{\sigma^2}{rab}\right] \\  
+            \E[SS_{A\times B}] &= ab\sigma^2 -b\sigma^2 -a\sigma^2 +\sigma^2 r\sum_{j,k} (pq)_{jk} \\  
+            \E[SS_{A\times B}] &= (a-1)(b-1)b\sigma^2 + r\sum_{j,k} (pq)_{jk} \\  
+        \end{align*}
+\end{itemize}
+\newpage
+\null
+\newpage
+STAT 345 Homework 2 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+
+{\bf Problem 2}
+\begin{itemize}
+    \item[a.]
+        To achieve equal variance among the estimated treatment differences, I would have one treatment of each kind in the blocks of four (O,A,B,C), one of each A,B,C in the both blocks of three, and O with each of the other treatments respectively for the final three blocks. In other words, the set of blocks would be:
+        \[ \{\{O,A,B,C\},\{O,A,B,C\},\{A,B,C\},\{A,B,C\},\{O,A\},\{O,B\},\{O,C\}\} \]
+        This would result in the covariance matrix:
+            \FloatBarrier
+            \input{hw2/hw2_2a_cov} 
+            \FloatBarrier
+        And give the following unscaled variances among the estimated differences:
+            \FloatBarrier
+            \input{hw2/hw2_2a_dif_var} 
+            \FloatBarrier
+    \item[b.]
+        To get the variance estimates for the differences between 0 and the others to be $\frac{2}{3}$ that of the other differences, I used the following block assignment:
+        \[ \{\{O,A,B,C\},\{O,O,A,B\},\{O,A,C\},\{O,B,C\},\{O,A\},\{O,B\},\{O,C\}\} \]
+        This would result in the covariance matrix:
+            \FloatBarrier
+            \input{hw2/hw2_2b_cov} 
+            \FloatBarrier
+        \newpage
+        And give the following unscaled variances among the estimated differences:
+            \FloatBarrier
+            \input{hw2/hw2_2b_dif_var} 
+            \FloatBarrier
+\end{itemize}
+\newpage
+STAT 345 Homework 2 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+
+{\bf Problem 3}
+\begin{itemize}
+    \item[a.]
+        Using the standard model, variety doesn't seem to have much a significant impact on yield. I ran a linear regression with the variety and block as predictors (I used a sum constraint on variety and a treatment constraint on block). I have plotted the coefficients for variety and their confidence intervals. Since I used the sum constraint, $0$ represents the average of all varieties.
+            \begin{center}
+                \includegraphics[width=16cm]{hw2/hw2_3a_coef_plot}
+            \end{center}
+        As you can see, most of the confidence intervals overlap $0$, indicating they are not statistically different from the mean across all varieties. One barely doesn't overlap, but the confidence intervals don't account for multiple testing, so a small number of "significant" results are to be expected. Thus, this appears to be a null plot, where variety doesn't actually predict yield significantly. To test this, I generated an ANOVA table:
+            \FloatBarrier
+            \input{hw2/hw2_3a_anova} 
+            \FloatBarrier
+        Indeed, the F test on Variety yields a high p-value of $.712$. We can not reject the null hypothesis that different varieties have the same expected yield.
+    \item[b.]
+        I calculated this estimate as a contrast on the estimated parameters. Where $\beta_i$ was the estimated effect for variety $i$, 
+        \[ a_i = \begin{cases} \frac{1}{20} &\mbox{if } i\leq20 \\ 
+                               \frac{1}{36} &\mbox{if } i>20 \end{cases} \]
+        Thus, my estimate was \(d=\sum_{i=1}^{56} a_i \beta_i=-8.813\). Then, my confidence interval was gotten in the usual way for a linear combination of parameters from a linear regression:
+        \[ d\pm t_{165}^{.025} \sqrt{a^t \Sigma a} = [-47.586,29.961] \]
+    \item[c.]
+        I have plotted the residuals below:
+            \begin{center}
+                \includegraphics[width=16cm]{hw2/hw2_3c_plot}
+            \end{center}
+            It appears that the units in the top left corner (high latitude, low longitude), tend not to have mean 0, instead having negative mean. This indicates that the blocking didn't really account for the variation in yield due to geography as the study assumed. Any of the varieties with one plot in that region would be adversely affected, but those that have a plot in both block 3 and 4 which fall in that region would be the worst affected, driving down their predicted yield. This seems to include varieties 30, 26, 52, 4, and possibly a few others.
+    \item[d.]
+        After including longitude and latitude as predictors in the model, we see some movement in the predicted effects of the varieties:
+            \begin{center}
+                \includegraphics[width=16cm]{hw2/hw2_3d_coef_plot}
+            \end{center}
+        From the previous regression, most of the predicted effects stay approximately the same. Some, such as 1, flip signs, though their CI still cover $0$. A few, such as 55 and 53 are nudged over enough so that their CI don't cover 0, but with so many tests that distinction isn't meaningful. The only meaningful change I see is that 30 made a large shift, becoming the most significant effect while before the estimate was very close to 0. Looking at the residuals again, we still see somewhat of the same problem we had before, though less substantial:
+            \begin{center}
+                \includegraphics[width=16cm]{hw2/hw2_3d_plot}
+            \end{center}
+        There still remains what looks like a meaningful dip in yield in that top left corner.
+    \item[e.]
+        With the quadratic function of the coordinates, we finally see substantial differentiation between the varieties:
+            \begin{center}
+                \includegraphics[width=16cm]{hw2/hw2_3e_coef_plot}
+            \end{center}
+        Variety 30 appears to be quite distinct from the rest of the varieties; it's p-value is .000368, which is sufficiently small that we can reject the null assumption at an alpha of $5\%$ even with a Bonferoni adjustment.  A few other varieties' CIs now no longer cover 0, such as 39, 40, and 20, but they aren't by very much. Since I am using the sum constraint, this may be a function of variety 30 dragging up the average rather than than these varieties being meaningfully worse than all the varieties excluding 30. Looking at the residuals again, we seem to have finally solved the issue with the top left corner:
+            \begin{center}
+                \includegraphics[width=16cm]{hw2/hw2_3e_plot}
+            \end{center}
+            By eyeball, I can not say that that plots in that region do worse than the rest of the plots, and no other area jumps out as doing particularly well or poorly. If there is a lingering geographic effect, it does not seem to be substantial.
+    \item[f.]
+        I do not think this study design was well chosen. The intent was clearly that the blocks would account for heterogeneity in yield over different areas of the farm, but this did not hold true in practice. Additionally, the blocks allowed replicates of the same variety to be planted relatively closely in the field. For instance, two of variety 30's replicates were right next to each other in the top right corner, and all of 30's replicates were in the four left most columns of plots. A better solution would have been to create smaller blocks which had much closer to homogeneous growing conditions, and then assign varieties to blocks such that they are more evenly spread over the field. For instance, the field might have been broken up into approximately a $4\times4$ grid, where each replicate of a particular variety would be placed in a block such that none of the other replicates of that variety would be in the same row or column of blocks. This would have prevented them being overly clustered together. The cost of this would be that the experiment would no longer have a full factorial design, but with $14$ treatments in each block there would still be substantial grounds to compare varieties.
+        
+
+
+\end{itemize}
+
+\end{document}
