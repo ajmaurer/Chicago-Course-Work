@@ -1,0 +1,170 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+STAT 345 Homework 4 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+{\bf Problem 1}
+\begin{itemize}
+    \item[a)]
+        Let $Y$ be the vector of $y_{ij}$, and our eventual predictor to be $c'Y$ for $c\in\R^{ab}$. For our predictor to be unbiased, it must be the case that
+        \begin{align*}
+            0 &= \E(c'Y-\mu-\alpha_1) \\
+            0 &= c'\E(Y) - \mu \\
+            0 &= \mu c'1 - \mu \\
+            1 &= c'1
+        \end{align*}
+        Furthemore, to make our LUP a BLUP, we need to minimize the variance around our estimate. Thus, making use of our constraint:
+        \begin{align*}
+            \var(c'Y-\mu-\alpha_1) &= \var\left(\sum_{i,j} c_{ij}(\mu + \alpha_i + \beta_j + e_{ij}) - \mu - \alpha_1\right) \\
+                                   &= \var\left(\sum_{i,j} c_{ij}(      \alpha_i + \beta_j + e_{ij}) -     \alpha_1\right) \\
+                                   &= \var\left(\sum_{i,j} c_{ij}(\alpha_i + \beta_j + e_{ij})\right) -2\cov\left(\alpha_1,\sum_{i,j} c_{ij}(\alpha_i + \beta_j + e_{ij})\right) + \var(\alpha_1)  \\
+                                   &= \var\left(\sum_{i,j} c_{ij}(\alpha_i + \beta_j + e_{ij})\right) -2 \sigma_a^2 \sum_{j} c_{1j} + \sigma_a^2 
+        \end{align*}
+        If we let \(\Sigma=\cov(Y)=\sigma_e^2I + \sigma_a^2 V_a + \sigma_b^2 V_b\)  and \(I_{\{i=1\}}\) be a vector who has entry $0$ for $ij$ where $i\neq1$ and $1$ when $i=1$, we get
+
+            \begin{align*}
+                \var(c'Y-\mu-\alpha_1) &= c'\Sigma c -2\sigma_a^2 c'I_{\{i=1\}} + \sigma_a^2 \\
+                \nabla \var(c'Y-\mu-\alpha_1) &= 2\Sigma c -2\sigma_a^2 I_{\{i=1\}}
+            \end{align*}
+            Which is $0$ when (we know $\sigma$ is invertible due to its block structure):
+            \[ c = \sigma_a^2\Sigma^{-1} I_{\{i=1\}} \]
+            Making this $c'Y$ the BLUP.
+    \item[a)]
+        Repeating a similar process, we have a constraint of 
+        \begin{align*}
+            0 &= \E(c'Y-\mu-\alpha_1 -\beta_1) \\
+            0 &= c'\E(Y) - \mu \\
+            0 &= \mu c'1 - \mu \\
+            1 &= c'1
+        \end{align*}
+        And find that our estimates variance is
+        \begin{align*}
+            \var(c'Y-\mu-\alpha_1) &= \var\left(\sum_{i,j} c_{ij}(\mu + \alpha_i + \beta_j + e_{ij}) - \mu - \alpha_1 - \beta_1\right) \\
+                                   &= \var\left(\sum_{i,j} c_{ij}(      \alpha_i + \beta_j + e_{ij}) -     \alpha_1 - \beta_1\right) \\
+                                   &= \var\left(\sum_{i,j} c_{ij}(\alpha_i + \beta_j + e_{ij})\right) -2\cov\left(\alpha_1+\beta_1,\sum_{i,j} c_{ij}(\alpha_i + \beta_j + e_{ij})\right) + \var(\alpha_1 + \beta_1)  \\
+                                   &= \var\left(\sum_{i,j} c_{ij}(\alpha_i + \beta_j + e_{ij})\right) -2 \sigma_a^2 \sum_{j} c_{1j} -2\sigma_b^2 \sum_{i} c_{1j}+ \sigma_a^2 + \sigma_b^2 \\
+                                   &= c'\Sigma c -2\sigma_a^2 c' I_{\{i=1\}} -2\sigma_b^2 c' I_{\{j=1\}} + \sigma_a^2 + \sigma_b^2 \\
+            \nabla \var(c'Y-\mu-\alpha_1-\beta_1) &= 2\Sigma c -2\sigma_a^2 I_{\{i=1\}} -2\sigma_b^2 I_{\{j=1\}}
+        \end{align*}
+        Which is $0$ when
+        \[ c = \Sigma^{-1}(\sigma_a^2 I_{\{i=1\}} + 2\sigma_b^2  I_{\{j=1\}}) \]
+        Making this $c'Y$ the BLUP
+\end{itemize}
+
+\newpage
+STAT 345 Homework 4 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+{\bf Problem 2}
+\begin{itemize}
+    \item[a)]
+        As we can see from this plot, it appears that the yield of all strains is increased by heavy manure. In addition, yield seems to vary with plot, and it seems that there is an interaction between high yield and strain.
+        \begin{center}
+            \includegraphics[width=16cm]{hw4/hw4_2a_plot}
+        \end{center}
+        It would not be appropriate to have fixed effects for each of the three variables, since only the effect of the specific manure level and strain is of interest. On the other hand, no other land manager would care about the particular effect of these specific plots; their inclusion in a model is only so their effect can be factored out of the estimates for manure level and strain and the variance from it can be incorporated.
+    \item[b)]
+        I fit a model with strain and manure level, along with an interaction between the two, as fixed effects, and plot as a random effect. At eight parameters and four random effects, this is a relatively high number of variables to estimate for a data set of 32 observations, but the manure - strain interaction seems to meaninful to leave out. These are the estimates of the fixed effects: \\
+            \FloatBarrier
+            \input{hw4/hw4_2b_lme_fixed} 
+            \FloatBarrier
+            These are the estimated effects for the manure level, strain, and the interaction between the two. They can be thought of as constant for these strains; there was no randomness in their manifestation, and they don't provide information on any other strain or manure level. Then, these are the predictions of random effects for each plot:
+            \FloatBarrier
+            \input{hw4/hw4_2b_lme_random} 
+            \FloatBarrier
+            These are the particular manifestation of a random variable which dictates how an arbitrary plot effect yields. These estimates aren't so interesting in themselves, but their distribution is important to understand how crop yield will vary from place to place.
+
+    \item[c)]
+        I've calculated the standard errors and p-values two different ways. The first is by using the built in nlme package assumption that the estimated coefficients are t-distributed in the normal fashion with their rules for degrees of freedom. The difference between manure and not for each plant can then be calculated as the sum of the manure and the interaction coefficients (with standard errors based on the covariance matrix):
+            \FloatBarrier
+            \input{hw4/hw4_2c_lme_par_ttable} 
+            \FloatBarrier
+            I checked, and the residuals appear to be approximately normally distributed, though with only four estimated random effect predictions, its impossible to say normality holds. Thus, I also estimated the standard errors and p-values using a non-parametric bootstrap. For each boot, I drew randomly drew, with replacement, residuals and random effects from the observed pool of each, and added these on to the model estimates of the mean. Then, for each boot, I estimated the parameters again, using the sample over all boots to get the statistics of interest. As you can see, these standard errors are somewhat smaller (though the p-values are extremely small either way):
+            \FloatBarrier
+            \input{hw4/hw4_2c_lme_bs_ttable} 
+            \FloatBarrier
+        This difference is largely due to the small pool of realized random effects being drawn from. With a parametric bootstrap, the estimates are very close (as you would expect). Its hard to say which is better; in both cases we are hampered by the small pool of realized random effects, and we lack enough data to reject the normal assumption. However, with such small p-values either way, we don't have to worry too much about a false positive.
+        \item[d)]
+            Using the normal assumption again, we can calculate the difference between S23 and NZ when heavily manured as 
+            \[\hat d = \mu+\beta_{S23} + \beta_H + \beta_{S23,H} - \mu-\beta_{NZ} - \beta_H - \beta_{NZ,H} = \beta_{S23} +  \beta_{S23,H}-\beta_{NZ} - \beta_{NZ,H} \]
+            With the usual variance for a linear combination of a multivariate normal RV. Using the 21 degrees of freedom given by lme, this gives us a confidence interval of:
+            \[ \hat d\pm \sqrt{\var(\hat d)} * t_{.025,21} = (-4.783,15.783) \]
+
+
+
+
+
+        
+\end{itemize}
+
+
+
+
+
+\end{document}
