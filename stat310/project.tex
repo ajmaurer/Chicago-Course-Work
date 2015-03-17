@@ -1,0 +1,109 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%% AMS PACKAGES - Chances are you will want some or all of these if writing a math dissertation.
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, enumerate, multicol, graphicx, listings}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+STAT 310 Programing Assignment \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+
+\begin{itemize}
+    \item[1.]
+        After randomly generating $A$ and $c$, setting \({\bf b}=\frac{1}{2}A{\bf 1}\), and solving the continuous relaxation of the boolean linear programing problem, I got a \({\bf y}^*\). It only had 16 entries with values that weren't 0 or 1. \({\bf c}^T{\bf y}=-35.396\), which we know is a lower bound for \({\bf c}^T{\bf x}\), the optimal objective value for the original problem. I generated ${\bf x}_\tau$ for $\tau = .01n, n=1$ to $100$, and plotted the objective value and least slack among the rows of $A{\bf x}_\tau\leq{\bf y}$ below. 
+        \begin{center}
+            \includegraphics[width=12cm]{plot_1.pdf}
+        \end{center}
+        The feasible points lie to the left of $0$, corresponding to $A{\bf x}_\tau-{\bf y}$ having all negative entries(and thus the constraint being satisfied). Since each point in this region is a feasible point for the original boolean program, the corresponding objective value is an upper bound for the minimum objective value, since the minimum must be less than or equal to each of them. The smallest of these values is ${\bf c}^T{\bf x}=-34.373$. Thus, we have an upper bound on the optimal point of $-34.373$ and a lower bound of $-35.396$, the difference being $1.023$. \\
+
+{\bf Note:} Since there are only $16$ values in ${\bf y}$ which aren't either $0$ or $1$, there could be at most unique 17 ${\bf x}_\tau$ (there are actually only 16 since two of the points which aren't 0 or 1 are within .01 of each other). This is because ${\bf x}_\tau = {\bf x}_{\tau+.01}$ if none of the entries of ${\bf y}$ lie in $(\tau,\tau+.01)$. \\
+
+        {\bf Code:} \\
+        \lstinputlisting[firstline=17,lastline=61]{ajmaurer_project.m}
+
+    \item[2.]
+        If we set \(A={\bf aa}'\), this problem can be equivalently written as, where \(X\in\mathbb{S}^n\),
+        \begin{align*}
+            \text{minimize    }\; & tr(AX) \\
+            \text{subject to  }\; & X \succeq 0 \\
+                                  & X =\left[ \begin{array}{cccc} .2  & x_1 & x_2 & x_3 \\
+                                                                  x_1 & .1  & x_4 & x_5 \\
+                                                                  x_2 & x_4 & .3  & x_6 \\
+                                                                  x_3 & x_5 & x_6 & .1 \end{array} \right]  \\
+                                  & x_1 \geq 0 & x_2 \geq 0 \\
+                                  & x_4 \leq 0 & x_5 \leq 0 \\
+                                  & x_6 \geq 0
+        \end{align*}
+        Plugging this into our software, we get that
+        \[X^* = \left[ \begin{array}{cccc} .2    & 0   & .2449 &   0 \\
+                                            0    & .1  &    0  & -.1 \\
+                                           .2449 & 0   & .3    &   0 \\
+                                            0    & -.1 &    0  &   .1 \end{array} \right],
+         \; tr(AX^*) = .0013 \]
+        Its interesting to note that our minimal objective value, even with the restrictions placed on $X$, is quite close to the minimum value you would get for arbitrary $X\succeq0$ of 0.  
+
+        {\bf Code:} \\
+        \lstinputlisting[firstline=66,lastline=84]{ajmaurer_project.m}
+
+
+        
+                        
+    
+        
+\end{itemize}
+
+\end{document}
