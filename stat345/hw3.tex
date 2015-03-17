@@ -1,0 +1,146 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+STAT 345 Homework 3 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+{\bf Problem 1}
+\begin{itemize}
+    \item[a)]
+        We are using the model \(y_{ij}=\mu+b_i+t_j+e_{ij}\), where $i\in\{1,2,3,4\}$ and $j\in\{A,B,C,D\}$ and, by the treatment constraint, $b_1=t_O=0$. If we define \(Y_{..},Y_{i.},Y_{.j}\) as the sum over the respective blocks and/or treatments, then we get the following equations:
+        \begin{itemize}
+            \item[1.] \( Y_{..}=13\hat\mu+3(\hat b_2 + \hat b_3 + \hat b_4) + 3(\hat t_A + \hat t_B + \hat t_C)\)
+            \item[2.] \( Y_{1.}=4\hat\mu+\hat t_A + \hat t_B + \hat t_C\)
+            \item[3.] \( Y_{2.}=3\hat\mu+\hat t_A + \hat t_B + 3\hat b_2 \)
+            \item[3.] \( Y_{3.}=3\hat\mu+\hat t_A + \hat t_C + 3\hat b_3 \)
+            \item[4.] \( Y_{3.}=3\hat\mu+\hat t_B + \hat t_C + 3\hat b_4 \)
+            \item[5.] \( Y_{.O}=4\hat\mu+\hat b_2 + \hat b_3 + \hat b_4 \)
+            \item[6.] \( Y_{.A}=3\hat\mu+3\hat t_A \hat\hat b_2 + \hat b_3  \)
+            \item[7.] \( Y_{.B}=3\hat\mu+3\hat t_B \hat\hat b_2 + \hat b_4  \)
+            \item[8.] \( Y_{.C}=3\hat\mu+3\hat t_C \hat\hat b_3 + \hat b_4  \)
+        \end{itemize}
+        From this, we get that
+            \[4Y_{..} - Y_{1.} + 21Y{.O}=132\hat\mu + 11(\hat t_A + \hat t_B +\hat t_C) + 33(\hat b_2 + \hat b_3 + \hat b_4) \]
+        Subtracting the above from 
+            \[11Y_{4.} + 33Y_{.A} = 132\hat\mu + 99 \hat t_A + 11\hat t_B + 11\hat t_C + 33(\hat b_2 + \hat b_3 + \hat b_4) \]
+        We get 
+            \[11Y_{4.} + 33Y_{.A} - 4Y_{..} - Y_{1.} + 21Y{.O} =  88\hat t_A\]
+        So, we get estimates of 
+        \begin{align*}
+            \hat t_A &= \frac{1}{88}(11Y_{4.} + 33Y_{.A} - 4Y_{..} - Y_{1.} + 21Y_{.O}) \\
+            \hat t_A &= \frac{1}{88}(40y_{4a}+6y_{4O}+30y_{1A}-24y_{1O}+29(y_{2A}+y_{3A})-25(y_{2O}+y_{3O})+7(y_{4B}+y_{4C})-3(y_{1B}+y_{1C})) \\
+            \var(\hat t_A) &=\frac{40^2 + 6^2 + 30^2 +24^2 + 2\times29^2 + 2\times 25^2 + 2\times 7^2 + 2\times 3^2}{88^2}\sigma^2 \\
+            \var(\hat t_A) &=\frac{6174}{7744}\sigma^2 \approx .797\sigma^2
+        \end{align*}
+        Repeating this for $\hat t_B$ and $\hat t_C$, the process is identical, except we subtract \(4Y_{..} - Y_{1.} + 21Y{.O}\) from \(11Y_{3.} + 33Y_{.B}\) and \(11Y_{2.} + 33Y_{.C}\) respectively. This will give us
+        \begin{align*}
+            \hat t_B &= \frac{1}{88}(11Y_{3.} + 33Y_{.B} - 4Y_{..} - Y_{1.} + 21Y_{.O}) \\
+            \var(\hat t_B) &=\frac{6174}{7744}\sigma^2 \approx .797\sigma^2 \\
+            \hat t_C &= \frac{1}{88}(11Y_{2.} + 33Y_{.C} - 4Y_{..} - Y_{1.} + 21Y_{.O}) \\
+            \var(\hat t_C) &=\frac{6174}{7744}\sigma^2 \approx .797\sigma^2
+        \end{align*}
+    \item[b)]
+        The best design I found was this:  \\
+            \FloatBarrier
+            \input{hw3/hw3_1a_comb} 
+            \FloatBarrier
+        As you would want, each treatment appears and equal number of times, there are no treatments appearing multiple times in the same block, and very pair of treatments had either 3 or 4 primary links:
+            \FloatBarrier
+            \input{hw3/hw3_1a_P} 
+            \FloatBarrier
+        And those that only had 3 primary links had slightly more secondary links:
+            \FloatBarrier
+            \input{hw3/hw3_1a_S} 
+            \FloatBarrier
+\end{itemize}
+
+\newpage
+STAT 345 Homework 3 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+
+{\bf Problem 2}
+\begin{itemize}
+    \item[a)]
+        When I fit a model with an additive fixed effect using all the observations, I get an estimated standard deviation of $\sigma=11.589$. However, when I fit the same model, but only include treatment C and D, the estimated standard deviation is $\sigma=4.275$. When we plot the actual data, we see why:
+        \begin{center}
+            \includegraphics[width=16cm]{hw3/hw3_2a_plot}
+        \end{center}
+        Even though the total amount of sleep each participant gets varies, the difference between their sleep under treatment C and D is relatively consistent. Thus, a model just including these two treatments has a relatively low prediction of variance. On the other hand, the difference between the sleep a participant gets on the drugs and without any drugs is not very consistent. Thus, we get a higher prediction of variance including it. This makes sense, because C and D are very similar drugs, so it can be expected that one person won't respond to one of the drugs strongly but not the other, while this may not hold for drug B or sleep without any drugs.
+
+    \item[b)]
+        There is evidence of an interaction between person in treatment. As noted above, the difference between each treatment does not seem consistent over all the people. In particular, People who already sleep relatively long hours do not seem to benefit from any of the drugs, while the change in sleep under different drugs does not seem consistent from person to person among those for whom this is not true. The fact that the relatively similar drugs have a consistent difference though suggests that this lack of consistency represents meaningful difference by person, corresponding to a person specific effect for each drug, rather than just random variation.
+        
+    \item[c)] The mean effect over the entire population is not of particular importance; as we've seen, those who sleep relatively long periods already do not seem to benefit from the drug, so irrespective of the population mean, its likely not worth giving it to them. Each person's existing sleep habits seems to be more important to predicting effectiveness than the population as a whole. Thus, a population mean by the amount one sleeps unmedicated could be useful. Among those who do not sleep longer periods, there is likely to benefit to medication, but the benefit is random by person, so having some sense of this distribution would be useful. 
+ 
+\end{itemize}
+
+
+
+
+\end{document}

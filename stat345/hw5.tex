@@ -1,0 +1,171 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+STAT 345 Homework 4 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+{\bf Problem 1}
+\begin{itemize}
+    \item[a.]
+        The distribution of Z is identical to the distribution of the described variance estimator when the error is iid $N(0,1)$. We can see this by the correspondence between its creation and the prescribed procedure:
+        \begin{itemize}
+            \item[i.] $S_Y^2$ has the same distribution as the residual sum of squares from the model where 2-factor interactions are assumed (giving residuals with five degrees of freedom), and $S_X^2$ has the same distribution as the marginal sum of squares attributable to the two factor interactions. This makes \(\frac{S_X^2}{S_Y^2}\) identically distributed to the F statistic for the comparison of the model without two factor interactions to the model with two factor interactions. 
+            \item[ii.] Thus, $\frac{S_X^2}{S_Y^2}<4.95 = F_{.95}(6,5)$ is equivalent to not rejecting the null that there are no two factor interactions. In the procedure, when this occurs the two factor interactions are pooled into the error and the error variance is estimated on 11 degrees of freedom. This is equivalent to \(Z=\frac{5S_Y^2+6S_X^2}{11}\).
+            \item[iii.] $\frac{S_X^2}{S_Y^2}\geq4.95$ is equivalent to rejecting the null, so the error is estimated based on the original 5 degrees of freedom. In this case, that is distributed the same as $Z=S_Y^2$.
+        \end{itemize}
+    \item[b.] Over 1000 simulations, the mean of Z was $.951$, and the mean squared error was $.180$. I simulated it by the same method as described in part a. These values are meaningfully lower than both the true value $\sigma^2=1$ and the mean squared error of $S_Y^2=.4$. We can derive the latter by noting $S_Y^2\sim \frac{\chi_5^2}{5}$, so
+        \[ \E((S_Y^2-1)^2)= \E(S_Y^2-1)^2 + \var(S_Y^2) = \frac{\var(\chi_5^2)}{25} = \frac{10}{25} \] 
+        The reason we see the underestimate of $\sigma^2$ is that with each $\beta$ set to 0, we are essentially drawing $11$ $\chi^2$ variables, and throwing out the last 6 if they are too much larger than the first 5, then averaging over however many remain. The end result is that the average will be biased downwards. The mean square error is smaller because $95\%$ of the time it is average of $11$ instead of $5$ $\chi^2$ variables, reducing the variance more than enough to compensate for the small additional bias.
+    \item[c.] When $\beta_1$ is simulated 1000 times at different values, this is the mean and $MSE$ I got: 
+        \FloatBarrier
+        \input{hw5/hw5_1c} 
+        \FloatBarrier
+        As you would expect, initially both the Mean and MSE of Z increase with $\beta_1$. Since the $F$ test has relatively low power for small, positive $\beta$, the null is rarely rejected, and the mean and MSE both go up with $S_x^2$. However once $\beta_1$ is large enough and the power is high, the test rejects more often, so both the mean and MSE drop back down again. We see this clearest at $\beta_1=8$, where the test should reject the vast majority of the time, making it so that $Z\approx S_Y^2$.
+    \item[d.]
+        The obvious disadvantage of pooling the interactions into the error when a test determines them insignificant is the potential for bias. When there are no interactions, the estimate of the variance is biased downwards, and when there are nonnegative interactions and low power, the variance is significantly biased upwards. The advantage is that for small or non-existent interactions, you still have a better MSE due to the decreased variance of your estimator. My advice is that this is probably safe if your significance test has high power (though this probably makes the pooling unnecessary), but otherwise I would avoid employing this technique; as our tests have shown, it seems that you generally end up with a worse estimator.
+\end{itemize}
+\newpage
+\null
+\newpage
+STAT 345 Homework 4 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+{\bf Problem 2}
+\begin{itemize}
+    \item[a.]
+        From those two defining relationships, we can figure out what is aliased with the identity via :
+        \[E=ABC \, \& \, F=BCD \Longrightarrow I=ABCE \, \& \, I = BCDF\]
+        Multiplying ABCE by BCDF gives us the last element aliased with I:
+        \[I = ABCE = BCDF = ADEF\]
+        Now, multiplying through by remaining terms in the data set gives us the rest of the relationships:
+        \begin{alignat*}{4}
+            A    &=& BCE   &=& ABCDF  &=& DEF \\
+            B    &=& ACE   &=& CDF    &=& ABDEF \\
+            AB   &=& CE    &=& ACDF   &=& BDEF \\
+            C    &=& ABE   &=& ADF    &=& ADCEF \\
+            AC   &=& BE    &=& ABDF   &=& CDEF \\
+            BC   &=& AE    &=& ABCDEF &=& DF \\
+            ABC  &=& E     &=& BCDEF  &=& ADF \\
+            D    &=& ABCDE &=& BCF    &=& AEF \\
+            AD   &=& BCDE  &=& ABCF   &=& EF \\
+            BD   &=& ACDE  &=& CF     &=& ABEF \\
+            ABD  &=& CDE   &=& ACF    &=& BEF \\
+            CD   &=& ABDE  &=& BF     &=& ACEF \\
+            ACD  &=& BDE   &=& ABF    &=& CEF \\
+            BCD  &=& ABCEF &=& F      &=& ADE \\
+            ABCD &=& BCEF  &=& AF     &=& DE \\
+        \end{alignat*}
+    \item[b.]
+        As I'll show from the regression model, the best combination seems to be A, B, D at the "-" level, and C, E, and F at the "+" level, though besides A and B, the rest don't seem to have a significant impact. \\
+        \indent Running a fully interacted model, we get these estimations (effects are under the sum constraint and for the "-" level):
+        \FloatBarrier
+        \input{hw5/hw5_2b_rtable} 
+        \FloatBarrier
+        Based off this, it seems like A- and B- is unquestionably a must, since their individual effects are so large negative, outweighing their positive interaction. Then, with D- having a negative coefficient and A-D- having a relatively large negative coefficient, D- seems a good choice too. A-B-C- has a relatively large positive coefficients, so C+ is the better choice. F and E, as determined by the aliasing relationship in the data, should be thus set to "+". \\
+        However, looking at the half normal plot of the absolute value of the coefficients, besides A and B its unclear if any of the estimates are significant enough to worry about:
+        \begin{center}
+            \includegraphics[width=16cm]{hw5/hw5_2b_halfnorm}
+        \end{center}
+        Clearly B-, A-, and A-B- have meaningful effects. A-D- and its neighbor, A-C-D- are borderline, only maybe lying above the expected line for normal noise which the remaining coefficients fall on or below. \\
+        Finally, I tried to look into whether there was predictable variation in shrinkage. Obviously, with a fully interacted model, we can't estimate the variance at all, but since the interactions generally seemed small, I estimated a model with no interactions (but including E and F, as determined by the aliasing). I then fit a model predicting the log absolute value of the residual:
+        \FloatBarrier
+        \input{hw5/hw5_2b_lrtable} 
+        \FloatBarrier
+        The one 'significant' p-value is borderline, and based on the F-statistic comparing this to a mean model, we get a p-value of $.348$. Thus, we don't have evidence to say the shrinkage variation changes with any of our variables.
+    \item[c.]
+        Having B set to "-" was clearly the most important choice, so I used that as the basis for this analysis. Now, the Aliasing is:
+        \begin{alignat*}{4}
+            I    &=& ACE   &=& CDF    &=& ADEF \\
+            A    &=& CE    &=& ACDF   &=& DEF \\
+            C    &=& AE    &=& ADF    &=& ADCEF \\
+            AC   &=& E     &=& ADF    &=& CDEF \\
+            D    &=& ACDE  &=& CF     &=& AEF \\
+            AD   &=& CDE   &=& ACF    &=& EF \\
+            CD   &=& ADE   &=& F      &=& ACEF \\
+            ACD  &=& DE    &=& AF     &=& CEF \\
+        \end{alignat*}
+        Repeating our analysis from before, we get the following coefficients from the regression:
+        \FloatBarrier
+        \input{hw5/hw5_2c_rtable} 
+        \FloatBarrier
+        Which I have plotted on a half norm plot here:
+        \begin{center}
+            \includegraphics[width=16cm]{hw5/hw5_2c_halfnorm}
+        \end{center}
+        With so few data points, its hard to say if any of these are significant; besides the intercept, this could easily be a null plot. However, if we have to make a choice, A-D- still has the biggest negative coefficient, even if the coefficient on just A- has shrunk, while  A-C-D- has an equally large positive coefficient. Thus, The same combination, A-, C+, D-, E+, F+ still seems like the best option.
+
+
+
+
+
+
+
+\end{itemize}
+
+
+
+\end{document}
