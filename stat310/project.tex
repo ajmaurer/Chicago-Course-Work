@@ -64,11 +64,12 @@ STAT 310 Programing Assignment \hfill Aaron Maurer
 
 \begin{itemize}
     \item[1.]
-        After randomly generating $A$ and $c$, setting \({\bf b}=\frac{1}{2}A{\bf 1}\), and solving the continuous relaxation of the boolean linear programing problem, I got a \({\bf y}^*\). It only had 16 entries with values that weren't 0 or 1. \({\bf c}^T{\bf y}=-35.396\), which we know is a lower bound for \({\bf c}^T{\bf x}\), the optimal objective value for the original problem. I generated ${\bf x}_\tau$ for $\tau = .01n, n=1$ to $100$, and plotted the objective value and least slack among the rows of $A{\bf x}_\tau\leq{\bf y}$ below. 
+        After randomly generating $A$ and ${\bf c}$, setting \({\bf b}=\frac{1}{2}A{\bf 1}\), and solving the continuous relaxation of the boolean linear programing problem, I got a \({\bf y}^*\). It only had 16 entries with values that weren't 0 or 1. \({\bf c}^T{\bf y}^*=-35.396\), which we know is a lower bound for \({\bf c}^T{\bf x}\), the optimal objective value for the original problem. I generated ${\bf x}_\tau$ for $\tau = .01n, n=1$ to $100$, and plotted the objective value against the minimum slack among the rows of $A{\bf x}_\tau\leq{\bf y}$ below. 
         \begin{center}
             \includegraphics[width=12cm]{plot_1.pdf}
         \end{center}
-        The feasible points lie to the left of $0$, corresponding to $A{\bf x}_\tau-{\bf y}$ having all negative entries(and thus the constraint being satisfied). Since each point in this region is a feasible point for the original boolean program, the corresponding objective value is an upper bound for the minimum objective value, since the minimum must be less than or equal to each of them. The smallest of these values is ${\bf c}^T{\bf x}=-34.373$. Thus, we have an upper bound on the optimal point of $-34.373$ and a lower bound of $-35.396$, the difference being $1.023$. \\
+        The feasible points lie to the left of $0$, corresponding to $A{\bf x}_\tau-{\bf y}$ having all negative entries (and thus the constraint being satisfied). Since each point in this region is a feasible point for the original boolean program, the corresponding objective value is an upper bound for the minimum objective value, since the minimum must be less than or equal to each of them. The smallest of these values is ${\bf c}^T{\bf x}=-34.373$. Thus, we have an upper bound on the objective value at optimal point of $-34.373$ and a lower bound of $-35.396$, the difference being $1.023$. \\
+ 
 
 {\bf Note:} Since there are only $16$ values in ${\bf y}$ which aren't either $0$ or $1$, there could be at most unique 17 ${\bf x}_\tau$ (there are actually only 16 since two of the points which aren't 0 or 1 are within .01 of each other). This is because ${\bf x}_\tau = {\bf x}_{\tau+.01}$ if none of the entries of ${\bf y}$ lie in $(\tau,\tau+.01)$. \\
 
@@ -99,10 +100,114 @@ STAT 310 Programing Assignment \hfill Aaron Maurer
         {\bf Code:} \\
         \lstinputlisting[firstline=66,lastline=84]{ajmaurer_project.m}
 
+    \item[3.]
+        We can transform $X$ into a vector ${\bf x}$ such that \(x_{ij}={\bf x}_{ni+j}\) to make this closer to the perfered form for a LP/QP problem. Then, we can make a sparse matrix $C$ such that $C{\bf x}=\nabla X$. Each row of $C$ will have all $0$s except one $1$ and one $-1$. In the first $(m-1)n$ rows of $C$, the $-1$ will be along the main diagonal, and the $1$ will be $n$ spots to the right, making ${\bf c}_i'{\bf x}=x_ij-x_{i-1,j}$. In the remaining $m(n-1)$ rows of $C$, there will be $-1$s along the diagonal starting from the top left corner of the section and $1$s one spot to the right, making ${\bf c}_i'{\bf x}=x_ij-x_{i,j-1}$. \\
+        \smallskip \\
+        Now, here is the original image on the left, and the original image with the missing pixes greyed out on the right: \\
+        \includegraphics[width=9cm]{image_2_orig.pdf}
+        \includegraphics[width=9cm]{image_2_miss.pdf}
 
-        
-                        
-    
+        \begin{itemize}
+            \item[(a)]
+                When we use the $L_2$-variation, our problem can be formatted for CVX as: 
+                \begin{align*}
+                    \text{minimize    }\; & \|C{\bf x}\|_2 \\
+                    \text{subject to  }\; & x_{ij}=a_{ij},\, (i,j)\in S  \\
+                \end{align*}
+                Which has the equivalent solution to the QP problem  
+                \begin{align*}
+                    \text{minimize    }\; & {\bf x}'C'C{\bf x} \\
+                    \text{subject to  }\; & x_{ij}=a_{ij},\, (i,j)\in S  \\
+                \end{align*}
+                Optimizing the first problem in CVX, and transforming ${\bf x}^*$ into $X^*$, we get this image:
+
+                \begin{center}
+                    \includegraphics[width=9cm]{image_2a.pdf}
+                \end{center}
+                It's decently close to the original, but blurry and not sharp at all
+            \item[(b)]
+                When we use the $L_1$-variation, our problem can be formatted for CVX as: 
+                \begin{align*}
+                    \text{minimize    }\; & \|C{\bf x}\|_1 \\
+                    \text{subject to  }\; & x_{ij}=a_{ij},\, (i,j)\in S  \\
+                \end{align*}
+                Which has an equivalent solution to the LP problem  
+                \begin{align*}
+                    \text{minimize    }\; & {\bf 1}'{\bf t} \\
+                    \text{subject to  }\; & {\bf t}\geq C{\bf x} \\
+                                          & {\bf t}\geq -C{\bf x} \\  
+                                          & x_{ij}=a_{ij},\, (i,j)\in S  \\
+                \end{align*}
+                Optimizing the first problem in CVX, and transforming ${\bf x}^*$ into $X^*$, we get this image:
+                \begin{center}
+                    \includegraphics[width=9cm]{image_2b.pdf}
+                \end{center}
+                Which is much better; its much closer to the original and doesn't have nearly as much blurring as with the $L_2$ variation.
+        \end{itemize}
+
+        {\bf Code:} \\
+        \lstinputlisting[firstline=90,lastline=145]{ajmaurer_project.m}
+
+    \item[4.]
+        \begin{itemize}
+            \item[(a)]
+                A simple way to estimate x with a LCQP is to minimize the squared error over the first $k$ terms where $y$ is known under the restriction that the predictions for the remaining terms are higher than $\beta$. If \(A_1=[{\bf a}_1,...,{\bf a}_k]', A_2=[{\bf a}_{k+1},...,{\bf a}_n]',\) and \({\bf b}_1=[b_1,...,b_k]\), this gives us the optimization problem
+                \begin{align*}
+                    \text{minimize    }\; & \|A_1{\bf x}-b_1\|_2^2 \\
+                    \text{subject to  }\; & A_2{\bf x}\geq \beta{\bf 1} \\
+                \end{align*}
+                This is a simplification which will probably bias our prediction upwards. Just because an observed value is higher than $\beta$ doesn't mean its expectation is, since the error could be greater than \({\bf a}_i'{\bf x}-\beta\). If we knew something about the distribution of the error, we could, for instance, instead have the constraint \(A_2x\geq c{\bf 1}\), where $c$ is a constant such that \(P(\max_{k<i\leq n}(\varepsilon_i)\geq \beta-c)\leq \alpha\). This would give us $1-\alpha$ confidence that we are allowing for the true values of \(A_2{\bf x}\). 
+                \smallskip  \\         
+                We don't have enough information to do this in the data description though, so instead I ran the first version I gave, giving
+                \[{\bf x}_{qp}=
+                    \begin{array}{cccccccccc} 
+                       [-0.22 & -1.69 &  0.40 &  0.18 & -1.06 &  1.28 & 1.13 & -0.01 &  0.30 &  0.38 \\
+                        -0.14 &  0.81 & -0.32 &  2.12 & -0.24 & -0.02 & 0.97 & -0.11 & -0.15 & -0.89]
+                    \end{array} \]
+            \item[(b)]
+                The usual least squares estimator based on just the first $k$ points is given by
+                \begin{align*}
+                    {\bf x}_{ls} &= (A_1'A_1)^{-1}A_1' b_1 \\
+                                 &= \begin{array}{cccccccccc} 
+                                        [-0.35& -1.80&  0.20& 0.17& -0.84&  1.30& 1.83& -0.56&  0.37& -0.05 \\
+                                         -0.11&  1.53& -0.50& 2.42& -0.56& -0.37& 0.99& -0.25& -0.18& -0.43]
+                                    \end{array} \\
+                \end{align*}
+            \item[(c)]
+                Comparing these two estimates to the original, the LCQP has the smaller relative error:
+                \[\frac{\|{\bf x}_{qp}-{\bf x}\|_2}{\|{\bf x}\|_2} = .1538 \]
+                while                         
+                \[\frac{\|{\bf x}_{ls}-{\bf x}\|_2}{\|{\bf x}\|_2} = .3907 \]
+        \end{itemize}
+
+        {\bf Code:} \\
+        \lstinputlisting[firstline=152,lastline=171]{ajmaurer_project.m}
+    \item[5.] 
+        The problem as given is
+        \begin{align*}
+            \text{minimize    }\; & \|{\bf x}\|_1 \\
+            \text{subject to  }\; & \E[(y-{\bf a}'{\bf x})^2]\leq .01 \E(y^2) \\
+        \end{align*}
+        Using a few identities from statistics, we can transform the constraint into a quadratic constraint:
+        \begin{align*}
+            \E[(y-{\bf a}'{\bf x})^2] &\leq .01 \E[y^2] \\
+            (\E[y]-\E[{\bf a}'{\bf x}])^2 + \var(y-{\bf a}'{\bf x}) &\leq .01 (\E[y]^2+\var(y)) \\
+           ({\bf \mu}'{\bf c}-{\bf \mu}'{\bf x})^2 + \var(y)-2\cov(y,{\bf a}'{\bf x})+\var({\bf a}'{\bf x}) &\leq .01 ((\mu'{\bf c})^2+\var(y)) \\
+            ({\bf \mu}'{\bf c}-{\bf \mu}'{\bf x})^2 + {\bf c}'\Sigma {\bf c} - 2{\bf c}'\Sigma {\bf x}+ {\bf x}'\Sigma {\bf x} &\leq .01 (({\bf \mu}'{\bf c})^2+{\bf c}'\Sigma {\bf c}) \\
+            .99({\bf \mu}'{\bf c})^2 - 2{\bf \mu}'{\bf c}{\bf \mu}'{\bf x} + ({\bf \mu}'{\bf x})^2 + .99{\bf c}'\Sigma {\bf c} - 2{\bf c}'\Sigma {\bf x} + {\bf x}'\Sigma {\bf x} &\leq 0 \\
+        \end{align*}
+        Giving us the QCLP
+        \begin{align*}
+            \text{minimize    }\; & \|{\bf x}\|_1 \\
+            \text{subject to  }\; & .99({\bf \mu}'{\bf c})^2 - 2{\bf \mu}'{\bf c}{\bf \mu}'{\bf x} + ({\bf \mu}'{\bf x})^2 + .99{\bf c}'\Sigma {\bf c} - 2{\bf c}'\Sigma {\bf x} + {\bf x}'\Sigma {\bf x} \leq 0 \\
+        \end{align*}
+        Our optimal \({\bf x}^*\) isn't perfectly sparse, but its quite close, with the majority of its entries close to 0. Of the $500$ entries, only 50 are larger than .1, 52 are larger than .001, 69 are larger than .0001, and 373 are larger than .00001. \\ 
+        {\bf Code:} \\
+        \lstinputlisting[firstline=179,lastline=199]{ajmaurer_project.m}
+
+
+
+
         
 \end{itemize}
 
