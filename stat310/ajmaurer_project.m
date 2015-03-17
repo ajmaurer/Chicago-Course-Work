@@ -3,7 +3,7 @@
 
 %%% Caller
 setup = 1 
-prob = [0,1,0,0,0]
+prob = [0,0,1,0,0]
 
 %%% Setup
 if setup
@@ -97,6 +97,12 @@ if prob(3)
     CT = speye([m*(n-1),m*n]) - [sparse(m*(n-1),m),speye(m*(n-1),m*(n-1))] % Top of C matrix
     CB = speye([(m-1)*n,m*n]) - [sparse((m-1)*n,1),speye((m-1)*n,m*n-1)] % bottom of C matrix
     C  = [CT;CB]
+
+    % Show sparse image
+    colormap gray
+    imagesc(abs(X-127*(1-S)))
+    print('image_2_miss.pdf')
+    close
 
     %% part a: L2 variation. 
 
