@@ -104,15 +104,42 @@ STAT 302 Homework 1 \hfill Aaron Maurer
                 Which is a very large and in favor of $H_1$
         \end{itemize}
     \item[2.]
+        I simulated, for one sided p-values for the coefficient from a simple linear regression, how often a value between .04 and .05 actually corresponded to a true positive. Each p-value was simulated where the true effect $\beta$ was 0 with probability $1-\pi$ and drawn from an exponential with coefficient $\lambda$ with probability $\pi$. This was preformed with all the usual assumptions for a linear regression in place. To get each p-value, I simulated as if 10 units received the treatment, 10 received the control, and that underlying variance was 1. This was done by drawing \(\hat\beta\sim N(\beta,\frac{1}{\sqrt{10}})\), drawing \(\hat s^2 \sim \frac{\chi^2_{18}}{18}\), and generating the usual p-value from the resulting T score. \\
+        \vspace{0mm} \\
+        For a number of combinations of $\lambda$ and $\pi$, I simulated $100,000$ such p-values, and calculated the portion of such values between .04 and .05 for which the true $\beta$ was positive. I've include the results below (remember \(\E(\beta)=\frac{1}{\lambda}\)):
+        \FloatBarrier
+        \input{hw1/pr2.tex}
+        \FloatBarrier
+        Though I employ a somewhat different simulation, the main result is the Same as Selke et al; a p-value near .05 is not consistently strong evidence for the alternative hypothesis. Indeed, we also see that it provides the best evidence for the alternative with moderate levels of power, since if power is too high one rarely sees p-values near .05 for true positives. \\
 
+        {\bf Code:}
+        \lstinputlisting[firstline=22,lastline=50]{hw1.R}
     
     \item[3.]
         To get the posterior, we do the usual Bayesian calculation:
         \begin{align*}
-            P(\mu|x) &=  P(\mu) P(x|\mu) \\
+            P(\mu|x) &\propto P(\mu) P(x_1,...,x_n|\mu) \\
                      &\propto \mu^{m-1}e^{-\lambda \mu} \prod_{i=1}^n \frac{\mu^{x_i}}{x_i!}e^{-\mu} \\
                      &\propto \mu^{m-1+\sum_{i=1}^n x_i}e^{-(\lambda+n) \mu} \prod_{i=1}^n \frac{1}{x_i!} \\
+                     &\sim Gamma(m+\sum_{i=1}^n x_i,\lambda+n)
         \end{align*}
+
+    \item[4.]
+        To get the posterior, we do the usual Bayesian calculation, this time substituting in \(\tau=\frac{1}{\sigma^2}\):
+        \begin{align*}
+            P(\tau|x) &\propto P(\tau) P(x|\tau) \\
+                      &\propto e^{-2\tau} \sqrt{\tau}e^{-\frac{1}{2}\tau x^2} \\
+                      &\propto e^{-2\tau} \sqrt{\tau}e^{-\frac{1}{2}\tau x^2} \\
+                      &\propto \tau^\frac{1}{2}e^{-(2+\frac{1}{2}x^2)\tau} \\
+                      &\sim Gamma\left(\frac{3}{2},2+\frac{1}{2}x^2\right) 
+        \end{align*}
+
+    \item[5.]
+        Overall, using this method, I had an error rate of $22.3\%$. The main issue I ran into with the method as described was that a number of allele/population combinations didn't appear in the training set. This isn't necessarily a problem, but with these 0 likelihoods included, some individuals in the test data set had 0 likelihoods of each population. I remedied this by adding one to each of the allele/locus counts in the test data set before calculating frequencies. This corresponds to beginning with a weak uniform prior on the allele/locus frequencies. Also, when an individual was missing allele data at a particular locus, I omitted that locus from likelihood calculation (in the program I just multiplied each likelihood by 1).
+        
+        {\bf Code:}
+        \lstinputlisting[firstline=60,lastline=108]{hw1.R}
+
 \end{itemize}
 
 \end{document}
