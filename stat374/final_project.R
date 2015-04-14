@@ -10,10 +10,10 @@ library('graphics')
 
 # Turns on different parts of the code
 clean.data <- F 
-data.sum   <- F 
+data.sum   <- T 
 par.reg    <- F 
 nonpar.reg <- F 
-eval.fit   <- T 
+eval.fit   <- F 
 
 # par.reg options
 cross.validate <- T
@@ -89,7 +89,7 @@ if (data.sum) {
     barplot(rob.ct.w,main="Distribution of Robbery Counts, Workdays",xlab="Number of Robberies During Hour",ylab="Occurrences in Data",col=gray.scale(length(hour.seq)),legend=oclock(rownames(rob.ct.w)),beside=TRUE)
     dev.off()
     pdf("final_project/ct_dist_nw.pdf")
-    barplot(rob.ct.nw,main="Distribution of Robbery Counts, Workdays",xlab="Number of Robberies During Hour",ylab="Occurrences in Data",col=gray.scale(length(hour.seq)),legend=oclock(rownames(rob.ct.nw)),beside=TRUE)
+    barplot(rob.ct.nw,main="Distribution of Robbery Counts, Weekend/Holiday",xlab="Number of Robberies During Hour",ylab="Occurrences in Data",col=gray.scale(length(hour.seq)),legend=oclock(rownames(rob.ct.nw)),beside=TRUE)
     dev.off()
 
     # Effect of precipitation
