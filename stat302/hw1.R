@@ -73,7 +73,7 @@ if (problem5) {
     train_freq <- list()
     for (i in 1:12) {
         train_freq[[i]] <- as.data.frame.matrix(compute_freq(train,i))
-        train_freq[[i]]$allele <- as.factor(rownames(test_freq[[i]]))
+        train_freq[[i]]$allele <- as.factor(rownames(train_freq[[i]]))
     }
 
     # Set uniform prior
