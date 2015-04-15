@@ -57,23 +57,25 @@ if (problem2) {
 
 ### Problem 5
 if (problem5) {
-    subpops <- c("EelR","FeatherHfa","FeatherHsp","KlamathRfa")
     # Call given code
     source('official/exercises/seeb/train_test.R')
+    subpops <- unique(test$Population)
+    loci <- names(test)[3:26]
+    loci <- locs[!grepl("\\.1",loci)] # get rid of .1 version
 
     # Function to summarize frequency at locus by population (similar to trainc)
     # Add 1 so that no Allele is impossible in each subpopulation
     compute_freq <- function(data,locus){
-        counts <- table(data[,1+2*locus],data$Population) + 
-                    table(data[,2+2*locus],data$Population) + 1
-        return(counts/sum(counts))
+        counts <- table(data[,locus],data$Population) + 
+                    table(data[,paste(locus,".1",sep="")],data$Population) + 1
+        return(counts/colSums(counts))
     }
 
     # Get frequency at each locus
     train_freq <- list()
-    for (i in 1:12) {
-        train_freq[[i]] <- as.data.frame.matrix(compute_freq(train,i))
-        train_freq[[i]]$allele <- as.factor(rownames(train_freq[[i]]))
+    for (loc in loci) {
+        train_freq[[loc]] <- as.data.frame.matrix(compute_freq(train,loc))
+        train_freq[[loc]]$allele <- as.factor(rownames(train_freq[[loc]]))
     }
 
     # Set uniform prior
@@ -83,14 +85,16 @@ if (problem5) {
     # Calculate Log-Likelihood
     log_lks <-paste(subpops,"loglk",sep="_")
     test[,log_lks]<-0
-    for (i in 1:12) {
-        for (j in 1:2) {
-            test <- merge(test,train_freq[[i]],by.x=names(test)[j+i*2],
-                          by.y="allele")
+    for (loc in loci) {
+        for (e in c("",".1")) {
+            locus <- paste(loc,e,sep="")
+            test <- merge(test,train_freq[[loc]],by.x=locus,
+                          by.y="allele",all.x=T,sort=F)
             # Missing data won't effect likelihood
-            test[is.na(test[,j+i*2]),subpops] <- 1  
+            test[is.na(test[,locus]),subpops] <- 1  
             test[,log_lks] <- test[,log_lks] + log(test[,subpops])
             test<-test[,!(names(test) %in% subpops)]
+
         }
     }
 
