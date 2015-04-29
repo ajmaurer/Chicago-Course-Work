@@ -1,0 +1,244 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+STAT 302 Homework 3 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+
+\begin{itemize}
+    \item[1.]
+        \begin{itemize}
+            \item[(a)]
+                \begin{align*}
+                    P(D \st P) &= \frac{P(P\st D)P(D)}{P(P\st D)P(D) +  P(P\st D^c)P(D^c)} \\
+                               &= \frac{p_0p_1}{p_0p_1 +  (1-p_0)p_1} \\
+                \end{align*}
+            \item[(b)]
+                Here is my R code:
+                \lstinputlisting[firstline=18,lastline=25]{hw3.R}
+            \item[(c)/(d)]
+                I have produced the results for $a=.5,1 \,\&\, 2$ in one table, each time with confidence intervals based off of $10,000$ iterations.
+                \FloatBarrier
+                \input{hw3/pr1_cd.tex}
+                \FloatBarrier
+                We can observe the sensitivity to $a$ by noting that the confidence intervals get pulled towards $.5$ as $a$ increases. The distinction isn't huge though; with $n=20$ we note the bounds change by as much as $.1$, but with $n=80$, the change is at most near $.01$.
+            \item[(e)]
+                I have simulated the portion of the time the true $\theta$ (th) was below the CI lower bound (LB) and the portion the time it was above the upper bound (UB) for each $a$ and the given $p$. The simulation drew the $X$ $1,000$ times, and for each of these generated a confidence interval based on another $1,000$ random draws based on the given $X$.
+                \FloatBarrier
+                \input{hw3/pr1_e.tex}
+                \FloatBarrier
+                In general, $a=.05$ seems to have proper, or very close to proper, frequentist coverage properties. However, in the cases where there are $p$ near $0$ or $1$, this seems to be less true, with the worst case being $p_0=.95, p_1=.95, p_2=0$, where we never see $\theta$ fall below the CI. For different values of $a$ though, we seem to consistently see either higher or lower error rates on each side of the CI.
+        \end{itemize}
+    \item[2.]
+        \begin{itemize}
+            \item[i)]
+                We can derive $\E(\theta_j)$ as such:
+                \begin{align*}
+                    \E(\theta_j) &= \idotsint_{\sum_{i=1}^k\theta_i=1}\theta_i \frac{\Gamma(\sum_{i=1}^k\alpha_i)}{\prod_{i=1}^k\Gamma(\alpha_i)} \left(\prod_{i=1}^{k}\theta_i^{\alpha_i-1}\right)d\theta_1...d\theta_k \\
+                    \E(\theta_j) &= \frac{\Gamma(1+\alpha_j)\Gamma(\sum_{i=1}^k\alpha_i)}{\Gamma(\alpha_j)\Gamma(1+\sum_{i=1}^k\alpha_i)}   \idotsint_{\sum_{i=1}^k\theta_i=1}\frac{\Gamma(1+\sum_{i=1}^k\alpha_i)}{\Gamma(1+\alpha_j)\prod_{i\neq j}\Gamma(\alpha_i)} \left(\theta_i^{\alpha_i}\prod_{i\neq j}\theta_i^{\alpha_i-1}\right)d\theta_1...d\theta_k \\
+                    \E(\theta_j) &= \frac{\Gamma(1+\alpha_j)\Gamma(\sum_{i=1}^k\alpha_i)}{\Gamma(\alpha_j)\Gamma(1+\sum_{i=1}^k\alpha_i)}\\
+                    \E(\theta_j) &= \frac{\alpha_j}{\sum_{i=1}^k\alpha_i}\\
+                \end{align*}
+                Then, as a first step to get the variance,
+                \begin{align*}
+                    \E(\theta_j^2) &= \idotsint_{\sum_{i=1}^k\theta_i=1} \theta_i^2 \frac{\Gamma(\sum_{i=1}^k\alpha_i)}{\prod_{i=1}^k\Gamma(\alpha_i)} \left(\prod_{i=1}^{k}\theta_i^{\alpha_i-1}\right)d\theta_1...d\theta_k \\
+                    \E(\theta_j^2) &= \frac{\Gamma(2+\alpha_j)\Gamma(\sum_{i=1}^k\alpha_i)}{\Gamma(\alpha_j)\Gamma(2+\sum_{i=1}^k\alpha_i)}   \idotsint_{\sum_{i=1}^k\theta_i=1}\frac{\Gamma(2+\sum_{i=1}^k\alpha_i)}{\Gamma(2+\alpha_j)\prod_{i\neq j}\Gamma(\alpha_i)} \left(\theta_i^{1+\alpha_i}\prod_{i\neq j}\theta_i^{\alpha_i-1}\right)d\theta_1...d\theta_k \\
+                    \E(\theta_j^2) &= \frac{\Gamma(2+\alpha_j)\Gamma(\sum_{i=1}^k\alpha_i)}{\Gamma(\alpha_j)\Gamma(2+\sum_{i=1}^k\alpha_i)}\\
+                    \E(\theta_j^2) &= \frac{\alpha_j(\alpha_j+1)}{\left(\sum_{i=1}^k\alpha_i+1\right)\sum_{i=1}^k\alpha_i}\\
+                \end{align*}
+                Which we can use to get
+                \begin{align*}
+                    \var(\theta_j) &= \E(\theta_j^2) - \E(\theta_j)^2 \\
+                    \var(\theta_j) &= \frac{\alpha_j^2+\alpha_j}{\left(\sum_{i=1}^k\alpha_i+1\right)\sum_{i=1}^k\alpha_i} - \frac{\alpha_j^2}{\left(\sum_{i=1}^k\alpha_i\right)^2} \\
+                    \var(\theta_j) &= \frac{\alpha_j^2\left(\sum_{i=1}^k\alpha_i\right)+\alpha_j\left(\sum_{i=1}^k\alpha_i\right)-\alpha_j^2\left(\sum_{i=1}^k\alpha_i\right) -\alpha_j^2}{\left(\sum_{i=1}^k\alpha_i+1\right)\left(\sum_{i=1}^k\alpha_i\right)^2} \\
+                    \var(\theta_j) &= \frac{\alpha_j\left(\sum_{i=1}^k\alpha_i\right)- \alpha_j^2}{\left(\sum_{i=1}^k\alpha_i+1\right)\left(\sum_{i=1}^k\alpha_i\right)^2}
+                \end{align*}
+                Finally, 
+                \begin{align*}
+                    \cov(\theta_j,\theta_i) &= \E(\theta_j\theta_i) - \E(\theta_j)\E(\theta_i) \\
+                    \cov(\theta_j,\theta_i) &= \frac{\Gamma(1+\alpha_j)\Gamma(1+\alpha_i)\Gamma(\sum_{i=1}^k\alpha_i)}{\Gamma(\alpha_i)\Gamma(\alpha_j)\Gamma(2+\sum_{i=1}^k\alpha_i)} - \frac{\alpha_j\alpha_i}{\left(\sum_{i=1}^k\alpha_i\right)^2} \\
+                    \cov(\theta_j,\theta_i) &= \frac{\alpha_j\alpha_i}{\left(\sum_{i=1}^k\alpha_i+1\right)\sum_{i=1}^k\alpha_i} - \frac{\alpha_j\alpha_i}{\left(\sum_{i=1}^k\alpha_i\right)^2} \\
+                    \cov(\theta_j,\theta_i) &= \frac{-\alpha_j\alpha_i}{\left(\sum_{i=1}^k\alpha_i+1\right)\left(\sum_{i=1}^k\alpha_i\right)^2} \\
+                \end{align*}
+                Qualitatively, as any particular $\alpha_i$ grows with the rest held constant, the probability of high values for $\theta_i$ grows. When all the $\alpha_j$ grow together, the distribution becomes more concentrated around the center where all $\theta_j$ are close together, and when all the $\alpha_j$ shrink together, the distribution becomes clustered around high values for one of the $\theta_j$ with the rest close to $0$
+            \item[ii)]
+                Let, for each $1\leq j \leq k$, let \(|\{j;X_j=k\}|=n_j\). Then,
+                \begin{itemize}
+                    \item[a)]
+                        \begin{align*}
+                            P(\theta \st X_1,...,X_n) &\propto P(X_1,...,X_n \st \theta)P(\theta) \\
+                            P(\theta \st X_1,...,X_n) &\propto \left(\prod_{i=1}^k\theta_i^{n_i}\right)\left(\prod_{i=1}^k\theta_i^{\alpha_i-1}\right) \\
+                            P(\theta \st X_1,...,X_n) &\propto \prod_{i=1}^k\theta_i^{n_i+\alpha_i-1}\\
+                        \end{align*}
+                        So \(\theta \st X_1,...,X_n\) has a Dirichlet distribution with parameters \((n_1+\alpha_1,...,n_k+\alpha_k)\)
+                    \item[b)]
+                        \begin{align*}
+                            P(X_{n+1}=j \st X_1,...,X_n) &= \idotsint_{\sum_{i=1}^k\theta_i=1}P(X_{n+1}=j \st X_1,...,X_n,\theta)P(\theta\st X_1,...,X_n)d\theta_1...d\theta_k \\
+                            P(X_{n+1}=j \st X_1,...,X_n) &= \frac{\Gamma(\sum_{i=1}^k n_i +\alpha_i)}{\prod_{i=1}^k\Gamma(n_i+\alpha_i)}\idotsint_{\sum_{i=1}^k\theta_i=1}\theta_j \prod_{i=1}^k\theta_i^{n_i+\alpha_i-1}d\theta_1...d\theta_k \\
+                            P(X_{n+1}=j \st X_1,...,X_n) &= \frac{n_j+\alpha_j}{\sum_{i=1}^kn_i+\alpha_i}
+                        \end{align*}
+                        So we can conclude that \(X_{n+1}=j \st X_1,...,X_n\) has a multinomial distribution with probability vector
+                        \[p = \left( \frac{n_1+\alpha_1}{\sum_{i=1}^kn_i+\alpha_i},...,\frac{n_k+\alpha_k}{\sum_{i=1}^kn_i+\alpha_i}\right) \]
+                \end{itemize}
+        \end{itemize}
+    \item[3.]
+        If $X$ is Poisson with mean $\theta$, then \(P(X=x\st \theta)\propto \theta^x e^{-\theta}\), which makes a prior that is something of the sort \(P(\theta)\propto \theta^a e^{b\theta}\), for some hyperparameters $a$, $b$, a natural choice. This is satistified by the gamma distribution, which is the conjugate prior. If we parameterize it the usual way with \(P(\theta)\propto \theta^{\alpha-1} e^{-\beta\theta}\), we get the posterior 
+        \begin{align*}
+            P(\theta \st X) &\propto P(X \st \theta)P(\theta) \\
+            P(\theta \st X) &\propto \theta^{\sum x_i} e^{-n\theta}\theta^{\alpha-1} e^{-\beta\theta} \\
+            P(\theta \st X) &\propto \theta^{\sum x_i+\alpha-1} e^{-(\beta+n)\theta}\\
+        \end{align*}
+        Giving us a gamma posterior with parameters \((\sum x_i+\alpha,\beta+n)\). \\
+        \vspace{5mm} \\
+        We can get the Jeffreys prior from the Fisher information:
+        \begin{align*}
+            p(\theta) &\propto \sqrt{I(\theta)} \\
+            p(\theta) &\propto \sqrt{-\E\left[\frac{d^2}{d\theta^2} \log(f(X\st \theta))\right]} \\
+            p(\theta) &\propto \sqrt{-\E\left[\frac{d^2}{d\theta^2} x\log(\theta)-\theta+c\right]} \\
+            p(\theta) &\propto \sqrt{-\E\left[\frac{d}{d\theta} \frac{x}{\theta}-1\right]} \\
+            p(\theta) &\propto \sqrt{-\E\left[-\frac{x}{\theta^2}\right]} \\
+            p(\theta) &\propto \sqrt{\frac{1}{\theta}} \\
+            p(\theta) &\propto \theta^{-\frac{1}{2}} \\
+        \end{align*}
+        With the Jeffreys prior, we get the posteriors
+        \begin{align*}
+            P(\theta \st x) &\propto P(x \st \theta)P(\theta) \\
+            P(\theta \st x) &\propto \theta^{x} e^{-\theta}\theta^{-\frac{1}{2}} \\
+            P(\theta \st x) &\propto \theta^{x-\frac{1}{2}} e^{-\theta} \\
+            P(\theta \st cx) &\propto \theta^{cx-\frac{1}{2}} e^{-\theta} \\
+        \end{align*}
+        Versus, for the 'scale invariant' prior
+        \begin{align*}
+            P(\theta \st x) &\propto P(x \st \theta)P(\theta) \\
+            P(\theta \st x) &\propto \theta^{x} e^{-\theta}\theta^{-1} \\
+            P(\theta \st x) &\propto \theta^{x-1} e^{-\theta} \\
+            P(\theta \st cx) &\propto \theta^{cx-1} e^{-\theta} \\
+        \end{align*}
+        The posteriors are similar, but the Jeffreys prior has a mean that is a bit closer to the MLE mean, which probably makes it preferable as far as a noninformative prior. As $c$ grows, they both converge to the MLE.
+    \item[4.]
+        We can derive the Jefferies prior from the Fisher Information:
+        \begin{align*}
+            I(p)_{i,j} &= -\E\left[H\left(\log(f(X\st p))\right)_{i,j}\right] \\
+            I(p)_{i,j} &= -\E\left[H\left(c + \sum_{i=1}^k x_i\log(p_i)\right)_{i,j}\right] \\
+            I(p)_{i,j} &= \begin{cases} 
+                                    -\E\left[-\frac{x_i}{p_i^2}\right] & \mbox{if } i=j \\ 
+                                                                     0 & \mbox{if } i\neq j 
+                               \end{cases}  \\
+            I(p)_{i,j} &= \begin{cases} 
+                               \frac{n}{p_i} & \mbox{if } i=j \\ 
+                                       0 & \mbox{if } i\neq j 
+                               \end{cases} 
+        \end{align*}
+        Which makes \(|I(p)|^{\frac{1}{2}} = n^{\frac{k}{2}}\prod_{i=1}^k p_i^{-\frac{1}{2}}\). We can thus conclude
+        \[p(\theta) \propto \prod_{i=1}^k p_i^{-\frac{1}{2}} \]
+        Making it a Dirichlet prior with each $\alpha$ set to $\frac{1}{2}$.
+    \item[5.]
+        \begin{itemize}
+            \item[a)]
+                If we let $X$ be the training data, $G_j$ be the testing data, consisting of gene $g_{l,j}$ at locus $l$ for individual $j$, and $P_j$ denote the population of training sample $j$, then previously our model was:
+                \begin{align*}
+                    P(P_j \st G_j, X) &\propto P(P_j)P(G_j \st P_j, X) \\
+                    P(P_j \st G_j, X) &\propto P(P_j)\prod_{l=1}^{24} P(g_{l,j} \st P_j, X) \\
+                \end{align*}
+                Where $P(g_{l,j} \st P_j=k, X)$ was the portion of the training population $k$ which had gene $g_{l,j}$ at locus $l$. Now however, I implemented a new model, where
+                \begin{align*}
+                    P(P_j \st G_j, X, \alpha) &\propto P(P_j)P(G_j \st P_j, X, \alpha) \\
+                    P(P_j \st G_j, X, \alpha) &\propto P(P_j)\prod_{l=1}^{24} P(g_{l,j} \st P_j, X, \alpha) \\
+                \end{align*}
+                Where $P(g_{l,j} \st P_j, X, \alpha)$ is the posterior prediction distribution based on all the genes at locus $l$ in population $P_j$ with a uniform $\alpha$ Dirichlet distribution (as in question 2.ii.b). If $W$ is the set of genes at locus $l$, and $n_{w,P_j}$ is the count from the training sample of gene $w$ at locus $l$ in population $P_j$, then this quantity is:
+                \[ P(g_{l,j}=v \st P_j, X, \alpha) = \frac{\alpha + n_{v,P_j}}{\sum_{w\in W} \alpha +n_{w,P_j}} \]
+            \item[b)]
+                Trying out different values of $\alpha$, I got these empirical error rates
+                \FloatBarrier
+                \input{hw3/pr5_b.tex}
+                \FloatBarrier
+            \item[c)]
+                I calculated the likelihood for a given alpha as the outcome which made our training data most likely. In other words:
+                \begin{align*}
+                    P(G \st X,\alpha) &= \prod_{j=1}^n P(G_j \st X,\alpha) \\ 
+                    P(G \st X,\alpha) &= \prod_{j=1}^n \prod_{l=1}^{24} P(g_{l,j} \st X, \alpha) \\
+                    P(G \st X,\alpha) &= \prod_{j=1}^n \prod_{l=1}^{24}\sum_{k=1}^4 P(P_j=k)P(g_{l,j} \st P_j=k, X, \alpha) \\
+                \end{align*}
+                I maximized $\alpha$ over this quantity, with \(P(g_{l,j} \st P_j=k, X, \alpha)\) defined as above.
+            \item[d)]
+                When I did this, I found the optimal parameter to be $\alpha=.363$, which had a log likelihood of $-13621$ and yielded an error rate of $.231$. This rate is only a bit higher than the best rate observed in part b of $.216$.
+            \item[e)]
+                Where A=\(\{0.025, 0.05, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4\}\), I implemented the method as such:
+                \begin{align*}
+                    P(P_j \st G_j, X) &\propto P(P_j)P(G_j \st P_j, X) \\
+                    P(P_j \st G_j, X) &\propto \sum_{\alpha\in A} P(\alpha)P(P_j)P(G_j \st P_j, X, \alpha) \\
+                    P(P_j \st G_j, X) &\propto \sum_{\alpha\in A} \frac{1}{|A|}P(P_j)\prod_{l=1}^{24} P(g_{l,j} \st P_j, X, \alpha) \\
+                \end{align*}
+                This time, I got an error rate of $.243$, which is higher than the best $\alpha$ by it self by a few percent. This isn't surprising though, we are averaging the probabilities over a few $\alpha$ which we know have higher error rates than the best $\alpha$ we've seen. Of course, it may be that this value is really closer to what $\alpha$ "should" be given the true variation in the data.
+
+
+
+        \end{itemize}
+
+
+\end{itemize}
+
+\end{document}

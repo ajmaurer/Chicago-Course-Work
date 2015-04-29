@@ -1,0 +1,97 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+STAT 347 Homework 2, Part 1 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+\begin{itemize}
+    \item[A1:]
+        Filling out the table, I got:
+        \FloatBarrier
+        \input{hw2/pr1}
+        \FloatBarrier
+        Overall, the majority of the variation not accounted for by the mean can be explained by the Fac(T) space, even though the other variables can account for part of this total variation too. We can see this by noting that (if $S$ is the entire space)
+        \[ SS_{T/1} > SS_{t/1} + SS_{R/1}+ SS_{(t:r)/(T+R+r)} \geq SS_{S/T} \]
+
+        Additionally we notice the spaces defined by each of three variables are not orthogonal to each other; otherwise, the sum of squares in the space defined by each would be identical to the quotient space with the other two variables removed. Additionally, a significant amount of the covariation between each subspace and the Prothrombin level is due to the intersection of the three subspaces. This said, each quotient space still accounts for its own covariation with Prothombin level. Finally, there is variation unaccounted for by the joint span of the three subspaces due to each variable, as indicated by the variation of the quotient space of the interaction space and the span of the three variable spaces.
+    \item[A2:]
+        Let us say the number of rows is $R$ \\
+        \begin{itemize}
+            \item[(i)] 
+                The subspace will have dimension $R$.
+                Algebraically this can be expressed as \(\E(Y_{ij})=\alpha_i+\alpha_b\). 
+                This might be used to model a variable assigned to pairs, where order doesn't matter and each member contributes an amount independently. For instance, it might be used to model the energy released by burning one ounce of one fuel and one ounce of another fuel.
+            \item[(ii)] 
+                The subspace will have dimension $R$ and be orthogonal to the subspace in the prior problem. Algebraically it can be expressed as \(\E(Y_{ij})=\alpha_i-\alpha_b\). This might be used to model the difference between the first item in a pair and the second. For instance, this was the appropriate model for the voltage difference between two metals in an electrolytic solution.
+            \item[(iii)] This subspace will have dimension ${R \choose 2}$. Algebraically, it can be expressed as $\E(Y_{ij})=\alpha_{ij}$, where $\alpha_{ij}=\alpha_{ji}$. This might be used to model an effect which is unique to particular unordered pairs. For instance, one might use this model the energy released from the reaction of one ounce of one chemical mixed with one ounce of another chemical.
+            \item[(iv)] This subspace will have dimension ${R \choose 2}$. Algebraically, it can be expressed as $\E(Y_{ij})=\alpha_{ij}$, where $\alpha_{ij}=-\alpha_{ji}$ when $i\neq j$. This might be used to model an effect which is unique for particular pairs, with the sign flipped depending on the order. For instance, this might be used to model the difference in score between the first player to move and the second player to move in a game of go (we'll say someone can play themselves). 
+        \end{itemize}
+\end{itemize}
+
+
+
+\end{document}
