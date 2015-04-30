@@ -1,0 +1,135 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\sd}{\mathrm{SD}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+STAT 347 Homework 2 Part 2 \hfill Aaron Maurer
+\vspace{2mm}
+\hrule
+\vspace{2mm}
+\begin{itemize}
+    \item[A0.]
+        In this paper, the authors attempt to measure whether raising two sets of flies on different feed for several generations results in the two groups being less likely to mate with each other. To test this, the researchers performed two experiments. For both experiments, the distinct populations were raised on the respective feed for a number of generations. Then, a new generation from each population were both raised on one feed. Finally, a number of different wells were filled with one male and one female fly from the final generation of each population. The mating in each well was observed, and the number of pairings was tallied by male and female population. In the first experiment, these counts were summed across all the wells for one generation. In the second experiment, this process was repeated after different numbers of generations had been raised on the two feed, and the results were summed across wells and generations. \\
+        \vspace{-2mm} \\
+        To analyze this statistics, the researchers assumed that a mating represented an independent Bernoulli random draw of whether the mating occurred between flies of the same population. Thus, for $n_h$, the number of matings with both members from the same population, and $p$, the probability of homogamic mating given mating, $n_h\sim Bin(n,p)$. They transformed this into a statistic 
+        \[ SII = \frac{n_h - (n-n_h)}{n} = \frac{2n_h}{n} - 1\]
+        Then, they calculated its standard error based on the binomial assumption:
+        \begin{align*}
+            \sd(SII) &= \sd(\frac{2n_h}{n}) \\
+                     &= \sqrt{\frac{2}{n}\frac{n_h}{n}\left(1-\frac{n_h}{n}\right)} \\
+                     &= \sqrt{\frac{1}{n}\left(1-\left(\frac{n_h - (n-n_h)}{n}\right)^2\right)} \\
+                     &= \sqrt{\frac{1}{n}\left(1-SII^2\right)} \\
+        \end{align*}
+        For the first experiment, with $n_h=29, n=38$ they calculated an SII of $.53$ with a standard error of $.14$. Also, they attempted to calculate a p-value as $P(n_h\geq 29 \st p =.5)$, which should have been $.00083$, but which they reported as $.0012$. In the second experiment, $n=900, n_h=571$, yielding a SII of $.27$, a SE of $.02$, and a p-value less than $.0001$. They accordingly concluded that the different diets reduced inter-mating. \\
+        \vspace{-2mm} \\
+        The biggest issue with this analysis was the binomial assumption. The fact that there was only two males and two females in each well prevented independence; while one pair of flies is mating, the other two can only possibly be mating with each other. This means that two homogamic matings or two heterogamic matings would be more common than one of each in a well (indeed, depending on how they counted mating, which was not clear, it may be impossible). This means that their confidence intervals and p-values are invalid. \\
+        \vspace{-2mm} \\
+        Other set of potential issues stem from the pooling of data across generation in the second experiment. Its questionable whether SII is constant across the generations. When I fit a quadratic regression by least squares, our p-value from an F test is $.1534$, but as you see below, it does appear to be a better fit than just a constant. 
+        \begin{center}
+            \includegraphics[width=10cm]{hw2/A0_SII} 
+        \end{center}
+        Thankfully, since flies which were placed in wells to mate were permanently removed from the population, there is little concern of dependence among mating between generation.\\
+        \vspace{-2mm} \\
+        The one remaining issue then is whether the last three sets of tests in the second experiment, which were from a parallel pair of populations, is comparable to the rest of the data set. If we look at the number of matings per well, the answer seems to be no. As one would expect, the total number of matings grows linearly with wells. However, the last three test groups do not seem to fit the pattern from the first 15:
+        \begin{center}
+            \includegraphics[width=10cm]{hw2/A0_wells} 
+        \end{center}
+        When we test for the probability of seeing the mean of the three points fall so far away from the prediction under the linear model, we get a p-value of $.013$, which is sufficient to reject that they follow the same distribution. (I used the usual formula for prediction distribution of a linear model taking into account the smaller standard error for the mean of three observations).
+    \item[A3.]
+        Fitting a logistic model to the data, we get this model:
+        \FloatBarrier
+        \input{hw2/A3_logit}
+        \FloatBarrier
+        Superimposed over the data, it seems to be a very good fit:
+        \begin{center}
+            \includegraphics[width=10cm]{hw2/A3_plot1} 
+        \end{center}
+        We can obtain an estimate of $\log_2LD_{50}$ by solving this equation:
+        \begin{align*}
+            .5 &= (1+e^{-1.01x+2.54})^{-1} \\
+            0  &= -1.01x+2.54 \\
+            x  &= 2.51 \\
+        \end{align*}
+        Where $\hat\alpha$ is in the intercept and $\hat\beta$ is the coefficient on $x$, we want a confidence interval on $-\frac{\hat\alpha}{\hat\beta}$, which will set the linear predictor to $0$ and yield $\log_2LD_{50}$. Thus, we can apply Fieller's method.
+        \begin{align*} 
+            1.96^2 &> \frac{(\hat\alpha - x\hat\beta)^2}{\hat\sigma_\alpha^2 - 2x\hat\sigma_{\alpha,\beta} + x^2\sigma_\beta^2} \\
+            U,L &= \frac{(\hat\alpha\hat\beta - 1.96^2\hat\sigma_{\alpha,\beta}) \pm \sqrt{(\hat\alpha\hat\beta - 1.96^2\hat\sigma_{\alpha,\beta})^2 - (\hat\beta^2 - 1.96^2\sigma_{\hat\beta})(\hat\alpha^2 - 1.96^2\sigma_{\hat\alpha})}}{\hat\beta^2 - 1.96^2 \sigma_{\hat\alpha}} \\
+            U&=-1.66, L=-3.31
+        \end{align*}
+        Since this is the confidence interval on $\frac{\hat\alpha}{\hat\beta}$ while we want $-\frac{\hat\alpha}{\hat\beta}$, our confidence interval for $\log_2LD_{50}$ is $(1.66,3.31)$. Its worth noting that this ignores the uncertainty in the covariance matrix. \\
+        \vspace{-2mm} \\
+        Fitting a model under the constraint that $\log_2LD_{50}=4$ means that the linear predictor must be $0$ at $x$. Thus, we fit the model $E(y) = logit(\beta(x-4))$. This yields the model
+        \FloatBarrier
+        \input{hw2/A3_logit4}
+        \FloatBarrier
+        Calculating the likelihood ratio statistic for this model as compared to the original model, we get a value of $11.59$, which corresponds to a p-value of $.00066$ assuming a $\chi^2_1$ distribution. Extending this concept, we might calculate a confidence interval set based on the $.95$ percentile of the $\chi^2_1$ distribution, including only values of $\log_2LD_{50}$ whose likelihood ratio statistic would fall below it. Indeed, this is plotted below, with the dotted line representing the cutoff:
+        \begin{center}
+            \includegraphics[width=10cm]{hw2/A3_lkl} 
+        \end{center}
+        The region which has log likelihoods above the cut off corresponds to $\log_2LD_{50}\in(1.75,3.21)$. This is pretty close to the confidence interval we calculated earlier. 
+
+        
+\end{itemize}
+
+\end{document}
