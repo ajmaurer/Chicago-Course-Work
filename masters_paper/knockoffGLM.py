@@ -104,23 +104,17 @@ def find_w(y,X,X_ko):
 
     X_lrg = np.concatenate((X,X_ko), axis=1)
 
-    clen = p*10
-    cs = l1_min_c(X_lrg, y, loss='log') * 10 * np.logspace(0, 3,clen)
-    clf = lm.LogisticRegression(C=1.0, penalty='l1', tol=1e-6)
-    coefs_ = []
-    for c in cs:
-        clf.set_params(C=c)
-        clf.fit(X_lrg, y)
-        coefs_.append(clf.coef_.ravel().copy())
-
+    clen = int(np.log(p)*50)
+    coefs_,cs = lm.logistic_regression_path(X_lrg,y, penalty='l1', tol=1e-6,fit_intercept=False,solver='liblinear',Cs=clen)
     coefsMat = np.vstack(coefs_)
     coefsMat[abs(coefsMat)<1e-6] = 0
     Z   = np.zeros(2*p) 
     for i in range(clen):
         Z[np.all(np.vstack((Z==0,coefsMat[i,:]!=0)),axis=0)] = cs[i]
     w = np.min((Z[:p],Z[p:2*p]),axis=0) * np.sign(Z[p:2*p]-Z[:p])
+    ent = np.min((Z[:p],Z[p:2*p]),axis=0)>0
 
-    return w 
+    return w, ent
 
 def generate_logit_w(y,X,knockoff='equicor',randomize=False):
     """ Generates the w statistic for a logistic model predicting y~X"""
@@ -134,15 +128,32 @@ def generate_logit_w(y,X,knockoff='equicor',randomize=False):
 
     return find_w(y,X,X_ko)
 
-def iid_normal_null_test(n,p,q):
-    """ Test run with n observations. p covariates, each iid Normal. Base rate q"""
-    y = npran.binomial(1,.2,n)
-    X = npran.randn(n,p)
-    w = generate_logit_w(y,X)
-    print '%.2f of null knockoffs came in first; %.2f of variables never entered' % (np.sum(w>0)/float(np.sum(w!=0)),np.sum(w==0)/float(p))
+def analyze_knockoff(X_1,X_null,y):
+    if X_1 == None:
+        n,p = X_null.shape
+        p0,p1 = p,0
+        X = X_null
+    else:
+        n,p0 = X_null.shape
+        n,p1 = X_1.shape
+        p = p0+p1
+        X = np.concatenate((X_1,X_null),axis=1)
+    w,ent = generate_logit_w(y,X)
+    print '%.2f of nulls beat there knockoffs; %.2f of variables never entered; %.2f had ties' % (np.sum(w>0)/float(np.sum(np.any((w!=0,ent),axis=0))),1-np.sum(ent)/float(p),np.sum(np.all((w==0,ent),axis=1))/float(p))
+    density_plot(w[np.all((ent,np.array(range(p))>=p1),axis=0)],.25)
 
 def main(n,p,q):
     print 'nobody lives here right now'
+
+def density_plot(data,bandwidth=.25):
+    density = spstat.gaussian_kde(data)
+    density.covariance_factor = lambda:bandwidth
+    density._compute_covariance()
+    xs = np.linspace(np.min(data)-2*density.covariance.ravel(),np.max(data)+2*density.covariance.ravel(),200)
+    plt.plot(xs,density(xs))
+    plt.title('Approximate Distribution Null W')
+    plt.show
+
 
 if __name__ == '___main__':
     status = main()
