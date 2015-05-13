@@ -1,0 +1,102 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\newcommand{\hwhead}[1]{#1 \hfill Aaron Maurer \vspace{2mm} \hrule \vspace{2mm}}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hwhead{STAT 302 Homework 4}
+\begin{itemize}
+    \item[1.]
+        \begin{itemize}
+            \item[i)]
+                Together, (1) and (2) define a hierarchical model since they relate observed values $D_{ij}$ drawn independently based on parameters $\beta_i$ to a set of hyperparameters $\pi_0$ and $\sigma_b$ in such a way that the $D_{ij}$ can provide inference on each other through the hyperparameters. In other words, even though the observations are conditionally independent, they are still informative on each other through the hyperparameters.Since the $\beta_j$ are iid given the hyperparameters, they are necessarily exchangeable. Not conditioned on $\pi_0, \sigma_b$, the $\beta_j$ should still be exchangeable assuming the same value of $\pi_0$ and $\sigma_b$ are used to draw each $\beta_j$; there is just additional variability in the initial draw of the hyperparameters. $D_{ij}\st \beta, \sigma$ will be exchangeable for all $i$ since they are iid, but $D_{ij}\st \beta_j$ won't be exchangeable across $j$ since \(P(D_{ij}\st \beta_j=a,D_{ij'}\st \beta_{j'}=b)=P(D_{ij'}\st \beta_{j'}=a,D_{ij}\st \beta_j=b)$ only if $\beta_{j'}=\beta_j$. Finally, the $D_{ij}$ should be exchangable accross $i$ and $j$ if unconditioned, or conditioned on $\pi,\sigma_b$, since then they will be iid.
+            \item[ii)]
+                This command will calculate $\beta$, $D$, and also the p-values.
+                \lstinputlisting[firstline=18,lastline=28]{hw4.R}
+            \item[iii)] I calculated the usual two sided t-test p-value using the R command. They were distributed as such: \\
+                \includegraphics[width=9cm]{hw4/pr1_iii_hist_a}
+                \includegraphics[width=9cm]{hw4/pr1_iii_hist_b} \\
+                \includegraphics[width=9cm]{hw4/pr1_iii_hist_c} \\
+                As one would expect, for the first one where the $\beta$ are all $0$, the p-values are uniformly distributed. In the second, with $\pi_0=.5$, we see a big lump of low p-values near $0$ corresponding to most of the $\beta_j$ which are non-zero, and a approximately uniform distribution over the rest of the p-values corresponding to the $\beta_j$ which are $0$. Finally, in the last histogram, where none of the $\beta_j$ are $0$, we see overwhelmingly low p-values corresponding to the strong evidence against $\beta_j=0$.
+            \item[iv)] This is my function to apply Benjamini-Hochberg:
+                \lstinputlisting[firstline=44,lastline=50]{hw4.R}
+            \item[v)] This is my function to computer the empirical FDR (and pFDR):
+                \lstinputlisting[firstline=53,lastline=58]{hw4.R}
+            \item[vi)]
+                To simulate $\E(V/R)$, I generated the dataset D $1000$ times for each scenario, and averaged the emperical FDR for each $alpha$ over the data sets. The results are ploted below: \\
+                \includegraphics[width=9cm]{hw4/pr1_vi_hist_a}
+                \includegraphics[width=9cm]{hw4/pr1_vi_hist_b} \\
+                \includegraphics[width=9cm]{hw4/pr1_vi_hist_c} \\
+                In the first scenario, despite the fact that all the discoveries are false, our FDR statistic is less than 1, which is due to the definiton. In any event, The FDR rate is properly controlled, coming in under $\alpha$. For the second scenario, the FDR rate seems to come in at almost exactly half of $\alpha$ for all levels, providing conservative control. For the final scenario, since all $\beta\neq0$, the FDR is necessarily $0$, so FDR is inherently controlled.  
+            \item[vii)] I repeated the same procedure as above, but this time caclulated the pFDR. The results are below:
+                \includegraphics[width=9cm]{hw4/pr1_vii_hist_a}
+                \includegraphics[width=9cm]{hw4/pr1_vii_hist_b} \\
+                \includegraphics[width=9cm]{hw4/pr1_vii_hist_c} \\
+                In the first case, with all discoveries false, the pFDR is naturally at 1 for all $\alpha$ and not controlled. The second case is nearly identical as with FDR, controlled at about half of $\alpha$. Again, for the final case, since no discoveries are false, the pFDR is controlled perfectly at 0.
+
+
+
+        \end{itemize}
+\end{itemize}
+\end{document}
