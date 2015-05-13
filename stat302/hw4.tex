@@ -85,17 +85,36 @@
                 \lstinputlisting[firstline=53,lastline=58]{hw4.R}
             \item[vi)]
                 To simulate $\E(V/R)$, I generated the dataset D $1000$ times for each scenario, and averaged the emperical FDR for each $alpha$ over the data sets. The results are ploted below: \\
-                \includegraphics[width=9cm]{hw4/pr1_vi_hist_a}
-                \includegraphics[width=9cm]{hw4/pr1_vi_hist_b} \\
-                \includegraphics[width=9cm]{hw4/pr1_vi_hist_c} \\
+                \includegraphics[width=9cm]{hw4/pr1_vi_a}
+                \includegraphics[width=9cm]{hw4/pr1_vi_b} \\
+                \includegraphics[width=9cm]{hw4/pr1_vi_c} \\
                 In the first scenario, despite the fact that all the discoveries are false, our FDR statistic is less than 1, which is due to the definiton. In any event, The FDR rate is properly controlled, coming in under $\alpha$. For the second scenario, the FDR rate seems to come in at almost exactly half of $\alpha$ for all levels, providing conservative control. For the final scenario, since all $\beta\neq0$, the FDR is necessarily $0$, so FDR is inherently controlled.  
             \item[vii)] I repeated the same procedure as above, but this time caclulated the pFDR. The results are below:
-                \includegraphics[width=9cm]{hw4/pr1_vii_hist_a}
-                \includegraphics[width=9cm]{hw4/pr1_vii_hist_b} \\
-                \includegraphics[width=9cm]{hw4/pr1_vii_hist_c} \\
+                \includegraphics[width=9cm]{hw4/pr1_vii_a}
+                \includegraphics[width=9cm]{hw4/pr1_vii_b} \\
+                \includegraphics[width=9cm]{hw4/pr1_vii_c} \\
                 In the first case, with all discoveries false, the pFDR is naturally at 1 for all $\alpha$ and not controlled. The second case is nearly identical as with FDR, controlled at about half of $\alpha$. Again, for the final case, since no discoveries are false, the pFDR is controlled perfectly at 0.
-
-
+        \end{itemize}
+    \item[2.]
+        \begin{itemize}
+            \item[i)]        
+                Repeating the same procedure as above, except with reject decisions based on q values, I get these results: \\
+                \includegraphics[width=9cm]{hw4/pr2_i_FDR_a}
+                \includegraphics[width=9cm]{hw4/pr2_i_pFDR_a} \\
+                In this first scenario, the FDR seems to be controlled at pretty much exactly the desired rate, while the pFDR is still necessarily 1.\\
+                \includegraphics[width=9cm]{hw4/pr2_i_FDR_b}
+                \includegraphics[width=9cm]{hw4/pr2_i_pFDR_b} \\
+                In this second scenario, we have control of both FDR and pFDR at the desired rate.\\
+                \includegraphics[width=9cm]{hw4/pr2_i_FDR_c}
+                \includegraphics[width=9cm]{hw4/pr2_i_pFDR_c} \\
+                With no false discoveries, FDR and pFDR are still 0.
+            \item[2)]
+                I have plotted the estimated $\pi_0$ vs actual $\pi_0$ over a range of values for $\sigma_b=.5,1,2,4$. Each estimate is the average over 100 simulations. \\
+                \includegraphics[width=9cm]{hw4/pr2_ii_pt5}
+                \includegraphics[width=9cm]{hw4/pr2_ii_1}\\
+                As we can see above and below, the estimates get increasingly good as the variance goes up and the $\beta$ tend to fall farther from $0$. The predictions are uniformly higher than the actual $\pi_0$, except for values near 1, and the worst predictions are for low values of $\pi_0$. In general, this method seem to provide a pretty solid estimate. \\
+                \includegraphics[width=9cm]{hw4/pr2_ii_2}
+                \includegraphics[width=9cm]{hw4/pr2_ii_4}\\
 
         \end{itemize}
 \end{itemize}
