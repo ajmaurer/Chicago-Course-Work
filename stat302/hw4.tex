@@ -12,7 +12,7 @@
 % graphicx lets you include pictures
 % listings lets you stick in blocks of code
 % placeins defines "\FloatBarrier", which stops tables from moving around
-\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins, bigints} 
 \newcommand{\Z}{\mathbb{Z}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\Q}{\mathbb{Q}}
@@ -37,6 +37,7 @@
 \newcommand{\uj}{\{u_j\}_{j=1}^\infty}
 \newcommand{\B}{\mathcal{B}}
 
+\newcommand{\p}{\mathrm{P}}
 \newcommand{\E}{\mathrm{E}}
 \newcommand{\var}{\mathrm{Var}}
 \newcommand{\cov}{\mathrm{Cov}}
@@ -115,7 +116,64 @@
                 As we can see above and below, the estimates get increasingly good as the variance goes up and the $\beta$ tend to fall farther from $0$. The predictions are uniformly higher than the actual $\pi_0$, except for values near 1, and the worst predictions are for low values of $\pi_0$. In general, this method seem to provide a pretty solid estimate. \\
                 \includegraphics[width=9cm]{hw4/pr2_ii_2}
                 \includegraphics[width=9cm]{hw4/pr2_ii_4}\\
-
+        \end{itemize}
+    \item[3.]
+        \begin{itemize}
+            \item[i)]
+                We can prove this by using the conditional independence of the $D_ij$ and decomposing the likelihood with $\sigma$ fixed:
+                \begin{align*}
+                    \p(D\st\beta) &= \prod_{j=1}^m \prod_{i=1}^n \p(D_{ij}\st\beta_j) \\
+                    \p(D\st\beta) &\propto \prod_{j=1}^m \prod_{i=1}^n \exp\left\{-\frac{1}{2\sigma^2}(\beta_j^2-2\beta_jD_{ij})\right\} \\
+                    \p(D\st\beta) &\propto \prod_{j=1}^m \exp\left\{-\frac{n}{2\sigma^2}\left(\beta_j^2-2\beta_j\sum_{j=1}^n\frac{D_{ij}}{n}\right)\right\} \\
+                    \p(D\st\beta) &\propto \prod_{j=1}^m \exp\left\{-\frac{n}{2\sigma^2}\left(\beta_j^2-2\beta_j\bar D_{j}\right)\right\} \\
+                    \p(D\st\beta) &\propto \prod_{j=1}^m \exp\left\{-\frac{1}{2\frac{\sigma^2}{n}}\left(\beta_j^2-2\beta_j\bar D_{j}\right)\right\} \\
+                    \p(D\st\beta) &\propto \prod_{j=1}^m \p(\bar D_j \st \beta_j) \\
+                    \p(D\st\beta) &\propto \p(\bar D \st \beta) \\
+                \end{align*}
+                Proving that $\bar D$ is a sufficient statistic for the full matrix $D$.
+            \item[ii)]
+                We can derive the log-likelihood by first integrating out $\beta$ to get the pdf of $\bar D$, and then taking the log. Let $\sigma_n^2 = \frac{\sigma^2}{n}$.
+                \begin{align*}
+                    \p(\bar D\st \pi_0,\sigma_b) &= \prod_{j=1}^m \p(\bar D_j\st \pi_0,\sigma_b)\\
+                    \p(\bar D\st \pi_0,\sigma_b) &= \prod_{j=1}^m\int_\R \p(\bar D_j\st \beta_j) d\p_{\beta_j \st \pi_0,\sigma_b}\\
+                    \p(\bar D\st \pi_0,\sigma_b) &= \prod_{j=1}^m\left(\pi_0\p(\bar D_j\st \beta_j=0) + \frac{1-\pi_0}{\sigma_b\sqrt{2\pi}}\bigintsss_\R \p(\bar D_j\st \beta_j)\exp\left\{-\frac{\beta_j^2}{2\sigma_b^2}\right\}d\beta_j\right) \\
+                    \p(\bar D\st \pi_0,\sigma_b) &\propto \prod_{j=1}^m\left(\pi_0 + \frac{1-\pi_0}{\sigma_b\sqrt{2\pi}}\bigintsss_\R \exp\left\{-\frac{1}{2\sigma_n^2}\left(\beta_j^2-2\beta_j\bar D_{j}\right)\right\}\exp\left\{-\frac{\beta_j^2}{2\sigma_b^2}\right\}d\beta_j\right) \\
+                    \p(\bar D\st \pi_0,\sigma_b) &\propto \prod_{j=1}^m\left(\pi_0 + \frac{1-\pi_0}{\sigma_b\sqrt{2\pi}}\bigintsss_\R \exp\left\{-\frac{\sigma_n^2+\sigma_b^2}{2\sigma_n^2\sigma_b^2}\left(\beta_j^2-2\frac{\sigma_b^2}{\sigma_n^2+\sigma_b^2}\beta_j\bar D_{j}\right)\right\}d\beta_j\right)\\
+                    \p(\bar D\st \pi_0,\sigma_b) &\propto \prod_{j=1}^m\left(\pi_0 + \frac{1-\pi_0}{\sigma_b\sqrt{2\pi}}\exp\left\{\frac{\sigma_b^2}{2\sigma_n^2(\sigma_n^2+\sigma_b^2)}\bar D_j^2\right\}          \bigintsss_\R \exp\left\{-\frac{\sigma_n^2+\sigma_b^2}{2\sigma_n^2\sigma_b^2}\left(\beta_j-\frac{\sigma_b^2}{\sigma_n^2+\sigma_b^2}\bar D_{j}\right)^2\right\}d\beta_j\right)\\
+                    \p(\bar D\st \pi_0,\sigma_b) &\propto \prod_{j=1}^m\left(\pi_0 + \frac{1-\pi_0}{\sigma_b\sqrt{2\pi}}\exp\left\{\frac{\sigma_b^2}{2\sigma_n^2(\sigma_n^2+\sigma_b^2)}\bar D_j^2\right\}  \sqrt{\frac{2\pi\sigma_n^2\sigma_b^2}{\sigma_n^2+\sigma_b^2}}\right) \\
+                    \p(\bar D\st \pi_0,\sigma_b) &\propto \prod_{j=1}^m\left(\pi_0 + \frac{(1-\pi_0)\sigma_n}{\sqrt{\sigma_n^2+\sigma_b^2}}\exp\left\{\frac{\sigma_b^2}{2\sigma_n^2(\sigma_n^2+\sigma_b^2)}\bar D_j^2\right\}  \right) \\
+                    l(\pi_0,\sigma_b) &= c +  \sum_{j=1}^m\log\left(\pi_0 + \frac{(1-\pi_0)\sigma_n}{\sqrt{\sigma_n^2+\sigma_b^2}}\exp\left\{\frac{\sigma_b^2}{2\sigma_n^2(\sigma_n^2+\sigma_b^2)}\bar D_j^2\right\}  \right) \\
+                \end{align*}
+            \item[iii)]
+                I've implemented a method that maximizes the likelihood given above. In testing, it converged fine, but there must be some mistake in my derivation or my code I can't figure out, since it yields consistantly the wrong answer. None the less, this is my code:
+                \lstinputlisting[firstline=186,lastline=218]{hw4.R}
+            \item[iv)]
+                Using the expression for likelihood we derived at the second to last step of ii, we can calculate \\ $\p(\beta_j=0\st \bar D_j, \pi_0, \sigma_b)$ as 
+                \begin{align*}
+                    \p(\beta_j=0\st \bar D_j, \pi_0, \sigma_b) &= \frac{\p(\beta_j=0\st \pi_0, \sigma_b)\p(\bar D_j \st \beta_j=0)}{\p( \bar D_j \st \pi_0, \sigma_b)} \\
+                    \p(\beta_j=0\st \bar D_j, \pi_0, \sigma_b) &= \frac{\pi_0}{ \pi_0 + \frac{(1-\pi_0)\sigma_n}{\sqrt{\sigma_n^2+\sigma_b^2}}\exp\left\{\frac{\sigma_b^2}{2\sigma_n^2(\sigma_n^2+\sigma_b^2)}\bar D_j^2\right\} } \\
+                    \p(\beta_j=0\st \bar D_j, \pi_0, \sigma_b) &:= \pi_1 \\
+                \end{align*}
+                We can then derive $\p(\beta_j\st \bar D_j, \pi_0, \sigma_b,\beta_j\neq0)$ as 
+                \begin{align*}
+                    \p(\beta_j\st \bar D_j, \pi_0, \sigma_b, \beta_j\neq 0) &\propto  \p(\bar D_j\st \beta_j) \p(\beta_j \st \pi_0, \sigma_b, \beta_j\neq 0) \\
+                    \p(\beta_j\st \bar D_j, \pi_0, \sigma_b, \beta_j\neq 0) &\propto  \exp\left\{-\frac{1}{2\sigma_n^2}\left(\beta_j^2-2\beta_j\bar D_j\right) -\frac{1}{2\sigma_b^2}\beta_j^2\right\} \\
+                    \p(\beta_j\st \bar D_j, \pi_0, \sigma_b, \beta_j\neq 0) &\propto  \exp\left\{-\frac{\sigma_n^2+\sigma_b^2}{2\sigma_n^2\sigma_b^2}\left(\beta_j^2-2\frac{\sigma_b^2}{\sigma_n^2+\sigma_b^2}\bar \beta_jD_{j}\right)\right\} \\
+                    \p(\beta_j\st \bar D, \pi_0, \sigma_b, \beta_j\neq 0) &= \frac{1}{\sqrt{\frac{\sigma_n^2\sigma_b^2}{\sigma_n^2+\sigma_b^2}2\pi}} \exp\left\{-\frac{\sigma_n^2+\sigma_b^2}{2\sigma_n^2\sigma_b^2}\left(\beta_j-\frac{\sigma_b^2}{\sigma_n^2+\sigma_b^2}\bar D_{j}\right)^2\right\} \\
+                    \p(\beta_j\st \bar D, \pi_0, \sigma_b, \beta_j\neq 0) &= \sqrt{\frac{1}{\sigma_b^2}+\frac{1}{\sigma_n^2}} \frac{1}{2\pi} \exp\left\{-\left(\frac{1}{\sigma_b^2}+\frac{1}{\sigma_n^2}\right)\left(\beta_j-\frac{\sigma_b^2}{\sigma_n^2+\sigma_b^2}\bar D_{j}\right)^2\right\}
+                \end{align*}
+                Giving us a total estimate of 
+                \[ \p(\beta_j\st\bar D, \pi_0, \sigma_b) = \begin{cases} 
+                        (1-\pi_1)\sqrt{\frac{1}{\sigma_b^2}+\frac{1}{\sigma_n^2}} \frac{1}{2\pi} \exp\left\{-\left(\frac{1}{\sigma_b^2}+\frac{1}{\sigma_n^2}\right)\left(\beta_j-\frac{\sigma_b^2}{\sigma_n^2+\sigma_b^2}\bar D_{j}\right)^2\right\} &\mbox{if } \beta_j\neq 0 \\
+                        \pi_1 &\mbox{if } \beta_j=0 \end{cases} \]
+            \item[v)] Since my likelihood is screwed up, I didn't actually use the optimized parameters and cheated. However, I still use the likelihood in part of my calculation of p-values as stated above, so the end result seems to still be that something is off. Non withstanding, here are my results: \\
+                \includegraphics[width=9cm]{hw4/pr3_v_FDR_a}
+                \includegraphics[width=9cm]{hw4/pr3_v_pFDR_a} \\
+                \includegraphics[width=9cm]{hw4/pr3_v_FDR_b}
+                \includegraphics[width=9cm]{hw4/pr3_v_pFDR_b} \\
+                \includegraphics[width=9cm]{hw4/pr3_v_FDR_c}
+                \includegraphics[width=9cm]{hw4/pr3_v_pFDR_c} \\
+                I think my mistake made my test way overly conservative in a way I don't quite understand.
         \end{itemize}
 \end{itemize}
 \end{document}

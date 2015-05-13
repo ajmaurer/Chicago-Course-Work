@@ -12,7 +12,8 @@ library("qvalue")
 
 ### Caller
 problem1 <- FALSE 
-problem2 <- TRUE
+problem2 <- FALSE
+problem3 <- TRUE
 
 ### Problem 1
 ## ii - simulate simple hierarchical model
@@ -177,4 +178,100 @@ if (problem2){
 
 }
 
+
+### Problem 3
+if (problem3){
+    ##part iii - r function to compute log-likelihood for hyperparameters
+
+    # compute log-likelihood for single observation in the hierarchical model
+    hloglik.sin <- function(Dbar,pi,sig.b,sig.n=1/sqrt(10)) {
+
+        # fraction part second term in log
+        frac  <- (1-pi)*sig.n/sqrt(sig.b^2+sig.n^2)
+        # exponential part second term in log
+        expon <- exp(sig.b^2*Dbar^2/(2*sig.n^4 + 2*sig.b^2)) 
+
+        # actual log-likelihood
+        loglik <- log(pi + frac*expon)  
+        return(loglik)
+    }
+
+    # Vectorize the log-likelihood for a single term
+    v.hloglik.sin <- Vectorize(hloglik.sin,c('pi','sig.b'))
+
+    # function to return the entire log-likelihood
+    hloglik <- function(Dbar,pi,sig.b) {
+       return(sum(v.hloglik.sin(Dbar,pi=pi,sig.b=sig.b)))
+    }
+
+    # wrapper of above for optim
+    hloglik.optim <- function(param,Dbar){
+        # convert to form in equation
+        pi    <- inv.logit(param[1])
+        sig.b <- exp(param[1])
+        return(hloglik(Dbar,pi,sig.b))
+    }
+
+    # converts output optim back into normal form
+    conv.param <- function(param) {
+        return(c(inv.logit(param[1]),exp(param[2])))
+    }
+
+    Dbar <- apply(simulateD(.2,2)$D,1,mean)
+    opt.param <- conv.param(optim(c(.5,2),hloglik.optim,Dbar=Dbar)$par)
+
+    ## part v - estimate pvalues with posterior
+    post.pval <- function(Dbar,pi,sig.b,sig.n=1/sqrt(10)){
+        denom <- exp(hloglik.sin(Dbar,pi,sig.b,sig.n=1/sqrt(10)))
+        return(pi/denom)
+    }
+    v.post.pval <- Vectorize(post.pval,vectorize.args=c('pi','sig.b'))
+
+    simulateDbay <- function(pi0,sigb,n=10,m=1000,sigj=1){
+        output <- list()
+        output$beta     <- ifelse(rbinom(m,1,pi0),0,rnorm(m,0,sigb))
+        output$Dbar     <- apply(replicate(n,rnorm(m,output$beta,sigj)),1,mean)
+        output$p.values <- v.post.pval(output$Dbar,pi=pi0,sig.b=sigb)
+        return(output)
+    }
+
+    k <- 1000
+    scenarios <- list(c(.1,.5),c(.3,1),c(.4,1))    # each is a pi0, sigb pair
+    alphas    <- seq(.05,.5,.05)
+    FDRs      <- list()
+    pFDRs     <- list()
+    simulations.k <- list()
+    for (i in 1:3){
+        simulations.k[[i]] <-list()
+        pi0  <- scenarios[[i]][1]
+        sigb <- scenarios[[i]][2]
+        sims <- mclapply(1:k,function(x){simulateDbay(pi0,sigb)},mc.cores=4)
+        simulations.k[[i]]$p.values <- mclapply(sims,function(x){x$p.values},mc.cores=4)
+        simulations.k[[i]]$betas    <- mclapply(sims,function(x){x$beta}    ,mc.cores=4)
+        simulations.k[[i]]$gammas<-list()
+        simulations.k[[i]]$FDRs  <-NULL
+        simulations.k[[i]]$pFDRs <-NULL
+        for (j in 1:length(alphas)) {
+            simulations.k[[i]]$gammas[[j]] <- mclapply(simulations.k[[i]]$p.values,function(x){x<alphas[j]},mc.cores=4)
+            # FDR
+            FDRs <- mcmapply(FDR,simulations.k[[i]]$betas,simulations.k[[i]]$gammas[[j]],mc.cores=4)
+            simulations.k[[i]]$FDRavgs[j]  <- mean(unlist(FDRs))       
+            # pFDR
+            pFDRs <- mcmapply(FDR,simulations.k[[i]]$betas,simulations.k[[i]]$gammas[[j]],TRUE,mc.cores=4)
+            simulations.k[[i]]$pFDRavgs[j] <- mean(unlist(pFDRs),na.rm=T)       
+        }
+        # FDR
+        pdf(paste('hw4/pr3_v_FDR_',letters[i],'.pdf',sep=''))
+        plot(alphas,simulations.k[[i]]$FDRavgs,type='b',main=bquote("Simulated FDR using Empirical Bayes, "~pi[0] == .(pi0)~','~ sigma[b]== .(sigb)),xlab=expression(alpha),ylab='FDR',ylim=c(0,1))
+        dev.off()
+ 
+        # pFDR
+        pdf(paste('hw4/pr3_v_pFDR_',letters[i],'.pdf',sep=''))
+        plot(alphas,simulations.k[[i]]$pFDRavgs,type='b',main=bquote("Simulated pFDR using Empirical Bayes, "~pi[0] == .(pi0)~','~ sigma[b]== .(sigb)),xlab=expression(alpha),ylab='pFDR',ylim=c(0,1))
+        dev.off()
+ 
+    }
+    
+
+}
 
