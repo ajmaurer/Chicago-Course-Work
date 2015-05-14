@@ -114,10 +114,43 @@
                     \sigma^2 &= \frac{3}{2} \\
                 \end{align*}
             \item[(vi)]
-                This mechanism can't explain the chi-square test, which indicated under dispersion. If it was the case that one couldn't see one homogamic and one heterogamic mating in one well as we simulated, then the result is higher variance than the binomial model anticipates. This is the opposite of what is observed in the actual data set, suggesting this mechanism is not the explanation.  
+                This mechanism can't explain the chi-square test, which indicated under dispersion. If it was the case that one couldn't see one homogamic and one heterogamic mating in one well as we simulated, then the result is higher variance than the multinomial model anticipates. This is the opposite of what is observed in the actual data set, suggesting this mechanism is not the explanation.  
             \item[(vii)]
-                They would have concluded that the data does not follow a multinomial distribution by looking at the variance of frequencies among replicated experiments, for instance through the same chi square test as above. Since these frequencies had much lower variance than one would anticipate with a binomial model, they concluded the frequencies weren't binomial. This would also stand to reason, since with only two flies of each gender in a well, one pair mating would necessarily effect the probability of the other pair mating, invalidating independence among the mating events. The data not being binomial would invalidate the standard errors and p-values, which were made under an assumed binomial mode.
-            \item[(viii)] By only analyzing the first mating in each well, they were assuring there was no dependence among mating events they counted. Since there is independence between wells, this first mating must necessarily be independent of the other counted matings. With this fix, the binomial model should hold again, allowing for simpler inference. 
+                They would have concluded that the data does not follow a multinomial distribution by looking at the variance of frequencies among replicated experiments, for instance through the same chi square test as above. Since these frequencies had much lower variance than one would anticipate with a multinomial model, they concluded the frequencies weren't multinomial. This would also stand to reason, since with only two flies of each gender in a well, one pair mating would necessarily effect the probability of the other pair mating, invalidating independence among the mating events. The data not being multinomial would invalidate the standard errors and p-values, which were made under an assumed multinomial mode.
+            \item[(viii)] By only analyzing the first mating in each well, they were assuring there was no dependence among mating events they counted. Since there is independence between wells, this first mating must necessarily be independent of the other counted matings. With this fix, the multinomial model should hold again, allowing for simpler inference. 
+            \item[(ix)]
+                It appears counting just the first mating solves the dispersion problem. When performing a Chi-Square test for the presence of mating pair-generation effects, we now get a p-value of $.107$. If we then combine the counts for all homogamic and heterogamic matings in each generation and repeat the test, we get a p-value of .785. This suggests that we have the proper dispersion for a multinomial and that generations don't have an effect on mating preference. \vspace{2mm}
+                
+                If subsequent matings had been analyzed, aside from the mentioned statistical issues due to dependence, the conclusion would likely have been less well supported. First, we can imagine in general, the first mating to occur is in general the one representing the strongest preference. Even if this is not the case though, due to female flies refractory period, after one mating both male flies will likely attempt to mate with the remaining female fly. One can imagine that the desire to mate is stronger than a particular preference if there is only one option, making a preference harder to discern.
+            \item[(x)]
+                Testing the significance of homogamic versus heterogamic pairings, I ran a logistic regression on the counts:
+                \FloatBarrier
+                \input{hw3/A0_ix_logit}
+                \FloatBarrier
+                There is extremely high significance on the intercept, strongly supporting that the probability of the first mating being homogamic is high. This supports the authors' conclusion that homogamic prefernce is preferred, though one could imagine a case where preference changes after some exposure time and an initial mating. Also, I included a second degree polynomial on generation as a second test for whether it effected mating preference; as we can see, it does not.
+
+        \end{itemize}
+    \item[3.]
+        \begin{itemize}
+            \item[(a)]
+                These are the parameter estimates from the main-effects linear logistic model:
+                \FloatBarrier
+                \input{hw3/A3_a_logit}
+                \FloatBarrier
+                For the deviance, the residual degrees of freedom are calculated as the total number of Bernoulli trials represented in the data set minus the minus dimension of the linear space of predictors. Another way of saying this is the sum of all positive and negative outcomes minus the number of variables included in the model (after removing linearly dependent variables). 
+            \item[(b)]
+                With an estimate of $.1239$ on sex2, the model is estimating a small increase in the rate of affected for women, though it is not statistically significant. We can estimate a confidence interval for the odds ratio by calculating a confidence interval for the parameter based on asymptotic normality and transforming it. To start, a $90\%$ CI for the parameter is:
+                \[(.1239+z_{.05}.2288,1.239+z_{.95}.2288)\quad=\quad(-.2524,.5002)\]
+                Then, we transform this by exponentiating it to yields an odds ratio CI:
+                \[(e^{-.2524},e^{.5002})\quad=\quad (.7769,1.6491)\]
+                Thus, we can say with $90\%$ confidence that the odds ratio for women as compared to men is between $.7769$ and $1.6491$.
+            \item[(c)]
+                I dropped sex first, and then race from the original model to get the model below. I didn't drop dust2 because thought it wasn't significant, it was part of a factor which was extremely significant.
+                \FloatBarrier
+                \input{hw3/A3_c_logit}
+                \FloatBarrier
+                Each of the remaining factors is estimated to cause a statistically significant increase in the risk of byssinosis. The third level of dust is estimated to cause a far bigger increase in risk than any of the other variables, causing a large increase over the first and second level, which are not statistically significantly different. The smoking level 2 and employment levels 2 and 3 both are estimated to increase the risk of the disease over the first level of each.
+
         \end{itemize}
 \end{itemize}
 
