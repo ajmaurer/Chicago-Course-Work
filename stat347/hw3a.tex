@@ -114,9 +114,9 @@
                     \sigma^2 &= \frac{3}{2} \\
                 \end{align*}
             \item[(vi)]
-                This mechanism can't explain the chi-square test, which indicated under dispersion. If it was the case that one couldn't see one homogamic and one heterogamic mating in one well as we simulated, then the result is higher variance than the multinomial model anticipates. This is the opposite of what is observed in the actual data set, suggesting this mechanism is not the explanation.  
+                This mechanism can't explain the chi-square test, which indicated under dispersion. If it was the case, as we simulated, that  homogamic and one heterogamic matings in the same well are impossible, then the result would be higher variance than the multinomial model anticipates. This is the opposite of what is observed in the actual data set, suggesting this mechanism is not the explanation.  
             \item[(vii)]
-                They would have concluded that the data does not follow a multinomial distribution by looking at the variance of frequencies among replicated experiments, for instance through the same chi square test as above. Since these frequencies had much lower variance than one would anticipate with a multinomial model, they concluded the frequencies weren't multinomial. This would also stand to reason, since with only two flies of each gender in a well, one pair mating would necessarily effect the probability of the other pair mating, invalidating independence among the mating events. The data not being multinomial would invalidate the standard errors and p-values, which were made under an assumed multinomial mode.
+                They concluded that the data does not follow a multinomial distribution by looking at the variance of frequencies among replicated experiments, for instance through the same chi square test as above. Since these frequencies had much lower variance than one would anticipate with a multinomial model, they concluded the frequencies weren't multinomial. This would also stand to reason, since with only two flies of each gender in a well, one pair mating would necessarily effect the probability of the other pair mating, invalidating independence among the mating events. The data not being multinomial would invalidate the standard errors and p-values, which were made under an assumed multinomial mode.
             \item[(viii)] By only analyzing the first mating in each well, they were assuring there was no dependence among mating events they counted. Since there is independence between wells, this first mating must necessarily be independent of the other counted matings. With this fix, the multinomial model should hold again, allowing for simpler inference. 
             \item[(ix)]
                 It appears counting just the first mating solves the dispersion problem. When performing a Chi-Square test for the presence of mating pair-generation effects, we now get a p-value of $.107$. If we then combine the counts for all homogamic and heterogamic matings in each generation and repeat the test, we get a p-value of .785. This suggests that we have the proper dispersion for a multinomial and that generations don't have an effect on mating preference. \vspace{2mm}
@@ -137,7 +137,7 @@
                 \FloatBarrier
                 \input{hw3/A3_a_logit}
                 \FloatBarrier
-                For the deviance, the residual degrees of freedom are calculated as the total number of Bernoulli trials represented in the data set minus the minus dimension of the linear space of predictors. Another way of saying this is the sum of all positive and negative outcomes minus the number of variables included in the model (after removing linearly dependent variables). 
+                For the deviance, the residual degrees of freedom are calculated as the observed unique combinations of predictors minus dimension of the linear space of predictors. Another way of saying this is the number of observations in the model after aggregating by predictors minus number of variable in the model (after removing linearly dependent variables). 
             \item[(b)]
                 With an estimate of $.1239$ on sex2, the model is estimating a small increase in the rate of affected for women, though it is not statistically significant. We can estimate a confidence interval for the odds ratio by calculating a confidence interval for the parameter based on asymptotic normality and transforming it. To start, a $90\%$ CI for the parameter is:
                 \[(.1239+z_{.05}.2288,1.239+z_{.95}.2288)\quad=\quad(-.2524,.5002)\]
@@ -150,6 +150,21 @@
                 \input{hw3/A3_c_logit}
                 \FloatBarrier
                 Each of the remaining factors is estimated to cause a statistically significant increase in the risk of byssinosis. The third level of dust is estimated to cause a far bigger increase in risk than any of the other variables, causing a large increase over the first and second level, which are not statistically significantly different. The smoking level 2 and employment levels 2 and 3 both are estimated to increase the risk of the disease over the first level of each.
+            \item[(d)]
+                Of all the ten models, the only model with an interaction which was statistically significantly better by the likelihood ratio test (p-value of .02294) was the one with sex interacted with dust. After running that model, race remained insignificant, so was removed. This left the following model, in which there were no insignificant main effects which weren't part of the interaction:
+                \FloatBarrier
+                \input{hw3/A3_d_logit}
+                \FloatBarrier
+                The model now predicts that while dust level 3 still causes a big increase in risk over dust level 1, this increase in risk is much smaller for women. As well, the model now has the point estimate that dust 2 causes a small decrease in risk for men and a small increase in risk for women, though neither the main effect or interaction are statistically significant. Besides that, the predictions of the model by factor are largely similar to before, with every other variable causing a small increase in risk.
+            \item[(e)]
+                Based on the final version of the model, where sex and dust level are interacted, I have plotted the odds ratios for men and women at different dust levels below:
+                \begin{center}
+                    \includegraphics[width=12cm]{hw3/A3_e_plot} 
+                \end{center}
+                As you can see, the cotton dust level can greatly increase a workers risk of getting Byssinosis. When exposed to high levels, males are estimated to be 17.8 times more likely to get the disease then men exposed to low levels; women are 6.54 times as likely to get the disease than males at low levels. Though there are large error bounds on the risk for women, both men and women have statistically significantly increased risk. The big increase in risk seems to be predicated on high level exposure though. At medium levels, neither men or women are estimated to have significant increased in risk over men at low levels of dust, and there is not a statistically significant difference between men and women at the low level.
+            \item[(f)]
+                None of our inference for particular effects shows a statistically significant difference in risk of byssinosis by race and sex. However, we do see statistically significant improvement in the overall model when we include the interaction of sex and dust level. The significance wasn't so high as to preclude this improvement  being random, but this does suggest that gender has some effect on ones risk. The reason could well not be biological though; it could, for instance, be due to men and women being in different roles in the factory in a way not accounted for in our model. We don't however have any evidence that race is a factor, since neither the inclusion of it as a variable nor any interaction with it was meaningful.
+
 
         \end{itemize}
 \end{itemize}
