@@ -15,8 +15,16 @@ import scipy.linalg as splin
 import scipy.stats as spstat
 import matplotlib.pyplot as plt
 import cvxpy as cvx
-from sklearn import linear_model as lm
-from sklearn.svm import l1_min_c 
+from glmnet import LogisticNet
+
+def get_index_z(coef_vector):
+    """This returns the first index for a variable from the glmnet coef matrix which isn't zero"""
+    n     = coef_vector.size
+    index = 0 
+    while index<n: 
+        if coef_vector[index]!=0: return index
+        index+=1
+    return np.nan 
 
 def solve_sdp(G):
     """ Solves the SDP problem:
@@ -45,88 +53,94 @@ def solve_sdp(G):
     # Return as array, not as matrix.
     return np.asarray(s.value).flatten()
 
-def create_SDP(X,randomize):
-    """ Creates the SDP knockoff of X"""
+class knockoff_logit(object):
+    def __init__(self,y,X,knockoff='equicor',randomize=False):
+        self.y = y
+        self.X = X
+        self.n,self.p = self.X.shape
+        self.knockoff_type = knockoff
+        self.randomize=False
+        self.tol = 1E-5
 
-    # Check for rank deficiency (will add later).
-    tol = 1e-5
+    def _create_SDP(self):
+        """ Creates the SDP knockoff of X"""
+ 
+        # Check for rank deficiency (will add later).
+ 
+        # SVD and come up with perpendicular matrix
+        U, d, V = nplin.svd(self.X,full_matrices=True) 
+        d[d<0] = 0
+        U_perp = U[:,self.p:(2*self.p)]
+        if self.randomize:
+            U_perp = np.dot(U_perp,splin.orth(npran.randn(self.p,self.p)))
+ 
+        # Compute the Gram matrix and its (pseudo)inverse.
+        G     = np.dot(V.T * d**2 ,V)
+        G_inv = np.dot(V.T * d**-2,V)
+ 
+        # Optimize the parameter s of Equation 1.3 using SDP.
+        s = solve_sdp(G)
+        s[s <= self.tol] = 0
+ 
+        # Construct the knockoff according to Equation 1.4:
+        C_U,C_d,C_V = nplin.svd(2*np.diag(s) - (s * G_inv.T).T * s)
+        C_d[C_d < 0] = 0
+        self.X_ko = self.X - np.dot(self.X,G_inv*s) + np.dot(U_perp*np.sqrt(C_d),C_V)
 
-    # SVD and come up with perpendicular matrix
-    n,p = X.shape
-    U, d, V = nplin.svd(X,full_matrices=True) 
-    d[d<0] = 0
-    U_perp = U[:,p:(2*p)]
-    if randomize:
-        U_perp = np.dot(U_perp,splin.orth(npran.randn(p,p)))
+    def _create_equicor(self):
+        """ Creates the equal correlation knockoff of X"""
+        # Check for rank deficiency (will add later).
+ 
+        # SVD and come up with perpendicular matrix
+        U, d, V = nplin.svd(self.X,full_matrices=True) 
+        d[d<0] = 0
+        U_perp = U[:,self.p:(2*self.p)]
+        U = U[:,:self.p]
+        if self.randomize:
+            U_perp = np.dot(U_perp,splin.orth(npran.randn(self.p,self.p)))
+ 
+        # Set s = min(2 * smallest eigenvalue of X'X, 1), so that all the correlations
+        # have the same value 1-s.
+        lambda_min = min(d)**2
+        s = min(2*lambda_min,1)
+ 
+        # Construct the knockoff according to Equation 1.4.
+        s_diff = 2*s - (s/d)**2
+        s_diff[s_diff<0]=0 # can be negative due to numerical error
+        self.X_ko = np.dot(U*(d-s/d) + U_perp*(np.sqrt(s_diff)) , V)
 
-    # Compute the Gram matrix and its (pseudo)inverse.
-    G     = np.dot(V.T * d**2 ,V)
-    G_inv = np.dot(V.T * d**-2,V)
+    def _fit_lognet(self):
+        X_lrg = np.concatenate((self.X,self.X_ko), axis=1)
 
-    # Optimize the parameter s of Equation 1.3 using SDP.
-    s = solve_sdp(G)
-    s[s <= tol] = 0
+        # initialize the glmnet object
+        self.lognet = LogisticNet(alpha=1) 
+        self.lognet.fit(X_lrg,self.y)
 
-    # Construct the knockoff according to Equation 1.4:
-    C_U,C_d,C_V = nplin.svd(2*np.diag(s) - (s * G_inv.T).T * s)
-    C_d[C_d < 0] = 0
-    X_ko = X - np.dot(X,G_inv*s) + np.dot(U_perp*np.sqrt(C_d),C_V)
-    return(X_ko)
+        self.lambdas = self.lognet.out_lambdas
+        self.var_index_ent = np.sort(self.lognet._indices)
+        self.coef_matrix = np.zeros((2*self.p,self.lognet.n_lambdas))
+        self.coef_matrix[self.var_index_ent] = self.lognet._comp_coef.squeeze()[self.lognet._indices]
 
-def create_equicor(X, randomize):
-    """ Creates the equal correlation knockoff of X"""
-    # Check for rank deficiency (will add later).
-    tol = 1e-5
+        self.var_entered = np.zeros(2*self.p).astype(bool)
+        self.var_entered[self.var_index_ent] = True
 
-    # SVD and come up with perpendicular matrix
-    n,p = X.shape
-    U, d, V = nplin.svd(X,full_matrices=True) 
-    d[d<0] = 0
-    U_perp = U[:,p:(2*p)]
-    U = U[:,:p]
-    if randomize:
-        U_perp = np.dot(U_perp,splin.orth(npran.randn(p,p)))
+    def _get_z(self): 
+        """ Given the coefficient matrix from a glmnet object, returns the Z, the first non-zero entries"""
+        self.z_rank  = np.array(map(get_index_z,self.coef_matrix))
+        self.z_value = np.array(map(lambda x: self.lambdas[x] if not np.isnan(x) else 0,self.z_rank))
 
-    # Set s = min(2 * smallest eigenvalue of X'X, 1), so that all the correlations
-    # have the same value 1-s.
-    lambda_min = min(d)**2
-    s = min(2*lambda_min,1)
+    def _get_w(self): 
+        """Produces the w values using the z values"""
+        self.w_filter = np.sign(self.z_value[0:self.p]-self.z_value[self.p:(2*self.p)])
+        self.w_rank   = self.w_filter * np.nanmin((self.z_rank[self.p:(2*self.p)],self.z_rank[:self.p]),axis=0)
+        self.w_value  = self.w_filter * np.max((self.z_value[self.p:(2*self.p)],self.z_value[:self.p]),axis=0)
 
-    # Construct the knockoff according to Equation 1.4.
-    s_diff = 2*s - (s/d)**2
-    s_diff[s_diff<0]=0 # can be negative due to numerical error
-    X_ko = np.dot(U*(d-s/d) + U_perp*(np.sqrt(s_diff)) , V)
-    return(X_ko)
-
-def find_w(y,X,X_ko):
-    """ Generate the W statistics given the X matrix, X knockoff, and y """
-    n,p = X.shape
-
-    X_lrg = np.concatenate((X,X_ko), axis=1)
-
-    clen = int(np.log(p)*50)
-    coefs_,cs = lm.logistic_regression_path(X_lrg,y, penalty='l1', tol=1e-6,fit_intercept=False,solver='liblinear',Cs=clen)
-    coefsMat = np.vstack(coefs_)
-    coefsMat[abs(coefsMat)<1e-6] = 0
-    Z   = np.zeros(2*p) 
-    for i in range(clen):
-        Z[np.all(np.vstack((Z==0,coefsMat[i,:]!=0)),axis=0)] = cs[i]
-    w = np.min((Z[:p],Z[p:2*p]),axis=0) * np.sign(Z[p:2*p]-Z[:p])
-    ent = np.min((Z[:p],Z[p:2*p]),axis=0)>0
-
-    return w, ent
-
-def generate_logit_w(y,X,knockoff='equicor',randomize=False):
-    """ Generates the w statistic for a logistic model predicting y~X"""
-
-    # normalize X
-    X = X/np.linalg.norm(X,ord=2,axis=0)
-
-    # creat knockoff
-    if   knockoff == 'equicor': X_ko = create_equicor(X,randomize)
-    elif knockoff == 'SDP'    : X_ko =     create_SDP(X,randomize)
-
-    return find_w(y,X,X_ko)
+    def fit(self):
+        if   self.knockoff_type == 'equicor': self._create_equicor()
+        elif self.knockoff_type == 'SDP'    : self._create_SDP()
+        self._fit_lognet()
+        self._get_z()
+        self._get_w()
 
 def analyze_knockoff(X_1,X_null,y):
     if X_1 == None:
@@ -138,8 +152,13 @@ def analyze_knockoff(X_1,X_null,y):
         n,p1 = X_1.shape
         p = p0+p1
         X = np.concatenate((X_1,X_null),axis=1)
-    w,ent = generate_logit_w(y,X)
-    print '%.2f of nulls beat there knockoffs; %.2f of variables never entered; %.2f had ties' % (np.sum(w>0)/float(np.sum(np.any((w!=0,ent),axis=0))),1-np.sum(ent)/float(p),np.sum(np.all((w==0,ent),axis=1))/float(p))
+    knockoff_model = knockoff_logit(y,X)
+    knockoff_model.fit()
+    w   = knockoff_model.w_value
+    ent = knockoff_model.var_entered
+    print w
+    print ent
+    #print '%.2f of nulls beat there knockoffs; %.2f of variables never entered; %.2f had ties' % (np.sum(w>0)/float(np.sum(np.any((w!=0,ent),axis=0))),1-np.sum(ent)/float(p),np.sum(np.all((w==0,ent),axis=1))/float(p))
     density_plot(w[np.all((ent,np.array(range(p))>=p1),axis=0)],.25)
 
 def main(n,p,q):
