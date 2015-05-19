@@ -142,37 +142,8 @@ class knockoff_logit(object):
         self._get_z()
         self._get_w()
 
-def analyze_knockoff(X_1,X_null,y):
-    if X_1 == None:
-        n,p = X_null.shape
-        p0,p1 = p,0
-        X = X_null
-    else:
-        n,p0 = X_null.shape
-        n,p1 = X_1.shape
-        p = p0+p1
-        X = np.concatenate((X_1,X_null),axis=1)
-    knockoff_model = knockoff_logit(y,X)
-    knockoff_model.fit()
-    w   = knockoff_model.w_value
-    ent = knockoff_model.var_entered
-    print w
-    print ent
-    #print '%.2f of nulls beat there knockoffs; %.2f of variables never entered; %.2f had ties' % (np.sum(w>0)/float(np.sum(np.any((w!=0,ent),axis=0))),1-np.sum(ent)/float(p),np.sum(np.all((w==0,ent),axis=1))/float(p))
-    density_plot(w[np.all((ent,np.array(range(p))>=p1),axis=0)],.25)
-
 def main(n,p,q):
     print 'nobody lives here right now'
-
-def density_plot(data,bandwidth=.25):
-    density = spstat.gaussian_kde(data)
-    density.covariance_factor = lambda:bandwidth
-    density._compute_covariance()
-    xs = np.linspace(np.min(data)-2*density.covariance.ravel(),np.max(data)+2*density.covariance.ravel(),200)
-    plt.plot(xs,density(xs))
-    plt.title('Approximate Distribution Null W')
-    plt.show
-
 
 if __name__ == '___main__':
     status = main()
