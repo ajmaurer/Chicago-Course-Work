@@ -16,15 +16,16 @@ import scipy.stats as spstat
 import matplotlib.pyplot as plt
 import cvxpy as cvx
 from glmnet import LogisticNet
+from sklearn.preprocessing import normalize
 
 def get_index_z(coef_vector):
     """This returns the first index for a variable from the glmnet coef matrix which isn't zero"""
     n     = coef_vector.size
     index = 0 
     while index<n: 
-        if coef_vector[index]!=0: return index
+        if abs(coef_vector[index])>1e-6: return index
         index+=1
-    return np.nan 
+    return n+1
 
 def solve_sdp(G):
     """ Solves the SDP problem:
@@ -56,7 +57,7 @@ def solve_sdp(G):
 class knockoff_logit(object):
     def __init__(self,y,X,knockoff='equicor',randomize=False):
         self.y = y
-        self.X = X
+        self.X = normalize(X.astype(float),norm='l2',axis=0)
         self.n,self.p = self.X.shape
         self.knockoff_type = knockoff
         self.randomize=False
@@ -114,7 +115,7 @@ class knockoff_logit(object):
 
         # initialize the glmnet object
         self.lognet = LogisticNet(alpha=1) 
-        self.lognet.fit(X_lrg,self.y)
+        self.lognet.fit(X_lrg,self.y,normalize=False,include_intercept=False)
 
         self.lambdas = self.lognet.out_lambdas
         self.var_index_ent = np.sort(self.lognet._indices)
@@ -127,11 +128,11 @@ class knockoff_logit(object):
     def _get_z(self): 
         """ Given the coefficient matrix from a glmnet object, returns the Z, the first non-zero entries"""
         self.z_rank  = np.array(map(get_index_z,self.coef_matrix))
-        self.z_value = np.array(map(lambda x: self.lambdas[x] if not np.isnan(x) else 0,self.z_rank))
+        self.z_value = np.array(map(lambda x: self.lambdas[x] if x<self.lambdas.size else 0,self.z_rank))
 
     def _get_w(self): 
         """Produces the w values using the z values"""
-        self.w_filter = np.sign(self.z_value[0:self.p]-self.z_value[self.p:(2*self.p)])
+        self.w_filter = np.sign(self.z_rank[self.p:(2*self.p)]-self.z_rank[0:self.p])
         self.w_rank   = self.w_filter * np.nanmin((self.z_rank[self.p:(2*self.p)],self.z_rank[:self.p]),axis=0)
         self.w_value  = self.w_filter * np.max((self.z_value[self.p:(2*self.p)],self.z_value[:self.p]),axis=0)
 

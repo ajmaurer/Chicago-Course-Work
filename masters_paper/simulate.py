@@ -148,9 +148,10 @@ class ko_test(object):
             plt.plot(np.arange(self.p)+1,self.true_orig_rank_rate,'b-', label = 'True Predictors')
         if self.pnull>0:
             plt.plot(np.arange(self.p)+1,self.null_orig_rank_rate,'g-', label = 'Null Predictors')
+            end_val = self.null_orig_rank_rate[-1]
         plt.xlabel('Rank Variable Entered Model')
         plt.ylabel('Cumulative % Original Variables')
-        plt.title('Percentage Original Variables')
+        plt.title('Percentage Original Variables\n %.3f of Null Originals Came in First By End' % end_val)
         plt.axis([1,self.p,0,1])
         plt.legend(loc='lower right')
         plt.show()
