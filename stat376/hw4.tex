@@ -1,0 +1,109 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins, qtree} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\p}{\mathrm{P}}
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\newcommand{\hwhead}[1]{#1 \hfill Aaron Maurer \vspace{2mm} \hrule \vspace{2mm}}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hwhead{STAT 376 Homework 4}
+\begin{itemize}
+    \item[1.]
+        Absolute residuals should have a half-normal distribution if $X_i\sim N(\mu,\sigma^2)$. Thus, if 
+        \[r_i=|X_i - median(\{X_{i=1}^n\})|\]
+        then, to derive our constant, if 
+        \[\frac{1}{5} = \p(r_i<q)\]
+        then
+        \begin{align*}
+            \frac{6}{10} &= \Phi\left(\frac{q}{\sigma}\right)\\
+            \Phi^{-1}\left(\frac{6}{10}\right) &= \frac{q}{\sigma} \\
+            \sigma &= \frac{q}{\Phi^{-1}\left(\frac{6}{10}\right)} \\
+        \end{align*}
+        So our constant $C$ should be 
+        \[\frac{1}{\Phi^{-1}\left(\frac{6}{10}\right)} =  3.947\] 
+        This, however, is a worse estimator than MAD, since an estimator for the first quintile of the absolute residuals of a normal distribution will have higher variance than a comparable estimator of the median.
+    \item[3.]
+        \begin{itemize}
+            \item[(a)]
+                \Tree 
+                    [.Start 
+                        [.$X_1<.5$ 
+                            [.$X_2<.7$ 1 ]
+                            [.$X_2\geq.7$ -1 ]
+                        ] 
+                        [.$X_1\geq.5$ 
+                            [.$X_2<.3$ 1 ]
+                            [.$X_2\geq.3$
+                                [.$X_2<.8$ 1 ]
+                                [.$X_2\geq.8$ 1 ]
+                            ]
+                        ]
+                    ]
+            \item[(b)]
+                This model incorrectly identifies three points, giving it a training error of $23\%$.
+            \item[(c)]
+                \[\hat f(.6,.2) = 1, \quad \hat f(.3,.9) = -1\]
+        \end{itemize}
+\end{itemize}
+
+\end{document}
