@@ -1,0 +1,206 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\newcommand{\hwhead}[1]{#1 \hfill Aaron Maurer \vspace{2mm} \hrule \vspace{2mm}}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hwhead{STAT 302 Homework 7}
+\begin{itemize}
+    \item[1.]
+        \begin{itemize}
+            \item[a)]
+                We can calculate the expected utility for taking the $\$100$ as
+                \[ U(100) = .62\log(.004\times 100 + 1) = .209 \]
+                While the expected utility for the gamble is
+                \begin{align*}
+                    \E[U(r)] &= \frac{2}{3}.62\log(1) + \frac{1}{3}.62\log(.004\times500 + 1) \\ 
+                             &= .227 \\ 
+                \end{align*}
+                Since the expected utility with the gamble is higher, Mr. Rubin should choose it.
+            \item[b)]
+                The utility for not taking the bet is $U(0)=0$. By comparison, the utility for taking the bet is
+                \begin{align*}
+                    \E[U(r)] &= \frac{2}{3}.62\log(.004\times-100 + 1) + \frac{1}{3}.62\log(.004\times400 + 1) \\ 
+                             &= -.014
+                \end{align*}
+                So the better choice is not to bet.
+        \end{itemize}
+    \item[2.]
+        We can find the optimal $q$ by taking the gradient with respect to $q$ and finding where it is $0$. These are all convex functions, so that will be the minimum. Also, I set $q_D=1-q_A-q_B-q_C$.
+        \begin{itemize}
+            \item[i)]
+                \begin{align*}
+                    \E[L(\theta;q)] &= \sum_{i\in\Theta}(1-p_i)q_i^2 + p_i(q_i-1)^2  \\
+                    \frac{\partial}{\partial q_i}\E[L(\theta;q)] &= 2(1-p_i)q_i + 2p_i(q_i-1) - 2(1-p_D)q_D - 2p_D(q_D-1)
+                \end{align*}
+                Which is $0$ only when $p_i=q_i$ for each $i$, making for a proper scoring rule.
+            \item[ii)]
+                \begin{align*}
+                    \E[L(\theta;q)] &= \sum_{i\in\Theta}-p_i\log(q_i)  \\
+                    \frac{\partial}{\partial q_i}\E[L(\theta;q)] &= -\frac{p_i}{q_i} + \frac{p_d}{q_d}
+                \end{align*}
+                Which is also $0$ when $p_i=q_i$ for each $i$, making for a proper scoring rule.
+            \item[iii)]
+                \begin{align*}
+                    \E[L(\theta;q)] &= \sum_{i\in\Theta} p_i(1-q_i) \\
+                    \frac{\partial}{\partial q_i}\E[L(\theta;q)] &= -p_i + p_D 
+                \end{align*}
+                Here, there is no minimum, but we are constrained within the probability simplex. This is a linear function, so the minimum is obviously achieved by setting $q_i=1$ for whatever $i$ has the largest $p_i$. 
+
+        \end{itemize}
+    \item[3.]
+        We can compare these two forecasters by summing up their mean loss over the 10 days, which serves as a frequentest point estimate of their expected loss on any given day. Doing so yields, for the two loss functions, \\
+        \begin{center}
+            \begin{tabular}{c | c c}
+                       \;    & Brier Loss & Log Loss \\
+                \hline
+                Forecaster 1 & .330      & .501 \\
+                Forecaster 2 & .524      & .709 \\
+            \end{tabular} \\
+        \end{center}
+        The first forecaster does better by both loss functions, so he is probably the better forecaster.
+    \item[4.]
+        \begin{itemize}
+            \item[a)]
+                As I showed above, with the $L_1$ loss, the best strategy is to predict the most likely outcome will occur with probability 1. Doing so would yield the probabilities
+                \[1 \;1 \;1 \;0 \;1 \;1 \;0 \;0 \;0 \;0\]
+            \item[b)]
+                The predictions in part a yield an average loss of $.3$. By comparison, using the original probabilities yields an average loss of $.369$.
+        \end{itemize}
+    \item[5.]
+        We can calculate the risk of $\delta_0(x)$ by taking its expectation given $\theta$:
+        \begin{align*}
+            R(\theta,d) &= \E_\theta[L(\theta,d)] \\
+                        &= \sum_{x=0}^\infty \frac{\theta^xe^{-\theta}}{x!}\frac{(\theta-x)^2}{\theta}  \\
+                        &= \sum_{x=0}^\infty \frac{\theta^xe^{-\theta}(\theta-2x +\frac{x^2}{\theta})}{x!}\\
+                        &= \theta -2\theta + \sum_{x=0}^\infty x^2\frac{\theta^{x-1}e^{-\theta}}{x!} \\
+                        &= -\theta + 0 + \sum_{x=1}^\infty x\frac{\theta^{x-1}e^{-\theta}}{(x-1)!} \\
+                        &= -\theta + \sum_{x=0}^\infty (x+1)\frac{\theta^{x}e^{-\theta}}{x!} \\
+                        &= -\theta + \theta + 1 \\
+                        &= 1
+        \end{align*}
+        The integrated risk will be 
+        \begin{align*}
+            r(\pi,\delta) &= \int_{\R_+} R(\theta,\delta)\pi(d\theta) \\
+                          &= \int_{\R_+} \E_\theta[R(x,\delta)] \frac{\beta^\alpha}{\Gamma(\alpha)}\theta^{\alpha-1}e^{-\beta\theta}d\theta \\
+                          &= \int_{\R_+}\sum_{x=0}^\infty  
+                                \frac{\theta^xe^{-\theta}(\theta-2\delta +\frac{\delta^2}{\theta})}{x!} 
+                                \frac{\beta^\alpha}{\Gamma(\alpha)}\theta^{\alpha-1}e^{-\beta\theta}d\theta \\
+                          &= \sum_{x=0}^\infty \frac{1}{x!}\frac{\beta^\alpha}{\Gamma(\alpha)} \int_{\R_+} 
+                                (\theta-2\delta +\frac{\delta^2}{\theta}) 
+                                \theta^{x+\alpha-1}e^{-(\beta+1)\theta}d\theta \\        
+                          &= \sum_{x=0}^\infty \frac{1}{x!}\frac{\beta^\alpha}{\Gamma(\alpha)} 
+                                \left(\frac{\Gamma(x+\alpha+1)}{(\beta+1)^{x+\alpha+1}} + 
+                                      -2\delta\frac{\Gamma(x+\alpha)}{(\beta+1)^{x+\alpha}} + 
+                                  \delta^2\frac{\Gamma(x+\alpha-1)}{(\beta+1)^{x+\alpha-1}} \right) \\
+                          &= \sum_{x=0}^\infty \frac{1}{x!}\frac{\beta^\alpha\Gamma(x+\alpha-1)}{(\beta+1)^{x+\alpha-1}\Gamma(\alpha)} 
+                                  \left(\frac{(x+\alpha)(x+\alpha-1)}{(\beta+1)^2} -2\delta \frac{(x+\alpha-1)}{\beta+1} + \delta^2\right)  \\
+            \frac{\partial}{\partial \delta} r(\pi,\delta) &= \sum_{x=0}^\infty \frac{1}{x!}\frac{\beta^\alpha\Gamma(x+\alpha-1)}{(\beta+1)^{x+\alpha-1}\Gamma(\alpha)}
+                                \left(-2\frac{(x+\alpha-1)}{\beta+1} + 2\delta\right)  \\
+        \end{align*}
+        This equals $0$ when 
+        \[ \delta = \frac{(x+\alpha-1)}{\beta+1} \]
+        Since the loss function is convex, this is the optimal value and our Bayes estimator.
+    \item[6.]
+        \begin{itemize}
+            \item[a)]
+                \begin{align*}
+                    R(\theta,\delta_c) &= \E_\theta[(\theta-cx)^2] \\
+                                       &= \sum_{x=0}^\infty (\theta^2 -2cx\theta + c^2x^2)\frac{\theta^xe^{-\theta}}{x!} \\
+                                       &= \theta^2 -2c\theta^2 + \sum_{x=1}^\infty c^2x\theta\frac{\theta^{x-1}e^{-\theta}}{(x-1)!} \\
+                                       &= \theta^2 -2c\theta^2 + c^2(\theta+1)\theta \\
+                                       &= (1-2c+c^2)\theta^2 +c^2\theta
+                \end{align*}
+            \item[b)]
+                For $c>1$,
+                \begin{align*}
+                    R(\theta,\delta_c) &= (1-2c+c^2)\theta^2 +c^2\theta \\
+                                       &> \theta \\
+                                       &> R(\theta,\delta_1)
+                \end{align*}
+                This result does not depend on $\theta$, so $\delta_c$ is strictly better, making $\delta_c$ inadmissible.
+            \item[c)]
+                To derive the integrated risk:
+                \begin{align*}
+                    r(\pi,\delta_c) &= \int_{\R_+} R(\theta,\delta_c) e^{-\theta}d\theta \\
+                    r(\pi,\delta_c) &= \int_{\R_+} \left((1-2c+c^2)\theta^2 +c^2\theta\right) e^{-\theta}d\theta \\
+                                    &= -\left((1-2c+c^2)\theta^2 +c^2\theta\right) e^{-\theta}\big]_0^\infty + \int_{\R_+} \left((1-2c+c^2)2\theta +c^2\right) e^{-\theta}d\theta \\
+                                    &= -0 - \left((1-2c+c^2)2\theta +c^2\right) e^{-\theta}\big]_0^\infty + \int_{\R_+} 2(1-2c+c^2) e^{-\theta}d\theta \\
+                                    &= c^2 + 2(1-2c+c^2) \\
+                                    &= 2-4c+3c^2
+                \end{align*}
+            \item[d)]
+                Taking the derivative of the integrated risk and setting it to 0,
+                \begin{align*}
+                    \frac{\partial}{\partial q_i}r(\pi,\delta_c) &= -4+6c \\
+                    0 &= -4 +6c \\
+                    c &= \frac{2}{3}
+                \end{align*}
+                So we find that the optimal $c$ is $\frac{2}{3}$.
+
+
+        \end{itemize}
+\end{itemize}
+\end{document}
