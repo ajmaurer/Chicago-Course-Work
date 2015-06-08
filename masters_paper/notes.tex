@@ -1,0 +1,99 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\linespread{1.5}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\setlength\parindent{0in}
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\p}{\mathrm{P}}
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\newcommand{\hwhead}[1]{#1 \hfill Aaron Maurer \vspace{2mm} \hrule \vspace{2mm}}
+
+\begin{document}
+\title{Binary Knockoffs Notes}
+\author{Aaron Maurer}
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Preliminaries} 
+Some early investigation into how the deterministic knockoffs as described in Rina's paper work with regularized logistic regression revealed that the answer is "not very well". Even when $X$ is a null predictor of $y$, the $X$ still tend to enter the model prior to $\tilde X$. The issue is that even when $X_i\sim N_p({\bf 0}, \Sigma)$ for some $\Sigma\succeq 0$, $\tilde X$ is not normally distributed. This can be seen from producing qq plots of $X_i$ vs $\tilde X_j$Of course, when $X_i$ is a binary vector, $\tilde X_i$ completely doesn't match its distribution, causing the original $X$ to beat the knockoffs into the model. This indicates that a new method of generating $\tilde X$ must be created to use with FDR via knockoffs for regularized logistic regression.
+
+\section{Probabilistic Random Bernoulli Knockoffs}
+My idea is to generate $\tilde X$ randomly such that, approximately, $\tilde X_i\sim X_i$. In particular, they should have similar marginal densities, expectations, and first moments. However, $\tilde X\st X$ should also have desired knockoff property that $\E(\tilde X'X\st X) = X'X-s$, where $\diag(X'X)-s$ is small. In the general case, this is likely infeasible; however, if $X$ is a binary vector, as is often the case, we know we are dealing with a much more limited class of random variables, and it should be possible to randomly generate $\tilde X\st X$ so as to have the desired properties. At worst, this method will provide a suitable replacement for deterministic $\tilde X$ as described in Rina's paper for LASSO, and if we are lucky, it will work reasonably for other regularized GLMs. 
+
+\section{Random Bernoulli Generation}
+Thankfully, there has been a reasonable amount of work on how one can generate random Bernoulli vectors with some kind of correlation among among the values. A random Bernoulli vector $X$ can be easiest represented with a mean vector $\E(X)=m\in(0,1)^p$ and $\E(XX')=M\in(0,1)^{p\times p}$, called the cross moment matrix. Obviously, $m_i = \p(X_i=1)$, $M_{ij} = \p(X_i=X_j=1)$, and $m=\diag(M)$. For an arbitrary symmetric $M$ to be valid cross-moment matrix, $M-\diag(M)\diag(M)'$ must be PSD, and
+\[ \max\{0,m_i+m_j -1\} \leq M_{ij} \leq \min\{m_i,m_j\}\]
+for all $i\neq j$\footnote{``On parametric families for sampling binary data with specified mean and correlation" - http://arxiv.org/abs/1111.0576}. Given a qualifying $M$, or observed $X$, there are a few ways of generating more random $X$.
+
+\subsection{Gaussian Copula Family}
+Since multivariate normal distributions are easy to randomly draw, the idea is to find some random normal variable $Z~N_p({\bf 0},\Sigma)$ such that,for $X_j = I(Z_j<0)$, $X$ has the desired properties. There are a number of ways to do this\footnote{``On the Generation of Correlated Artificial Binary Data" - http://epub.wu.ac.at/286/1/document.pdf}\footnote{``On parametric families for sampling binary data with specified mean and correlation"}, but it turns out that there is only certain to exist a working $\Sigma$ in the bivariate case. 
+
+\subsection{$\mu$-Conditionals family}
+It turns out that there exists a more flexible family which will always work for arbitrary $M$ called $\mu$-conditionals. The basic idea is that the $X$ is generate sequentially as 
+\[ X_{j}\st X_{j},...,X_{j-1} \sim \mathrm{B}\left(1,\mu\left(a_{jj}+\sum_{k=1}^{j-1}a_{kj}X_j\right)\right) \]
+for some monotone function $\mu:\R\to[0,1]$. This is essentially a binomial family GLM for a link function $\mu$. If one takes all of the $a_{kj}$, they can form a lower triangular matrix $A$, and then the joint density can be expressed as 
+\[ \p(X_j=\gamma) \propto \mu(\gamma'A\gamma)\]
+If $\mu$ is chose such that it is a bijection and differentiable, there is a unique $M$ such that $\E(X_iX_i')=M$\footnote{``On parametric families for sampling binary data with specified mean and correlation"}. As one might guess, the natural $\mu$ is the logistic link function, which is the ``binary analogue of the multivariate normal distribution which is the maximum entropy distribution on $\R^p$ having a given covariance matrix." Additionally, it has the usual benefit that the coefficients can be viewed as a log odds ratio:
+\[A_{ij} = \log\left(\frac{\p(X_j=X_k=1)\p(X_j=X_k=0)}{\p(X_j=0,X_k=1)\p(X_j=1,X_k=0)}\right) \]
+when $i\neq j$. I think this dictates that if $A_{jk}=0$, then $X_k$ and $X_j$ are independent. 
+
+\section{Generating Knockoffs}
+
+\end{document}
