@@ -60,6 +60,8 @@
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem{example}[theorem]{Example}
 
+\DeclareMathOperator*{\argmin}{arg\,min}
+
 \newcommand{\hwhead}[1]{#1 \hfill Aaron Maurer \vspace{2mm} \hrule \vspace{2mm}}
 
 \begin{document}
@@ -75,5 +77,11 @@ This article offers obvious extensions of how the classical Bayesian statistics 
 
 \section{Paper Contents}
 \subsection{DP-Means Algorithm}
+The idea of clustering arises, in statistical terms, from the idea that a set of random variables are drawn from a mixture distribution. In other words, a random variable $X_i$ is drawn in a two stage process. First, a multinomial variable $z_i$ with $k$ possible outcomes is drawn. Then, $X_i\st z_i\sim F_{z_i}$, where \(\left\{F_j\st j\in\{0,...,k\}\right\}\) is some set of probability distributions. The goal of a clustering method is then to impute the $z_i$ based on the $X_i$, revealing important underlying structure in the data. Bayesian models provide a natural way to fit probability distributions to $z_i$, in particular without choosing $k$ a priori, but there issue is that they, classically, are complicated to compute on large data sets and don't necessarily scale well. \par
+Thus, the k-means algorithm, where $k$ must be specified beforehand, remains the most commonly used algorithm. This method can be thought of as designed for a model where $z_i$ is multinomial $k$, for fixed $k$, and then $X\st z_i \sim N_p(\mu_j,\sigma I_p)$ for some set of mean vectors \(\left\{\mu_j\st j\in\{0,...,k\}\right\}\). To find $\{\mu_i\}$ using k-means, one picks initial guesses for the $\hat\mu_j$, then alternates assigning \(\hat z_i = \argmin_j \|X_i - \hat\mu_j\|\) and 
+\[\hat\mu_j = \frac{1}{\big | \{i\st z_i=j\} \big |}\sum_{i\st z_i=j }X_i \] 
+until the $\mu_j$ and $z_i$ have converged. This method allows little flexibility, but is relatively easy to compute, even for large data sets. The authors of the paper notes that the fitting process is the limit of what the EM algorithm would do if $\sigma$ goes to 0. \par
+
+In designing the DP-means algorithm, the authors ``attempt to achieve the best of both worlds by designing scalable hard clustering algorithms from a Bayesian nonparametric viewpoint." To this end, they start with a purely Bayesian model for how the data would arise which puts a prior on $k$, and then similarly derives a simple algorithm for hard clustering that represents the limit of fitting this Bayesian algorithm as a variance parameter is sent to 0. 
 
 \end{document}
