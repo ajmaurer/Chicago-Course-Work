@@ -8,17 +8,22 @@ import scipy.linalg as splin
 import scipy.stats as spstat
 import matplotlib.pyplot as plt
 import requests
+from scipy.special import expit as invlogit
+from scipy.special import logit
+
 from multiprocessing import Pool
 from bs4 import BeautifulSoup
 
 import knockoffGLM as ko
 
-# logit/invlogit
-def logit(p):
-    return np.log(p) - np.log(1 - p)
-
-def inv_logit(p):
-    return np.exp(p) / (1 + np.exp(p))
+def draw_random_binary(n,A):
+    ''' If p is the size of the square, lower triangular A, creates a n by p matrix of random binary vectors using Schafer's method '''
+    m,p = A.shape
+    ones   = np.ones((n,1))
+    output = np.empty((n,p))
+    for i in np.arange(0,p):
+        output[:,i] = npran.binomial(1,invlogit(np.dot(np.hstack((output[:,0:i],ones)),A[i,0:(i+1)])))
+    return output
 
 def getRandomIntegers(num=1000,min=1,max=1000000000,base=10):
     """
@@ -38,6 +43,23 @@ def cutoff(array,min=-50,max=50):
     cut_array = np.max((min*np.ones(shape),cut_array),axis=0)
     return cut_array
 
+def genXy_binary_X_norm_beta(seed,n,p1,pnull,base_prob=.25,beta_sd=1,A_base_diag=-1,A_sd=.2):
+    ''' X is binary from the isling model, with the coefficients drawn from a normal. Y is binary, with beta's coefficients also from a normal '''
+    if not seed == None:
+        npran.seed(seed)
+    p = p1 + pnull
+    A = npran.normal(0,.2,(p,p))-np.diag(A_base_diag*np.ones(p))
+    X = draw_random_binary(n,A)
+    X_1    = X[:,:p1]
+    X_null = X[:,p1:]
+    beta   = npran.randn(p1)*beta_sd
+    if p1>0:
+        eta    = cutoff(np.dot(X_1,beta)+logit(base_prob))
+        y      = npran.binomial(1,invlogit(eta),n)
+    else:
+        y      = npran.binomial(1,base_prob,n)
+    return X,y
+
 def genXy_normal_X_beta(seed,n,p1,pnull,base_prob=.25,beta_sd=1):
     """ The X are normal. p1 predictive vars, pnull null vars. beta on the p1 vars is ~normal(0,beta_sd) and the intercept is logit(base_prob)"""
     if not seed == None:
@@ -48,7 +70,7 @@ def genXy_normal_X_beta(seed,n,p1,pnull,base_prob=.25,beta_sd=1):
     beta   = npran.randn(p1)*beta_sd
     if p1>0:
         eta    = cutoff(np.dot(X_1,beta)+logit(base_prob))
-        y      = npran.binomial(1,inv_logit(eta),n)
+        y      = npran.binomial(1,invlogit(eta),n)
     else:
         y      = npran.binomial(1,base_prob,n)
     return X,y
@@ -63,7 +85,7 @@ def genXy_bern_X_norm_beta(seed,n,p1,pnull,x_prob=.25,base_prob=.25,beta_sd=1):
     beta   = npran.randn(p1)*beta_sd
     if p1>0:
         eta    = cutoff(np.dot(X_1,beta)+logit(base_prob))
-        y      = npran.binomial(1,inv_logit(eta),n)
+        y      = npran.binomial(1,invlogit(eta),n)
     else:
         y      = npran.binomial(1,base_prob,n)
     return X,y
