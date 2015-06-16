@@ -1,0 +1,3 @@
+Winter 2015
+
+STAT 310 Convex Optimization: This course covers the fundamentals of convex optimization. Topics will include basic convex geometry and convex analysis, KKT condition, Fenchel and Lagrange duality theory; six standard convex optimization problems and their properties and applications: linear programming, geometric programming, second-order cone programming, semidefinite programming, linearly and quadratically constrained quadratic programming. In the last part of the course we will examine the generalized moment problem --- a powerful technique that allows one to encode a wide variety of problems (in probability, statistics, control theory, financial mathematics, signal processing, etc) and solve them or their relaxations as convex optimization problems. 
