@@ -21,7 +21,7 @@ import rpy2 as rp
 import rpy2.robjects.numpy2ri
 import statsmodels.api as sm 
 from rpy2.robjects.packages import importr
-from glmnet import LogisticNet
+from glmnet import LogisticNet, ElasticNet
 from sklearn.preprocessing import normalize
 from scipy.special import expit as invlogit
 from scipy.special import logit
@@ -67,7 +67,8 @@ def solve_sdp(G):
     # Return as array, not as matrix.
     return np.asarray(s.value).flatten()
 
-class knockoff_logit(object):
+class knockoff_net(object):
+    """ Parent class for knockoff lasso and knockoff logistic regression. Defines everything besides fitting the particular GlmNet object """
     def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,tol=1E-5,maxiter=100,full_A=False):
         self.y      = y
         self.X      = normalize(X.astype(float),norm='l2',axis=0)
@@ -130,14 +131,15 @@ class knockoff_logit(object):
         s_diff[s_diff<0]=0 # can be negative due to numerical error
         self.X_ko = np.dot(U*(d-s/d) + U_perp*(np.sqrt(s_diff)) , V)
 
-    def _deterministic_knockoff(self):
+    def _original_knockoff(self):
+        """ Creates the original style knockoffs"""
         if self.cov_type == 'equicor':
             self._create_equicor()
         else: 
             self._create_SDP()
 
     def _binary_knockoff(self):
-        ''' This creates knockoffs which are random multivariate bernoulli which should have, in expectation,
+        ''' This creates the new binary knockoffs, which are random multivariate bernoulli which should have, in expectation,
         the same first two moments as X. Only will work if X is all binaray '''
 
         ###############################################
@@ -277,21 +279,6 @@ class knockoff_logit(object):
         # hang onto A
         self.A = A
 
-    def _fit_lognet(self):
-        X_lrg = np.concatenate((self.X,self.X_ko), axis=1)
-
-        # initialize the glmnet object
-        self.lognet = LogisticNet(alpha=1) 
-        self.lognet.fit(X_lrg,self.y,normalize=False,include_intercept=False)
-
-        self.lambdas = self.lognet.out_lambdas
-        self.var_index_ent = np.sort(self.lognet._indices)
-        self.coef_matrix = np.zeros((2*self.p,self.lognet.n_lambdas))
-        self.coef_matrix[self.var_index_ent] = self.lognet._comp_coef.squeeze()[self.lognet._indices]
-
-        self.var_entered = np.zeros(2*self.p).astype(bool)
-        self.var_entered[self.var_index_ent] = True
-
     def _get_z(self): 
         """ Given the coefficient matrix from a glmnet object, returns the Z, the first non-zero entries"""
         self.z_rank  = np.array(map(get_index_z,self.coef_matrix))
@@ -312,17 +299,71 @@ class knockoff_logit(object):
         """ Calculate the vector selecting features S """
         self.S = self.w_value>=self.T
 
+class knockoff_logit(knockoff_net):
+    """ Preforms the knockoff technique with logistic regression """
+
     def fit(self):
-        if   self.knockoff_type == 'deterministic': self._deterministic_knockoff()
+        """ Generates the knockoffs, fits the regression, and performs the FDR calculations """
+        # Generate knockoff as inherited from knockoff_net
+        if   self.knockoff_type == 'deterministic': self._original_knockoff()
         elif self.knockoff_type == 'binary':        self._binary_knockoff()
-        self._fit_lognet()
+
+        X_lrg = np.concatenate((self.X,self.X_ko), axis=1)
+
+        # initialize and fit the glmnet object
+        self.lognet = LogisticNet(alpha=1) 
+        self.lognet.fit(X_lrg,self.y,normalize=False,include_intercept=False)
+
+        # pull out some values from the glmnet object and clean
+        self.lambdas = self.lognet.out_lambdas
+        self.var_index_ent = np.sort(self.lognet._indices)
+        self.coef_matrix = np.zeros((2*self.p,self.lognet.n_lambdas))
+        self.coef_matrix[self.var_index_ent] = self.lognet._comp_coef.squeeze()[self.lognet._indices]
+
+        # figure out when different variables entered the model
+        self.var_entered = np.zeros(2*self.p).astype(bool)
+        self.var_entered[self.var_index_ent] = True
+
+        # Preform all the FDR calculations as inherited from knockoff_net
         self._get_z()
         self._get_w()
         self._get_T()
         self._get_S()
 
-def main(n,p,q):
-    print 'nobody lives here right now'
+
+class knockoff_lasso(knockoff_net):
+    """ Preforms the knockoff technique with lasso """
+    
+    def fit(self):
+        """ Generates the knockoffs, fits the regression, and performs the FDR calculations """
+        # Generate knockoff as inherited from knockoff_net
+        if   self.knockoff_type == 'deterministic': self._original_knockoff()
+        elif self.knockoff_type == 'binary':        self._binary_knockoff()
+
+        X_lrg = np.concatenate((self.X,self.X_ko), axis=1)
+
+        # initialize the glmnet object
+        self.elasticnet = ElasticNet(alpha=1) 
+        self.elasticnet.fit(X_lrg,self.y,normalize=False,include_intercept=False)
+
+        # pull out some values from the glmnet object and clean
+        self.lambdas = self.elasticnet.out_lambdas
+        self.var_index_ent = np.sort(self.elasticnet._indices)
+        self.coef_matrix = np.zeros((2*self.p,self.elasticnet.n_lambdas))
+        self.coef_matrix[self.var_index_ent] = self.elasticnet._comp_coef.squeeze()[self.elasticnet._indices]
+
+        # figure out when different variables entered the model
+        self.var_entered = np.zeros(2*self.p).astype(bool)
+        self.var_entered[self.var_index_ent] = True
+
+        # Preform all the FDR calculations as inherited from knockoff_net
+        self._get_z()
+        self._get_w()
+        self._get_T()
+        self._get_S()
+
+def main():
+ 'nobody lives here right now'
 
 if __name__ == '___main__':
     status = main()
