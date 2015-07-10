@@ -1,0 +1,247 @@
+
+\documentclass[11pt]{article}
+\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\linespread{1.5}
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+
+%%% Packages
+% First four - AMS (american mathematical society). General math goodness. I use the align* enviorment in particular
+% multirow, multicol allow for certain kinds of tables
+% enumerate lets you determine the style of the counter for the enumerate enviorment
+% graphicx lets you include pictures
+% listings lets you stick in blocks of code
+% placeins defines "\FloatBarrier", which stops tables from moving around
+\usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins} 
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\del}{\partial}
+\newcommand{\real}{\textrm{Re }}
+\newcommand{\imag}{\textrm{Im }}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\sumk}{\sum_{k=1}^\infty}
+\newcommand{\sumj}{\sum_{j=1}^\infty}
+\newcommand{\sumn}{\sum_{n=0}^\infty}
+\newcommand{\summ}[2]{\sum_{k=#1}^{#2}}
+\newcommand{\sig}[1]{\sum_{#1 =1}^\infty}
+\newcommand{\un}[1]{\bigcup_{#1 =1}^\infty}
+\newcommand{\inter}[1]{\bigcap_{#1 =1}^\infty}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\ipxu}{\langle x,u_j \rangle}
+\newcommand{\uj}{\{u_j\}_{j=1}^\infty}
+\newcommand{\B}{\mathcal{B}}
+
+\newcommand{\p}{\mathrm{P}}
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\ST}{mbox{ s.t. }}
+
+\newcommand{\x}{\bf x}
+
+\newcommand{\Example}{\noindent {\bf Example. \quad} }
+\newcommand{\Proof}{\noindent {\bf Proof: \quad} }
+\newcommand{\Remark}{\noindent {\bf Remark. \quad} }
+\newcommand{\Remarks}{\noindent {\bf Remarks. \quad} }
+\newcommand{\Case}{\noindent {\underline{Case} \quad} }
+
+\newcommand{\st}{ \; \big | \:}
+
+\newcommand{\deuc}{d_{\mathrm euc}}
+\newcommand{\dtaxi}{d_{\mathrm taxi}}
+\newcommand{\ddisc}{d_{\mathrm disc}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\newcommand{\hwhead}[1]{#1 \hfill Aaron Maurer \vspace{2mm} \hrule \vspace{2mm}}
+
+\begin{document}
+\title{Using Probabilistic Knockoffs of Binary Variables to Control the False Discovery Rate}
+\author{Aaron Maurer}
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+    Basic overview of what paper is about
+    
+\subsection{Knockoff Filter}
+    Describe the original knockoff filter, and introduce some notation. Original=deterministic
+
+\subsection{Binary Knockoffs}
+    Overview of my addition
+
+\section{Issues With Deterministic Knockoffs} 
+    {\em Note:} I will try to hold to the convention that $X$ is the $n\times p$ data matrix, while $\bf x$ is the random vector variable from which each row of $X$ was drawn. Accordingly, $\tilde X$ will be the knockoff matrix while $\bf \tilde x$ is a random vector variable, at least when $\tilde X$ is generated randomly. $x_i$ will be the random variable corresponding to the $i$th entry of $\bf x$, while $X_i$ is $i$th column of $X$, with observations drawn from $x_i$. $\hat \Sigma = \frac{1}{n}X^TX$ is the empirical covariance matrix associated with $X$, while $\Sigma=\E(\mathbf x \mathbf x^T)$ is the theoretical covariance matrix associate with $\mathbf x$. Also, for a square matrix $A$, $\diag(A)$ is the vector of values along the diagonal, while for a vector $\mathbf a$, $\diag(\mathbf a)$ is a square diagonal matrix with $\mathbf a$ along the diagonal.\\
+
+    Simulations with deterministic knockoffs reveal that they don't perform well in L1 regularized logistic regression. Even when $X_i$ is a null predictor of $y$, the $X_i$ still tend to enter the model prior to $\tilde X_i$. The issue is that even when $x\sim N_p({\bf 0}, \Sigma)$ for some $\Sigma\succeq 0$, the $\tilde X_i$ do not fit a normal distribution. This can be seen below in figure 1, where normal Q-Q plots of simulated variables $X_i$ and corresponding knockoffs $\tilde X_i$ are provided. Of course, when $X$ is a binary vector, $\tilde X$ completely doesn't match its distribution.
+    \begin{figure}[h!]
+        \includegraphics[width=20cm]{images/normalQQ}
+        \caption{Normal Q-Q of original variables and knockoffs for simulation with $4$ variables and 1,000 observations}
+    \end{figure}
+    These 
+    
+
+\section{Random Bernoulli Knockoffs}
+    My solution to the issues with the 
+
+     generate $\bf \tilde x$ randomly such that it has the desired knockoff properties in expectation. In particular, both  should have similar marginal densities, expectations, and second moments. However, $\bf \tilde x\st \bf x$ should also have desired knockoff property that $\E(\mathbf{\tilde x}^T\mathbf x\st \mathbf x) = \Sigma-\mathbf s$, where $\|\diag(\Sigma)-s\|$ is small. In the general case, this is likely infeasible; however, if $\bf x$ is a binary vector, as is often the case, we know we are dealing with a much more limited class of random variables, and it should be possible to randomly generate $\bf \tilde x\st \bf x$ so as to have the desired properties. At worst, this method will provide a suitable replacement for deterministic $\bf \tilde x$ for use with LASSO, and if we are lucky, it will work reasonably for other regularized GLMs. 
+
+\subsection{Random Bernoulli Generation}
+    Thankfully, there has been a reasonable amount of work on how one can generate random Bernoulli vectors with some kind of correlation among among the values. A random Bernoulli vector $\bf x$ can be summarized by its first two moments: a mean vector $\E(\bf x)=m\in(0,1)^p$ and cross-moment matrix $\E(\bf x\bf x^T)=M\in(0,1)^{p\times p}$. Obviously, $m_i = \p(x_i=1)$, $M_{ij} = \p(x_i=x_j=1)$, and $\mathbf m=\diag(M)$. For an arbitrary symmetric $M$ to be valid cross-moment matrix, $M-mm^T\succeq0$, and
+    \[ \max\{0,m_i+m_j -1\} \leq M_{ij} \leq \min\{m_i,m_j\}\]
+    for all $i\neq j$\footnote{``On parametric families for sampling binary data with specified mean and correlation" - http://arxiv.org/abs/1111.0576}. Given a qualifying $M$, or observed $X$, there are a few ways of generating more random $\bf x$.
+
+\subsubsection{Gaussian Copula Family}
+    Since multivariate normal distributions are easy to randomly draw, the idea is to find some random normal variable $\mathbf z\sim N_p({\bf 0},\Sigma)$ such that,for $x_i = I(z_i<0)$, $x$ has the desired properties. There are a number of ways to do this\footnote{``On the Generation of Correlated Artificial Binary Data" - http://epub.wu.ac.at/286/1/document.pdf}\footnote{``On parametric families for sampling binary data with specified mean and correlation"}, but it turns out that there is only certain to exist a working $\Sigma$ in the bivariate case. 
+
+\subsubsection{$\mu$-Conditionals family}
+    There exists a more flexible family which will always work for arbitrary $M$ called $\mu$-conditionals. The basic idea is that the $X$ is generate sequentially as 
+
+    \[ \p(x_{i}=1\st x_{1},...,x_{i-1}) = \mu\left(a_{ii}+\sum_{k=1}^{i-1}a_{ik}x_i\right) \]
+
+    for some monotone function $\mu:\R\to(0,1)$. This is essentially a binomial family GLM for a link function $\mu$. If one takes all of the $a_{kj}$, they can form a lower triangular matrix $A$, and then the joint density can be expressed as 
+
+    \[ \p(\mathbf x=\mathbf \gamma) \propto \mu(\mathbf{\gamma}^T A\mathbf \gamma)\]
+
+    If $\mu$ is chosen such that it is a bijection and differentiable, there is a unique $A$ such that $\E(\mathbf x \mathbf x^T)=M$ when generated from this model\footnote{``On parametric families for sampling binary data with specified mean and correlation"}. The natural choice for $\mu$ is the logistic link function, which yields the Ising model, the ``binary analogue of the multivariate normal distribution which is the maximum entropy distribution on $\R^p$ having a given covariance matrix." Additionally, it has the usual benefit that the coefficients can be viewed as a log odds ratio:
+    \[a_{ij} = \log\left(\frac{\p(x_j=x_k=1)\p(x_j=x_k=0)}{\p(x_j=0,x_k=1)\p(x_j=1,x_k=0)}\right) \]
+    when $i\neq j$. I think this dictates that if $\bf x$ is generated from this model with $a_{ij}=0$, then $x_i$ and $x_j$ are independent.  \par
+
+    There is no closed form to calculate the entries in $A$ if $p>1$, but they can be derived numerically two ways.  
+    \begin{enumerate}
+        \item If one is attempting to replicate the empirical cross-moments from a data matrix $X$, $a_{1i}$ to $a_{ii}$ can be derived from fitting successive logistic regressions of $X_i$ on $X_{1} \ldots X_{i-1}$ using maximum likelihood. $a_{ji}$ for $i\neq j$ will then be the coefficient on $X_j$ while $a_{ii}$ is the intercept of the regression.
+        \item If one is just working with a desired cross-moment matrix $M$, the successive rows of $A$ can be fit via Newton-Raphson. \par
+            Let us say that the first $i-1$ rows have already been fit, resulting in the upper left $(i-1)\times(i-1)$ sub matrix $A_{-i}$ of $A$. Let us say that $\mathbf a_i$ is the first $i$ entries of the $i$th row of $A$ (the rest will be 0 anyway). As well, let $\mathbf m_i$ be similarly the first $i$ entries of the $i$th row of $M$. In other words, $\mathbf{m}_i = [\E(x_i x_j)]_{j=1}^{i}$. Finally, let us say that $\mathbf x_{-i}$ is the first $i-1$ entries of $\mathbf x$. We want to solve for $\mathbf a_i$ such that
+            \begin{align*}
+                \mathbf m_i &= \E\left(x_i \left[\begin{array}{c} \mathbf x_{-i} \\ x_i \end{array}\right]\right) \\
+                \mathbf m_i &= \E\left(\E\left(x_i \left[\begin{array}{c} \mathbf x_{-i} \\ x_i \end{array}\right]\;\bigg \vert\; \mathbf x_{-i}\right)\right)\\
+                \mathbf m_i &= \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \p(\mathbf x_{-i})\p(x_i=1\st \mathbf x_{-i}) \left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right] \\
+        \mathbf m_i &= \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}\mu\left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) \mu\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right] \\
+            \end{align*}
+            Where $c$ is the appropriate normalizing constant. Let us define the quantity on the right in the last line as $f(\mathbf a_i)$. We can solve for $f(\mathbf a_i)=\mathbf{m}_i$ by successive Newton-Raphson iterations defined by 
+            \[\mathbf a_i^{(k+1)} = \left[H f\left(\mathbf a_i^{(k)}\right)\right]^{-1}\left[f\left(\mathbf a_i^{(k)}\right)-\mathbf m_i\right] \]
+            The Hessian matrix is calculated as 
+        \[ H f\left(\mathbf a_i\right) = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}\mu \left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf x_{-i}^T & 1 \end{array}\right] \]
+            With $2^{i-1}$ possible values for $\mathbf x_{-i}$, this can quickly become computationally expensive. Instead, with a series of values $\mathbf x_{-i}^{(k)}\sim \mathbf x_{-i}$, we can approximate
+            \[f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K \mu\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right] \]
+            and
+            \[H f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
+            Though in theory $A$ should always exist, in practice numerical issues may compound to the point that the Newton-Raphson method won't converge. In this case, one can solve instead for $\mathbf m_i^*(\tau)$, where, for $\tau\in[0,1]$
+    \[\mathbf m_i^*(\tau) = (1-\tau)\mathbf m_i + \tau \left[ \begin{array}{cccc} 0 & \ldots & 0 & M_{ii} \end{array} \right]^T \]
+            When $\tau=0$, this yields the original problem, while when $\tau=1$, it is treating $x_i$ as independent of $\mathbf x_{-i}$. The latter will always have the solution
+            \[\mathbf a_i = \left[ \begin{array}{cccc} 0 & \ldots & 0 & \log\left(\frac{M_{ii}}{1-M_{ii}}\right) \end{array} \right]^T \]
+            The hope is that for some $\tau$ close to $0$, convergence can be achieved, only causing a slight distortion from the desired cross moments.
+    \end{enumerate}
+
+\subsection{Generating Binary Knockoffs}
+    My method for generating binary knockoffs broadly involves two steps:
+    \begin{enumerate}
+        \item I use either the equal correlation method or the SDP method described in the original knockoff paper to find $\mathbf s$ such that $\|\diag(\hat\Sigma)-\mathbf s\|$ is small and 
+        \[ \Sigma_L = \left[\begin{array}{cc}  \hat\Sigma & \hat\Sigma - \diag(\mathbf s )\\ \hat\Sigma - \diag(\mathbf s) & \hat\Sigma \end{array}\right] \succeq 0 \]
+        I use a subscript $L$ for large to denote items associated with the joint distribution of $[\mathbf x \; \mathbf{\tilde x}]$. If $\mathbf m_L = \E\left([\mathbf x \; \mathbf{\tilde x}]\right)^T = [\mathbf m \; \mathbf m]^T$, then the desired cross moment matrix of the joint distribution is 
+        \[ M_L = \Sigma_L + \mathbf m_L\mathbf m_L^T\]
+        To ensure that this is a valid cross moment matrix for a binary random vector is that 
+        \[\max\{0,\mathbf m_{L,i} + \mathbf m_{L,j} -1\} \leq M_{L,ij} \leq \min\{\mathbf m_{L,i}, \mathbf m_{L,j}\} \]
+        I've built a check into the code for this, but in practice it shouldn't be a worry. This condition is always satisfied in a neighborhood of $M_{L,ij} = \mathbf m_{L,j}\mathbf m_{L,i}$. Since the we are either keeping the value $M_{L,ij}$ from a valid cross moment matrix or minimizing $\vert M_{L,ij} - \mathbf m_{L,j}\mathbf m_{L,i}\vert$, it would be very surprising if this condition was violated.
+        
+        \item I can fit the matrix $A$ that will generate random binary variables similarly to the method described in section $3.2$ which have cross moments $X_L$. This can be used to generate the $\tilde x_i$ sequentially as $\tilde x_i \st \mathbf x,\tilde x_1,\ldots,\tilde x_{i-1}$ so as to create $\tilde X \st X$. 
+    \end{enumerate}
+    \subsection{More Detail on Fitting $A$}
+        I could fit $A$ based on $M_L$ exactly as described in the second method of $3.2$, however, this isn't exactly what I do. First off, with $p$ being potentially large, the simulation method for estimating $f(\mathbf a)$ and $H f(\mathbf a)$ was the obvious choice. This involves fitting $\mathbf a_i$ based on the conditional distribution of $\mathbf x_{L,i}$ given randomly drawn partial vectors $\mathbf x_{L,-i}$. There is no need to simulate the marginal distribution of $\mathbf x$ though, since the simulation is only approximate and we already have a number of realizations in $X$. Thus, I only fit the lower half of $A$, using this process: 
+        \begin{enumerate}
+            \item To get a simulation of size at least $K$, I create a matrix $X_F$ ($F$ for fixed) which is initially $X$ stacked up until it has $K'\geq K$ rows. 
+            \item For each $p<i\leq 2p$,
+                \begin{itemize}
+                    \item Where $\mathbf x_F^{(k)}$ is the $k$th row of $X_F$, the rows $\mathbf a_i$ are fit sequentially by Newton-Raphson iterations with 
+                    \[f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right] \]
+                    and
+                    \[H f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_F^{(k)}]^T & 1 \end{array}\right] \]
+                    \item If the iterations won't converge, I attempt to fit $f(\mathbf a_i)=m_i^*(\tau)$ instead for increasing values of $\tau$ until it converges.
+                    \item After $\mathbf a_i$ is fit, a new column $X_i$ is drawn as independent Bernoulli with probability vector $\mu(X_F \mathbf a_i)$.   
+                    \item $X_F$ is updated to 
+                    \[ X_F = [X_F \; X_i] \]
+                \end{itemize}
+            \item At the end, the first $n$ rows of $X_F$ are taken as $[X \; \tilde X]$, though the rows corresponding to any copy of $X$ would work equally well, since these all should have the desired distribution.
+        \end{enumerate}
+        Some thoughts/concerns/explanations:
+        \begin{itemize}
+            \item Since $x_{-i}^{(k)}$ is replaced with $x_F^{(k)}$, which is a hybrid of real and simulated data, I am not sure there is the same theoretical guarantee that a unique $A$ matrix exists. In practice though it still worked pretty well, and has the advantage that we are deriving $\tilde X$ such that $\E(X'\tilde X) = \hat \Sigma- \diag(\mathbf s)$.
+            \item A hybrid of simulating $x_{-i}^{(k)}$ and keeping fixed $x_F^{(k)}$ would be to draw from the rows of $X$ $K$ times, with replacement, then simulating the rest of the $x_{-i}^{(k)}$ vector. I'm not convinced there is a good reason to do this. 
+            \item By not simulating, there is the advantage of not needing to fit the upper half of $A$.
+            \item By not redrawing $x_{-i}^{(k)}$ each time, there is less computation for the computer. As well, the multiplication
+                \[ \left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_F^{(k)}]^T & 1 \end{array}\right] \]
+            needn't be redone for each iteration, and only partially recalculated for each $i$ (though I don't have this implemented yet). The downside might be that error is getting compounded over each $i$.
+        \end{itemize}
+
+\section{Bernoulli Knockoff Performance}
+For each of thses, exaimine these situatations:
+\begin{itemize}
+    \item $X$ arises out of the assumed Isling model, with no high order interactions. 
+    \item $X$ does not arise out of this model, and does have higher order interactions. Could possibly model this by drawing the vector $\mathbf x$ or subsets of it as multinomial with probabilities from a Dirichlet distribution.
+    \item $X$ is from a real world data set, likely something in genetics.
+    \item $y$ is normally distributed around $X\beta$.
+    \item $y$ is drawn from some other distribution, possibly skewed, heavy tailed, or light tailed.
+    \item $y$ is from a real world data set.
+\end{itemize}
+\subsection{Gram Matrix Comparison}
+\subsection{Binary vs. Determinist Knockoffs in LASSO}
+\subsection{Binary Knockoffs in other Regularlized GLMS}
+
+\section{Discussion}
+\subsection{Areas for Further Work}
+
+
+\section{Further Work and Simulations}
+As I see it, further simulation work for my paper breaks down into three logical groups: comparison of random Bernoulli knockoffs to the original Knockoffs in LASSO, evaluation of Bernoulli knockoffs in other L1 regularized GLMs, and expanding random knockoffs to more general sorts of variables.
+
+\subsection{Comparison to Original Knockoffs in LASSO}
+The basic idea is to compare how the two sorts of knockoffs compare when $X$ is binary and we are fitting a LASSO regression. Do they select the same variables? Do the binary knockoffs control FDR more or less conservatively? Situations to test:
+\begin{itemize}
+    \item $X$ arises out of the assumed Isling model, with no high order interactions. 
+    \item $X$ does not arise out of this model, and does have higher order interactions. Could possibly model this by drawing the vector $\mathbf x$ or subsets of it as multinomial with probabilities from a Dirichlet distribution.
+    \item $X$ is from a real world data set, likely something in genetics.
+    \item $y$ is normally distributed around $X\beta$.
+    \item $y$ is drawn from some other distribution, possibly skewed, heavy tailed, or light tailed.
+    \item $y$ is from a real world data set.
+\end{itemize}
+
+\subsection{Evaluation of Binary Knockoffs in other GLMS}
+The one of the most interest would be logits. It would be good to see how successful the binary knockoffs are in controlling FDR without the theoretical guarantees that LASSO provides.
+\begin{itemize}
+    \item $X$ arises out of the Isling model, in which case it seems like the knockoffs should control FDR.
+    \item $X$ has higher order interactions, which might make the knockoffs perform poorly.
+    \item $X$ is from a real world data set, likely something in genetics.
+    \item $y$ is simulated based on the assumptions of the regression model.
+    \item $y$ is simulated to violate assumptions of the regression model.
+    \item $y$ is from a real world data set.
+\end{itemize}
+
+\subsection{Generalizations/Harebrained Ideas}
+I have two seeds of ideas for extensions if I have enough time.
+\begin{enumerate}
+    \item Still with binary data, one might be able to simulate binary variables with higher order interactions in the generation of $X$ by including higher order interactions in the regression of $X_i$ on $X_{-i}$. This would lead to $A$ being a matrix of higher dimension. Even if this worked, extending the method to knockoffs may not be obvious.
+    \item In the general case where $X$ is not binary, I can almost imagine a method set up along similar lines to the binary case.
+    \begin{itemize}
+        \item The desired covariance matrix could be chosen as in the original knockoff paper.
+        \item Each $x_i$'s marginal distribution would be approximated by a kernel density estimate on $X_i$.
+        \item A $x_i \st x_1, \ldots, x_{i-1}$ would be drawn from some reweighing of this marginal to achieve the proper covariance. For instance, if $F_i^{-1}$ is the inverse CDF of the marginal kernel density for $x_i$ and $u_i\st x_1, \ldots, x_{i-1}$ is a RV on $(0,1)$, then $x_i=F_i^{-1}(u_i)$.
+        \item Maybe fit generalized additive model for each successive $x_i$ with kernel regression for $x_1,\ldots,x_{i-1}$ to predict mean. Then, skew marginal of $x_i$ until it has that mean. 
+    \end{itemize}
+\end{enumerate}
+
+
+
+    
+
+\end{document}
