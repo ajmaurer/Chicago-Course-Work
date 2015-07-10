@@ -1,6 +1,6 @@
 
 \documentclass[11pt]{article}
-\usepackage[paper=letterpaper, margin=.5in]{geometry}
+\usepackage[paper=letterpaper, margin=1in]{geometry}
 \linespread{1.5}
 \pdfpagewidth 8.5in
 \pdfpageheight 11in
@@ -68,14 +68,30 @@
 \newcommand{\hwhead}[1]{#1 \hfill Aaron Maurer \vspace{2mm} \hrule \vspace{2mm}}
 
 \begin{document}
-\title{Binary Knockoffs Notes}
+\title{Using Probabilistic Knockoffs of Binary Variables to Control the False Discovery Rate}
 \author{Aaron Maurer}
 \maketitle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Preliminaries} 
-    {\em Note:} I will try to hold to the convention that $X$ is the $n\times p$ data matrix, while $\bf x$ is the random vector variable from which each row of $X$ was drawn. Accordingly, $\tilde X$ will be the knockoff matrix while $\bf \tilde x$ is a random vector variable. $x_i$ will be the random variable corresponding to the $i$th entry of $\bf x$, while $X_i$ is the vector of observations drawn from $x_i$ in the data matrix. $\hat \Sigma = \frac{1}{n}X^TX$ is the empirical covariance matrix associated with $X$, while $\Sigma=\E(\mathbf x \mathbf x^T)$ is the theoretical covariance matrix associate with $\mathbf x$. Also, for a square matrix $A$, $\diag(A)$ if the vector of values along the diagonal, while for a vector $\mathbf a$, $\diag(\mathbf a)$ is a square diagonal matrix with $\mathbf a$ along the diagonal.\\
+\section{Introduction}
+    Basic overview of what paper is about
+    
+\subsection{Knockoff Filter}
+    Describe the original knockoff filter, 
 
-    Some early investigation into deterministic knockoffs (as described in the original knockoff paper) reveal that they don't perform well in L1 regularized logistic regression. Even when $X_i$ is a null predictor of $y$, the $X_i$ still tend to enter the model prior to $\tilde X_i$. The issue is that even when $x\sim N_p({\bf 0}, \Sigma)$ for some $\Sigma\succeq 0$, $\tilde x$ is not normally distributed. This can be seen from producing qq plots of $X_i$ vs $\tilde X_i$ for each $i$. Of course, when $X$ is a binary vector, $\tilde X$ completely doesn't match its distribution, causing the original $X$ to beat the knockoffs into the model. This indicates that a new method of generating $\tilde X$ must be created to control FDR via knockoffs with regularized logistic regression. 
+\subsection{Binary Knockoffs}
+    Overview of my addition
+
+\section{Issues With Deterministic Knockoffs} 
+    {\em Note:} I will try to hold to the convention that $X$ is the $n\times p$ data matrix, while $\bf x$ is the random vector variable from which each row of $X$ was drawn. Accordingly, $\tilde X$ will be the knockoff matrix while $\bf \tilde x$ is a random vector variable, at least when $\tilde X$ is generated randomly. $x_i$ will be the random variable corresponding to the $i$th entry of $\bf x$, while $X_i$ is $i$th column of $X$, with observations drawn from $x_i$. $\hat \Sigma = \frac{1}{n}X^TX$ is the empirical covariance matrix associated with $X$, while $\Sigma=\E(\mathbf x \mathbf x^T)$ is the theoretical covariance matrix associate with $\mathbf x$. Also, for a square matrix $A$, $\diag(A)$ is the vector of values along the diagonal, while for a vector $\mathbf a$, $\diag(\mathbf a)$ is a square diagonal matrix with $\mathbf a$ along the diagonal.\\
+
+     
+    Simulations with deterministic knockoffs reveal that they don't perform well in L1 regularized logistic regression. Even when $X_i$ is a null predictor of $y$, the $X_i$ still tend to enter the model prior to $\tilde X_i$. The issue is that even when $x\sim N_p({\bf 0}, \Sigma)$ for some $\Sigma\succeq 0$, the $\tilde X_i$ do not fit a normal distribution. This can be seen below in figure 1, where normal Q-Q plots of simulated variables $X_i$ and corresponding knockoffs $\tilde X_i$ are provided.
+    \begin{figure}[h!]
+        \includegraphics[width=20cm]{images/normalQQ}
+        \caption{Normal Q-Q of original variables and knockoffs for simulation with $4$ variables and 1,000 observations}
+    \end{figure}
+    
+    This can be seen from producing qq plots of $X_i$ vs $\tilde X_i$ for each $i$. Of course, when $X$ is a binary vector, $\tilde X$ completely doesn't match its distribution, causing the original $X$ to beat the knockoffs into the model. This indicates that a new method of generating $\tilde X$ must be created to control FDR via knockoffs with regularized logistic regression. 
 
 \section{Random Bernoulli Knockoffs}
     My idea is to generate $\bf \tilde x$ randomly such that, approximately, $\bf \tilde x\sim \bf x$. In particular, both variables should have similar marginal densities, expectations, and second moments. However, $\bf \tilde x\st \bf x$ should also have desired knockoff property that $\E(\mathbf{\tilde x}^T\mathbf x\st \mathbf x) = \Sigma-\mathbf s$, where $\|\diag(\Sigma)-s\|$ is small. In the general case, this is likely infeasible; however, if $\bf x$ is a binary vector, as is often the case, we know we are dealing with a much more limited class of random variables, and it should be possible to randomly generate $\bf \tilde x\st \bf x$ so as to have the desired properties. At worst, this method will provide a suitable replacement for deterministic $\bf \tilde x$ for use with LASSO, and if we are lucky, it will work reasonably for other regularized GLMs. 

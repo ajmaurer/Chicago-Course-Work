@@ -8,6 +8,7 @@ The method for binary models is my development, based on the paper "On parametri
 """
 
 # imports 
+from __future__ import division
 import numpy as np
 import numpy.linalg as nplin
 import numpy.random as npran
@@ -67,10 +68,11 @@ def solve_sdp(G):
     return np.asarray(s.value).flatten()
 
 class knockoff_logit(object):
-    def __init__(self,y,X,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,tol=1E-5,maxiter=100,full_A=False):
+    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,tol=1E-5,maxiter=100,full_A=False):
         self.y      = y
         self.X      = normalize(X.astype(float),norm='l2',axis=0)
         self.X_orig = X
+        self.q      = q                # Level we want to control FDR at
         self.n,self.p = self.X.shape
         self.knockoff_type = knockoff  # what type of knockoff are we generating - binary or the original deterministic ones?
         self.cov_type = cov_method     # how are we generating the desired covariance matrix - equicor or SDP?
@@ -301,12 +303,23 @@ class knockoff_logit(object):
         self.w_rank   = self.w_filter * np.nanmin((self.z_rank[self.p:(2*self.p)],self.z_rank[:self.p]),axis=0)
         self.w_value  = self.w_filter * np.max((self.z_value[self.p:(2*self.p)],self.z_value[:self.p]),axis=0)
 
+    def _get_T(self):
+        """ Calculates the data-dependent threshold for the statistics """
+        Ws = set(np.abs(self.w_value))
+        self.T = np.amin(np.append([t for t in Ws if np.sum(self.w_value<=-t)/max(1,np.sum(self.w_value>=t)) <= self.q],np.inf))
+
+    def _get_S(self):
+        """ Calculate the vector selecting features S """
+        self.S = self.w_value>=self.T
+
     def fit(self):
         if   self.knockoff_type == 'deterministic': self._deterministic_knockoff()
         elif self.knockoff_type == 'binary':        self._binary_knockoff()
         self._fit_lognet()
         self._get_z()
         self._get_w()
+        self._get_T()
+        self._get_S()
 
 def main(n,p,q):
     print 'nobody lives here right now'
