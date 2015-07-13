@@ -41,7 +41,7 @@
 \newcommand{\E}{\mathrm{E}}
 \newcommand{\var}{\mathrm{Var}}
 \newcommand{\cov}{\mathrm{Cov}}
-\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\diag}[1]{\mathrm{diag}\{#1\}}
 \newcommand{\ST}{mbox{ s.t. }}
 
 \newcommand{\x}{\bf x}
@@ -73,16 +73,81 @@
 \maketitle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-    Basic overview of what paper is about
+    Variable selection is an essential problem to fitting a regression model. For linear regression, the knockoff filter (Barber and Cand\`{e}s, 2014) offers a method of exact FDR control. However, the method as originally formulated does not extend to other generalized linear models such as logistic regression. This paper offers an extension of this method which will work with binary features in the context of linear regression, but also will extend to other GLMs.  
     
 \subsection{Knockoff Filter}
-    Describe the original knockoff filter, and introduce some notation. Original=deterministic
+    Let us consider the consider the usual setting for linear regression, where $n$ observations of a variable of interest $y$ arise from the model
+    \[\mathbf{y} = X\beta + \mathbf{z}\]
+    where $\mathbf{y}\in\R^n$ are the observed values of $y$, $X \in \R^{n\times p}$ is the matrix of predictor variables, $\beta\in\R^p$ are the unknown coefficients, and $\mathbf z$ is Gaussian noise. For the purpose of this paper, only the case where $2p\leq n$ will be considered, though the methods can be extended to $p\leq n$. I will to refer the $j$th column of $X$ as $X_j$, which is $n$ observations of the random variable $x_j$. The random variable $x_j$ is in turn $j$th entry of the random vector valued variable $\mathbf x$. In the situation where $\beta$ is sparse and there is reason to expect that $x_j$ and $y$ are uncorrelated for many $j$, the knockoff filter is a method to select a subset of the $x_j$ which are likely correlated with $y$. \par
+    The method specifically seeks to control the false discovery rate (FDR), which is the expected portion of some selection of $x_j$ which are, in fact, uncorrelated with $y$. For a procedure which chooses a subset of variables $\hat S\subseteq \{1,\ldots,p\}$, this is defined as  
+    \[ \textrm{FDR} = \E\left[\frac{\vert{\{j: \beta_j=0 \; \& \; j\in\hat S\}}\vert}{\max\{\vert{\hat S}\vert,1\}} \right] \]
+    FDR is controlled at level $q$ if FDR is less than $q$ irrespective of the coefficients $\beta$. \par
 
+    The knockoff filter achieves FDR control in several steps, the first of which is creating a set of `knockoff' features $\tilde X_j$ which imitate the original $X_j$ while being less correlated with $y$. In particular, the matrix of knockoffs $\tilde X$ has the same internal correlation structure as $X$, the knockoff feature $\tilde X_j$ has the same correlation with other $X_i$ as $X_j$ does, but the correlation between $\tilde X_j$ and $X_j$ is minimized. In other words, where $\hat \Sigma := X^TX$, 
+    \[ \tilde X^T\tilde X=\hat\Sigma \textrm{ and } \tilde X^T X = \Sigma - \diag{\mathbf s}\]
+    for some vector $s\in \R^p$ such that, where $\diag{\Sigma}$ is the vector made from the main diagonal of $\Sigma$, $\diag{\Sigma} - \mathbf s$ is small. Since $\tilde X_j$ and $X_j$ have relatively low correlation, as long as $X_j$ is created independently of $\mathbf y$, $\tilde X_j$ will have lower correlation with $\mathbf y$ than $X_j$. In the case where $X_j$ is uncorrelated with $\mathbf y$, $\tilde X_j$ will also be uncorrelated with $\mathbf y$. How these knockoffs are actually generated will be described shortly.\par
+    The second step is to fit a series of Lasso model of $\mathbf y$ on the combined design matrix $[X \; \tilde X]$ so as to determine the largest value $\lambda$ at which the coefficient for each $X_j$ and $\tilde X_j$ is nonzero.\footnote{Other statistics besides the $\lambda$s can also be used in the knockoff method, but are not considered in this paper} Recall, for a given $\lambda$, the estimated coefficient from the Lasso regression will be 
+    \[ \beta(\lambda) = \textrm{argmin}_\mathbf b \left\{\frac{1}{2}\|\mathbf y - [X\; \tilde X]\mathbf b\|^2_2 + \lambda\|b\|_1 \right\}\]
+    In the general case, the coefficient for one feature in a Lasso regression being first nonzero for a larger value of $\lambda$ than another feature is an indication that the first feature is a stronger predictor of the outcome than the second. Thus, since, by construction, the knockoff features are weaker predictors than the originals, we would expect the original features to have nonzero coefficients sooner than the knockoff features when the original is a valid predictor. On the other hand, since $\beta(\lambda)$ only depends on $[X\; \tilde X]$ through the sufficient statistics $[X\; \tilde X]^T[X\; \tilde X]$ and $[X\; \tilde X]^T\mathbf y$, for null predictors, the coefficients of the original features won't enter any sooner on average than knockoff feature. This can be seen by switching a null $X_j$ with $\tilde X_j$; by construction, $[X\; \tilde X]^T[X\; \tilde X]$ will be unaltered, while $\E\left[[X\; \tilde X]^T\mathbf y\right]$ will also be unchanged, since $\E[X_j^T\mathbf y]=\E[\tilde X_j^T\mathbf y]=0$. \par
+   This observation leads to the final step. Let $Z_j$ be the largest $\lambda$ such that feature $j$ has a nonzero coefficient and $\tilde Z_j$ the largest $\lambda$ such that knockoff $j$ has a nonzero coefficient. Then, define $W_j$ as 
+   \[ W_j = \begin{cases}   Z_j         &\mbox{if } Z_j>\tilde Z_j \\ 
+                            -\tilde Z_j &\mbox{if } Z_j<\tilde Z_j \\
+                            0           &\mbox{if } Z_j=\tilde Z_j \\
+            \end{cases} \]
+            When $X_j$ is a null predictor, $W_j$ will be symmetrically distributed around zero, and when $X_j$ is true predictor, it will have a distribution skewed positive. Since $W_j$ with large positive values are more likely to be true predictors, the knockoff filter selects the variables $\{j:W_j\geq T\}$, where $T$ is a threshold defined as
+            \[ T = \min\left\{ t>0 \;: \; \frac{\vert\{j:W_j\leq -t\}\vert}{\max\{\vert\{j:W_j\geq t\}\vert,1\}}\leq q \right\} \]
+            Basic logic of this method is fairly simple. Let $N_h(t)$ be the random variable for the number of null predictors with $W_j\leq t$, $N_l(t)$ be the number of null predictors with $W_j\geq t$, and $V_l(t)$ \& $V_h(t)$ be the similar number of true predictors. Since the null $W_j$ are symmetrically distributed around $0$, $\E[N_l(t)]=\E[N_h(t)]$. Thus,
+            \begin{align*}
+                q &\geq \E\left[ \frac{\vert\{j:W_j\leq -t\}\vert}{\max\{\vert\{j:W_j\geq t\}\vert,1\}} \right] \\
+                q &\geq \E\left[ \frac{N_l(t) + V_l(t)}{\max\{N_h(t) + V_h(t),1\}} \right] \\
+                q &\geq \E\left[ \frac{N_l(t)}{\max\{N_h(t) + V_h(t),1\}} \right] \\
+                q &\geq \E\left[ \frac{N_h(t)}{\max\{N_h(t) + V_h(t),1\}} \right] \\
+                q &\geq \textrm{FDR}
+            \end{align*}
+            So FDR is controlled, and since $V_l(t)$ will tend to be small, it should be controlled fairly tightly.
+
+\subsection{Original Knockoff Features}
+    The original formulation of the method offers two similar methods of constructing knockoffs. Both of these will, by construction, have exactly the property that
+    \[ \tilde X^T\tilde X=\hat\Sigma \textrm{ and } \tilde X^T X = \Sigma - \diag{\mathbf s}.\]
+    For both methods, the first step is to normalize the matrix $X$ such that $X_j^TX_j=1$ for all $j$. Then, let the Gram matrix of $[X\; \tilde X]$ be
+    \[ G:= [X\; \tilde X]^T[X\; \tilde X] = \left[ \begin{array}{cc} \Sigma & \Sigma - \diag{\mathbf s} \\ \Sigma - \diag{\mathbf s} & \Sigma \end{array}\right] \]
+    $A$, the Schur complement of $\Sigma$ in $G$ can be calculated as 
+    \[ A = 2\,\diag{\mathbf s} - \diag{\mathbf s}\Sigma^{-1}\diag{\mathbf s} \]
+    For $G$ to exist, $G$ must be positive semi-definite, which happens if and only if $A$ is positive semi-definite, which happens in turn if and only if\footnote{A fleshed out version of this argument can be found in the original knockoff paper} 
+    \[ \diag{\mathbf s} \succeq 0  \; \textrm{ and } \; 2\Sigma - \diag{\mathbf s} \succeq 0 \]
+    Given this is true, $A$ can be factored as $A=C^TC$. Combining this with a satisfactory $\mathbf s$ and an orthonormal matrix $\tilde U\in\R^{n\times p}$ such that $\tilde U^T X = 0$, a $\tilde X$ fulfilling the desired properties can be calculated as 
+    \[ \tilde X = X(I-\Sigma^{-1}\,\diag{\mathbf s}) + \tilde UC\]
+    As mentioned above, $\mathbf s$ should be chosen so as to make $\diag{\Sigma}-\mathbf s$ small. Since each $X_j$ has been normalized, this means that $\diag{\Sigma}=\mathbf 1$, so $\mathbf 1 - \mathbf s$ should be minimized in accordance with the restrictions on $\mathbf s$. The two methods differ in how $\mathbf s$ is chosen:
+    \begin{itemize}
+        \item \textit{Equi-correlated knockoffs}: Each original features is set to have the same correlation with its knockoff by setting $\mathbf s = 2\min\{\lambda_{min}(\Sigma),1\}\mathbf 1$. For all simulations in this paper, this was the method used.
+        \item \textit{SDP knockoffs}: The $\mathbf s$ which minimizes the average correlation between knockoff and original features can be found via a semi-definite programing problem:
+            \begin{center}
+                \begin{tabular}{r l}
+                    minimize & $\|\mathbf1-\mathbf s\|_1$ \\
+                    subject to & $ 0 \preceq \diag{\mathbf s} \preceq 2\Sigma $
+                \end{tabular} 
+            \end{center}
+            This method is significantly more computationally intensive. 
+    \end{itemize}
+     
 \subsection{Binary Knockoffs}
-    Overview of my addition
+    Though the ``original" knockoff method, described above, achieves the exact desired knockoff properties, the individual values in the vector $X_j$ will have little relation to the individual values in $X_j$. In particular, these values will often have very different empirical distributions. This effect is particularly noticeable when the random variable $x_j$ is discrete but $\tilde X_j$ does not even consist of the same set of values. The end result is that for variable selection for other generalized linear models, which do not have the same sufficient statistics as linear regression which knockoffs are designed to hit, the original knockoffs will fail to control FDR. \par
+    Thus, this paper offers a new method of generating knockoffs which should offer superior performance with other GLMs. In this new method, the matrix of knockoff features $\tilde X$ will be generated by row from a random vector valued variable $\mathbf{\tilde x}$, each entry $\tilde x_j$ of which will have the property $\tilde x_j \sim x_j$. This random variable will also abide by a relaxation of the original knockoff condition:
+    \[ \E[\mathbf{\tilde x}^T\mathbf{\tilde x}]=\hat\Sigma \; \textrm{ and } \; \E[\mathbf{\tilde x}^T \mathbf x \st \mathbf x] = \Sigma - \diag{\mathbf s}\]
+    This will ensure that, at the very least, these knockoffs are a suitable replacement for the original knockoffs for linear regression. \par
+    Generating such knockoffs for a completely general case of any $\mathbf x$ is likely infeasible. However, in the specific case where $\mathbf x$ is a random binary vector variable, this paper will demonstrate a method to generate such knockoff variables. Since binary data is extremely common in many areas, this will hopefully serve as a useful tool.
+
+\subsection{Paper Organization}
+The rest of this paper will be organized in the following fashion:
+\begin{itemize}
+    \item Section 2 will go into more detail about how the original knockoffs breakdown with generalized linear models. In particular, several simulations will demonstrate how they breakdown.
+    \item Section 3 will develop the method and theory for generating binary knockoffs.
+    \item Section 4 will discuss tests of Binary knockoffs in simulation, both in comparison to the original knockoffs with Lasso and for logistic regression by itself.
+    \item Section 5 is the final section, and will contain discussion of the results as well as areas for further work.
+\end{itemize}
 
 \section{Issues With Deterministic Knockoffs} 
-    {\em Note:} I will try to hold to the convention that $X$ is the $n\times p$ data matrix, while $\bf x$ is the random vector variable from which each row of $X$ was drawn. Accordingly, $\tilde X$ will be the knockoff matrix while $\bf \tilde x$ is a random vector variable, at least when $\tilde X$ is generated randomly. $x_i$ will be the random variable corresponding to the $i$th entry of $\bf x$, while $X_i$ is $i$th column of $X$, with observations drawn from $x_i$. $\hat \Sigma = \frac{1}{n}X^TX$ is the empirical covariance matrix associated with $X$, while $\Sigma=\E(\mathbf x \mathbf x^T)$ is the theoretical covariance matrix associate with $\mathbf x$. Also, for a square matrix $A$, $\diag(A)$ is the vector of values along the diagonal, while for a vector $\mathbf a$, $\diag(\mathbf a)$ is a square diagonal matrix with $\mathbf a$ along the diagonal.\\
+    {\em Note:} I will try to hold to the convention that $X$ is the $n\times p$ data matrix, while $\bf x$ is the random vector variable from which each row of $X$ was drawn. Accordingly, $\tilde X$ will be the knockoff matrix while $\bf \tilde x$ is a random vector variable, at least when $\tilde X$ is generated randomly. $x_i$ will be the random variable corresponding to the $i$th entry of $\bf x$, while $X_i$ is $i$th column of $X$, with observations drawn from $x_i$. $\hat \Sigma = \frac{1}{n}X^TX$ is the empirical covariance matrix associated with $X$, while $\Sigma=\E(\mathbf x \mathbf x^T)$ is the theoretical covariance matrix associate with $\mathbf x$. Also, for a square matrix $A$, $\diag A$ is the vector of values along the diagonal, while for a vector $\mathbf a$, $\diag \mathbf a$ is a square diagonal matrix with $\mathbf a$ along the diagonal.\\
 
     Simulations with deterministic knockoffs reveal that they don't perform well in L1 regularized logistic regression. Even when $X_i$ is a null predictor of $y$, the $X_i$ still tend to enter the model prior to $\tilde X_i$. The issue is that even when $x\sim N_p({\bf 0}, \Sigma)$ for some $\Sigma\succeq 0$, the $\tilde X_i$ do not fit a normal distribution. This can be seen below in figure 1, where normal Q-Q plots of simulated variables $X_i$ and corresponding knockoffs $\tilde X_i$ are provided. Of course, when $X$ is a binary vector, $\tilde X$ completely doesn't match its distribution.
     \begin{figure}[h!]
@@ -95,10 +160,10 @@
 \section{Random Bernoulli Knockoffs}
     My solution to the issues with the 
 
-     generate $\bf \tilde x$ randomly such that it has the desired knockoff properties in expectation. In particular, both  should have similar marginal densities, expectations, and second moments. However, $\bf \tilde x\st \bf x$ should also have desired knockoff property that $\E(\mathbf{\tilde x}^T\mathbf x\st \mathbf x) = \Sigma-\mathbf s$, where $\|\diag(\Sigma)-s\|$ is small. In the general case, this is likely infeasible; however, if $\bf x$ is a binary vector, as is often the case, we know we are dealing with a much more limited class of random variables, and it should be possible to randomly generate $\bf \tilde x\st \bf x$ so as to have the desired properties. At worst, this method will provide a suitable replacement for deterministic $\bf \tilde x$ for use with LASSO, and if we are lucky, it will work reasonably for other regularized GLMs. 
+    generate $\bf \tilde x$ randomly such that it has the desired knockoff properties in expectation. In particular, both  should have similar marginal densities, expectations, and second moments. However, $\bf \tilde x\st \bf x$ should also have desired knockoff property that $\E(\mathbf{\tilde x}^T\mathbf x\st \mathbf x) = \Sigma-\mathbf s$, where $\|\diag{\Sigma}-s\|$ is small. In the general case, this is likely infeasible; however, if $\bf x$ is a binary vector, as is often the case, we know we are dealing with a much more limited class of random variables, and it should be possible to randomly generate $\bf \tilde x\st \bf x$ so as to have the desired properties. At worst, this method will provide a suitable replacement for deterministic $\bf \tilde x$ for use with LASSO, and if we are lucky, it will work reasonably for other regularized GLMs. 
 
 \subsection{Random Bernoulli Generation}
-    Thankfully, there has been a reasonable amount of work on how one can generate random Bernoulli vectors with some kind of correlation among among the values. A random Bernoulli vector $\bf x$ can be summarized by its first two moments: a mean vector $\E(\bf x)=m\in(0,1)^p$ and cross-moment matrix $\E(\bf x\bf x^T)=M\in(0,1)^{p\times p}$. Obviously, $m_i = \p(x_i=1)$, $M_{ij} = \p(x_i=x_j=1)$, and $\mathbf m=\diag(M)$. For an arbitrary symmetric $M$ to be valid cross-moment matrix, $M-mm^T\succeq0$, and
+Thankfully, there has been a reasonable amount of work on how one can generate random Bernoulli vectors with some kind of correlation among among the values. A random Bernoulli vector $\bf x$ can be summarized by its first two moments: a mean vector $\E(\bf x)=m\in(0,1)^p$ and cross-moment matrix $\E(\bf x\bf x^T)=M\in(0,1)^{p\times p}$. Obviously, $m_i = \p(x_i=1)$, $M_{ij} = \p(x_i=x_j=1)$, and $\mathbf m=\diag{M}$. For an arbitrary symmetric $M$ to be valid cross-moment matrix, $M-mm^T\succeq0$, and
     \[ \max\{0,m_i+m_j -1\} \leq M_{ij} \leq \min\{m_i,m_j\}\]
     for all $i\neq j$\footnote{``On parametric families for sampling binary data with specified mean and correlation" - http://arxiv.org/abs/1111.0576}. Given a qualifying $M$, or observed $X$, there are a few ways of generating more random $\bf x$.
 
@@ -147,8 +212,8 @@
 \subsection{Generating Binary Knockoffs}
     My method for generating binary knockoffs broadly involves two steps:
     \begin{enumerate}
-        \item I use either the equal correlation method or the SDP method described in the original knockoff paper to find $\mathbf s$ such that $\|\diag(\hat\Sigma)-\mathbf s\|$ is small and 
-        \[ \Sigma_L = \left[\begin{array}{cc}  \hat\Sigma & \hat\Sigma - \diag(\mathbf s )\\ \hat\Sigma - \diag(\mathbf s) & \hat\Sigma \end{array}\right] \succeq 0 \]
+        \item I use either the equal correlation method or the SDP method described in the original knockoff paper to find $\mathbf s$ such that $\|\diag{\hat\Sigma}-\mathbf s\|$ is small and 
+        \[ \Sigma_L = \left[\begin{array}{cc}  \hat\Sigma & \hat\Sigma - \diag{\mathbf s }\\ \hat\Sigma - \diag{\mathbf s} & \hat\Sigma \end{array}\right] \succeq 0 \]
         I use a subscript $L$ for large to denote items associated with the joint distribution of $[\mathbf x \; \mathbf{\tilde x}]$. If $\mathbf m_L = \E\left([\mathbf x \; \mathbf{\tilde x}]\right)^T = [\mathbf m \; \mathbf m]^T$, then the desired cross moment matrix of the joint distribution is 
         \[ M_L = \Sigma_L + \mathbf m_L\mathbf m_L^T\]
         To ensure that this is a valid cross moment matrix for a binary random vector is that 
@@ -176,7 +241,7 @@
         \end{enumerate}
         Some thoughts/concerns/explanations:
         \begin{itemize}
-            \item Since $x_{-i}^{(k)}$ is replaced with $x_F^{(k)}$, which is a hybrid of real and simulated data, I am not sure there is the same theoretical guarantee that a unique $A$ matrix exists. In practice though it still worked pretty well, and has the advantage that we are deriving $\tilde X$ such that $\E(X'\tilde X) = \hat \Sigma- \diag(\mathbf s)$.
+            \item Since $x_{-i}^{(k)}$ is replaced with $x_F^{(k)}$, which is a hybrid of real and simulated data, I am not sure there is the same theoretical guarantee that a unique $A$ matrix exists. In practice though it still worked pretty well, and has the advantage that we are deriving $\tilde X$ such that $\E(X'\tilde X) = \hat \Sigma- \diag{\mathbf s}$.
             \item A hybrid of simulating $x_{-i}^{(k)}$ and keeping fixed $x_F^{(k)}$ would be to draw from the rows of $X$ $K$ times, with replacement, then simulating the rest of the $x_{-i}^{(k)}$ vector. I'm not convinced there is a good reason to do this. 
             \item By not simulating, there is the advantage of not needing to fit the upper half of $A$.
             \item By not redrawing $x_{-i}^{(k)}$ each time, there is less computation for the computer. As well, the multiplication
