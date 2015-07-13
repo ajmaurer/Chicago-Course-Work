@@ -164,7 +164,7 @@ class ko_test(object):
             # The cumulitive rate of originals coming in first up to a given rank
             self.true_orig_rank_rate = self.true_or_rank_ct/(self.true_or_rank_ct+self.true_ko_rank_ct)
 
-    def plot_ko_rank_rate(self):
+    def plot_ko_rank_rate(self,title='Percentage Original Variables'):
         self.knockoff_rank_rate()
         if self.p1>0:
             plt.plot(np.arange(self.p)+1,self.true_orig_rank_rate,'b-', label = 'True Predictors')
@@ -173,7 +173,7 @@ class ko_test(object):
             end_val = self.null_orig_rank_rate[-1]
         plt.xlabel('Rank Variable Entered Model')
         plt.ylabel('Cumulative % Original Variables')
-        plt.title('Percentage Original Variables\n %.3f of Null Originals Came in First By End' % end_val)
+        plt.title(title+'\n %.3f of Null Originals Came in First By End' % end_val)
         plt.axis([1,self.p,0,1])
         plt.legend(loc='lower right')
         plt.show()
