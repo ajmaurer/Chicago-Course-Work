@@ -43,6 +43,79 @@ def cutoff(array,min=-50,max=50):
     cut_array = np.max((min*np.ones(shape),cut_array),axis=0)
     return cut_array
 
+def genXy_given_X_norm_y(seed,data,n,p1,pnull,sd=1,beta_sd=1):
+    ''' X is binary from the isling model, with the coefficients drawn from a normal. Y is binary, with beta's coefficients also from a normal '''
+    if not seed == None:
+        npran.seed(seed)
+    p = p1 + pnull
+    h,w = data.shape
+    rows = npran.choice(h,n)
+    X      = data[rows,:][:,npran.choice(w,p)]
+    X_1    = X[:,:p1]
+    X_null = X[:,p1:]
+    beta   = npran.randn(p1)*beta_sd
+    if p1>0:
+        eta    = np.dot(X_1,beta)+logit(base_prob)
+        y      = eta + npran.normal(0,sd,n)
+    else:
+        y      = npran.normal(0,sd,n)
+    return X,y
+
+def genXy_binary_X_norm_y(seed,n,p1,pnull,base_prob=.25,beta_sd=1,A_base_diag=-1,A_sd=.2):
+    ''' X is binary from the isling model, with the coefficients drawn from a normal. Y is binary, with beta's coefficients also from a normal '''
+    if not seed == None:
+        npran.seed(seed)
+    p = p1 + pnull
+    A = npran.normal(0,.2,(p,p))-np.diag(A_base_diag*np.ones(p))
+    X = draw_random_binary(n,A)
+    X_1    = X[:,:p1]
+    X_null = X[:,p1:]
+    beta   = npran.randn(p1)*beta_sd
+    if p1>0:
+        eta    = np.dot(X_1,beta)
+        y      = eta + npran.normal(0,sd,n)
+    else:
+        y      = npran.normal(0,sd,n)
+    return X,y
+
+
+
+
+def genXy_given_X_norm_beta(seed,data,n,p1,pnull,base_prob=.25,beta_sd=1):
+    ''' X is binary from the isling model, with the coefficients drawn from a normal. Y is binary, with beta's coefficients also from a normal '''
+    if not seed == None:
+        npran.seed(seed)
+    p = p1 + pnull
+    h,w = data.shape
+    rows = npran.choice(h,n)
+    X      = data[rows,:][:,npran.choice(w,p)]
+    X_1    = X[:,:p1]
+    X_null = X[:,p1:]
+    beta   = npran.randn(p1)*beta_sd
+    if p1>0:
+        eta    = cutoff(np.dot(X_1,beta)+logit(base_prob))
+        y      = npran.binomial(1,invlogit(eta),n)
+    else:
+        y      = npran.binomial(1,base_prob,n)
+    return X,y
+
+def genXy_binary_X_norm_beta(seed,n,p1,pnull,base_prob=.25,beta_sd=1,A_base_diag=-1,A_sd=.2):
+    ''' X is binary from the isling model, with the coefficients drawn from a normal. Y is binary, with beta's coefficients also from a normal '''
+    if not seed == None:
+        npran.seed(seed)
+    p = p1 + pnull
+    A = npran.normal(0,.2,(p,p))-np.diag(A_base_diag*np.ones(p))
+    X = draw_random_binary(n,A)
+    X_1    = X[:,:p1]
+    X_null = X[:,p1:]
+    beta   = npran.randn(p1)*beta_sd
+    if p1>0:
+        eta    = cutoff(np.dot(X_1,beta)+logit(base_prob))
+        y      = npran.binomial(1,invlogit(eta),n)
+    else:
+        y      = npran.binomial(1,base_prob,n)
+    return X,y
+
 def genXy_binary_X_norm_beta(seed,n,p1,pnull,base_prob=.25,beta_sd=1,A_base_diag=-1,A_sd=.2):
     ''' X is binary from the isling model, with the coefficients drawn from a normal. Y is binary, with beta's coefficients also from a normal '''
     if not seed == None:
@@ -97,25 +170,42 @@ def merge_two_dicts(x,y):
     z.update(y)
     return z
 
-def removekey(d, key):
+def removekeys(d, keys):
     r = dict(d)
-    del r[key]
+    for key in keys:
+        del r[key]
     return r
 
 # generates a whole lot of w statistics from different simulations
-def gen_w(kwargs):
+def gen_w_s(kwargs):
     func = kwargs['func']
-    X,y = func(**removekey(kwargs,'func'))
-    knockoff_model = ko.knockoff_logit(y,X)
-    knockoff_model.fit()
-    return knockoff_model.w_value
+    X,y = func(**removekeys(kwargs,['func','q','knockoff','model']))
+    if kwargs['knockoff']=='both':
+        if kwargs['model']=='logit':
+            bin_knockoff_model = ko.knockoff_logit(y,X,kwargs['q'],knockoff='binary')
+            ori_knockoff_model = ko.knockoff_logit(y,X,kwargs['q'],knockoff='original')
+        elif kwargs['model']=='lasso':
+            bin_knockoff_model = ko.knockoff_lasso(y,X,kwargs['q'],knockoff='binary')
+            ori_knockoff_model = ko.knockoff_lasso(y,X,kwargs['q'],knockoff='original')
+        bin_knockoff_model.fit()
+        ori_knockoff_model.fit()
+        return ((bin_knockoff_model.w_value,ori_knockoff_model.w_value),(bin_knockoff_model.S,ori_knockoff_model.S))
+    else:
+        if kwargs['model']=='logit':
+            knockoff_model = ko.knockoff_logit(y,X,kwargs['q'],knockoff=kwargs['knockoff'])
+        elif kwargs['model']=='lasso':
+            knockoff_model = ko.knockoff_lasso(y,X,kwargs['q'],knockoff=kwargs['knockoff'])
+        knockoff_model.fit()
+        return (knockoff_model.w_value, knockoff_model.S)
 
-def batch_gen_w(procs,seeds,**kwargs):
+def batch_gen_w_s(procs,seeds,**kwargs):
     ''' Will calculate a w statistic using the key words arguments passed to gen_w for each seed using procs processors'''
     pool = Pool(processes=procs)
     input = [merge_two_dicts({'seed':seed},kwargs) for seed in seeds]
-    Ws   = pool.map(gen_w,input)
-    return Ws
+    outlist   = pool.map(gen_w_s,input)
+    Ws    = [w for w,s in outlist]
+    Ss    = [s for w,s in outlist]
+    return (Ws,Ss)
 
 class ko_test(object):
     def __init__(self,procs,seeds,**kwargs):
@@ -129,17 +219,19 @@ class ko_test(object):
         self.p      = self.p1+self.pnull
         # The Ws - matrix, with the first row the value, second the rank by absolute value,
         #    and the third the sign (did knockoff or original come in first?), and the forth whether it is a true predictor
-        Ws     = batch_gen_w(procs,seeds,**kwargs)
-        self.Ws =   [
-                        np.vstack(
-                            (
-                                W,
-                                np.abs(W).argsort()[::-1].argsort(),
-                                np.sign(W),
-                                np.arange(self.p)<self.p1
+        Ws,Ss   = batch_gen_w_s(procs,seeds,**kwargs)
+        if kwargs['knockoff']=='both':
+            self.Ws =   [
+                            np.vstack(
+                                (
+                                    W,
+                                    np.abs(W).argsort()[::-1].argsort(),
+                                    np.sign(W),
+                                    np.arange(self.p)<self.p1
+                                )
                             )
-                        )
-                    for W in Ws]
+                        for W in Ws]
+        self.Ss = Ss
 
     def knockoff_rank_rate(self):
         if self.pnull>0:
@@ -164,19 +256,62 @@ class ko_test(object):
             # The cumulitive rate of originals coming in first up to a given rank
             self.true_orig_rank_rate = self.true_or_rank_ct/(self.true_or_rank_ct+self.true_ko_rank_ct)
 
-    def plot_ko_rank_rate(self,title='Percentage Original Variables'):
+    def plot_ko_rank_rate(self,title='Percentage Original Variables',plot=None,xlabel=True,ylabel=True):
         self.knockoff_rank_rate()
-        if self.p1>0:
-            plt.plot(np.arange(self.p)+1,self.true_orig_rank_rate,'b-', label = 'True Predictors')
-        if self.pnull>0:
-            plt.plot(np.arange(self.p)+1,self.null_orig_rank_rate,'g-', label = 'Null Predictors')
+        if plot==None:
+            if self.p1>0:
+                plt.plot(np.arange(self.p)+1,self.true_orig_rank_rate,'b-', label = 'True Predictors')
+            if self.pnull>0:
+                plt.plot(np.arange(self.p)+1,self.null_orig_rank_rate,'g-', label = 'Null Predictors')
             end_val = self.null_orig_rank_rate[-1]
-        plt.xlabel('Rank Variable Entered Model')
-        plt.ylabel('Cumulative % Original Variables')
-        plt.title(title+'\n %.3f of Null Originals Came in First By End' % end_val)
-        plt.axis([1,self.p,0,1])
-        plt.legend(loc='lower right')
-        plt.show()
+            if xlabel:
+                plt.xlabel('Rank Variable Entered Model')
+            if ylabel:
+                plt.ylabel('Cumulative % Original Features')
+            plt.title(title+'\n %.3f of Null Originals Entered First' % end_val)
+            plt.axis([1,self.p,0,1])
+            plt.legend(loc='lower right')
+            plt.show()
+
+        else:
+            if self.p1>0:
+                plot.plot(np.arange(self.p)+1,self.true_orig_rank_rate,'b-', label = 'True Predictors')
+            if self.pnull>0:
+                plot.plot(np.arange(self.p)+1,self.null_orig_rank_rate,'g-', label = 'Null Predictors')
+            end_val = self.null_orig_rank_rate[-1]
+            if xlabel:
+                plot.set_xlabel('Rank Variable Entered Model')
+            if ylabel:
+                plot.set_ylabel('Cumulative % Original Features')
+            plot.set_title(title+'\n %.3f of Null Originals Entered First' % end_val)
+            plot.set_xlim(1,self.p)
+            plot.set_ylim(0,1)
+            plot.legend(loc='lower right')
+
+    def calc_fdr_power(self):
+        trueS = np.arange(self.p)<self.p1
+        if self.kwargs['knockoff']=='both':
+            self.binFDRs  = map(lambda (S,other): np.dot(S,1-trueS)/max(np.sum(S),1),self.Ss)
+            self.binpowers= map(lambda (S,other): np.dot(S,trueS)/max(np.sum(trueS),1),self.Ss)
+            self.oriFDRs  = map(lambda (other,S): np.dot(S,1-trueS)/max(np.sum(S),1),self.Ss)
+            self.oripowers= map(lambda (other,S): np.dot(S,trueS)/max(np.sum(trueS),1),self.Ss)
+            self.corr     = map(lambda (Sbin,Sori): np.corrcoef(Sbin,Sori)[0,1],self.Ss)
+            self.corr     = [ c for c in self.corr if not np.isnan(c)]
+            return (np.mean(self.binFDRs),np.mean(self.oriFDRs),np.mean(self.binFDRs),np.mean(self.oriFDRs),np.mean(self.corr))
+
+
+        else:
+            self.FDRs  = map(lambda S: np.dot(S,1-trueS)/max(np.sum(S),1),self.Ss)
+            self.powers  = map(lambda S: np.dot(S,trueS)/max(np.sum(trueS),1),self.Ss)
+            return (np.mean(self.FDRs),np.mean(self.Ss))
+
+    
+
+
+
+
+
+
  
  
         

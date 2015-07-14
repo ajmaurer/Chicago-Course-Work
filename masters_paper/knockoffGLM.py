@@ -168,23 +168,46 @@ class knockoff_net(object):
             lambda_min = min(d)**2
             s = np.ones(self.p)*min(2*lambda_min,1)
 
-        # Generate the large covariance matrix we want
+        # Return to the original X
         self.X = self.X_orig              # Now that we've adjusted the variance, revert back to the original X 
-        Sigma     = np.cov(self.X,rowvar=0)
-        s         = s*np.diag(Sigma)        # scale s back up to original variance
-        Sigma_lrg = np.hstack(((np.vstack((Sigma,Sigma-np.diag(s)))),np.vstack((Sigma-np.diag(s),Sigma))))
 
-        # Generate the crossmoment matrix 
+        # Calculate first moments 
         mu       = np.mean(self.X,axis=0)
         mu_lrg   = np.concatenate((mu,mu))
-        self.M   = Sigma_lrg + np.outer(mu_lrg,mu_lrg)
 
-        # Check condition 2.1 from Schafer - make sure its a valid crossmoment matrix
-        cond1 = self.M <= np.minimum(np.outer(mu_lrg,np.ones(2*self.p)),np.outer(np.ones(2*self.p),mu_lrg))
-        cond2 = np.outer(mu_lrg,np.ones(2*self.p))+np.outer(np.ones(2*self.p),mu_lrg) -1 <= self.M
-        test = np.logical_or(np.logical_and(cond1,cond2),np.diag(np.ones(2*self.p)))  # ignore diagonal
-        if np.min(test) == False:
-            print "The cross momement matrix violates necessary conditions for being random Bernoulli"
+        # Scale s up to original variance
+
+        # Generate the covariance matrix Sigma
+        M    = np.dot(self.X.T,self.X)/self.n
+        Sigma = M - np.outer(mu,mu)
+        s     = s*np.diag(Sigma)        # scale s back up to original variance
+
+
+        # Generate the large Sigma matrix, and keep shrinking s until its a valid crossmoment matrix
+        test = False 
+        shrink = 1 
+        while not test:
+            # s will be shrunk a little more each time the test is failed
+            s = s*shrink
+
+            # Generate large Sigma and crossmoment matrix
+            Sigma_lrg = np.hstack(((np.vstack((Sigma,Sigma-np.diag(s)))),np.vstack((Sigma-np.diag(s),Sigma))))
+            self.M   = Sigma_lrg + np.outer(mu_lrg,mu_lrg)
+
+            # Check condition 2.1 from Schafer - make sure its a valid crossmoment matrix
+            cond1 = self.M <= np.minimum(np.outer(mu_lrg,np.ones(2*self.p)),np.outer(np.ones(2*self.p),mu_lrg))
+            cond2 = np.outer(mu_lrg,np.ones(2*self.p))+np.outer(np.ones(2*self.p),mu_lrg) -1 <= self.M
+            testmat = np.logical_or(np.logical_and(cond1,cond2),np.diag(np.ones(2*self.p)))  # ignore diagonal
+            test = np.min(testmat)
+                
+            #if test and shrink<1:
+            #    print "s had to be shrunk by a factor of %.2f" % shrink
+
+            if shrink<.05:
+                print "Still won't work"
+                test = True
+
+            shrink = shrink*.90
 
         ####################################################
         # Fit the A matrix for the original variables first. 
@@ -305,8 +328,8 @@ class knockoff_logit(knockoff_net):
     def fit(self):
         """ Generates the knockoffs, fits the regression, and performs the FDR calculations """
         # Generate knockoff as inherited from knockoff_net
-        if   self.knockoff_type == 'deterministic': self._original_knockoff()
-        elif self.knockoff_type == 'binary':        self._binary_knockoff()
+        if   self.knockoff_type == 'original': self._original_knockoff()
+        elif self.knockoff_type == 'binary':   self._binary_knockoff()
 
         X_lrg = np.concatenate((self.X,self.X_ko), axis=1)
 
@@ -337,8 +360,8 @@ class knockoff_lasso(knockoff_net):
     def fit(self):
         """ Generates the knockoffs, fits the regression, and performs the FDR calculations """
         # Generate knockoff as inherited from knockoff_net
-        if   self.knockoff_type == 'deterministic': self._original_knockoff()
-        elif self.knockoff_type == 'binary':        self._binary_knockoff()
+        if   self.knockoff_type == 'original': self._original_knockoff()
+        elif self.knockoff_type == 'binary':   self._binary_knockoff()
 
         X_lrg = np.concatenate((self.X,self.X_ko), axis=1)
 
@@ -363,7 +386,7 @@ class knockoff_lasso(knockoff_net):
         self._get_S()
 
 def main():
- 'nobody lives here right now'
+    print 'nobody lives here right now'
 
 if __name__ == '___main__':
     status = main()
