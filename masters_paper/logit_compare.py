@@ -95,7 +95,7 @@ def logit_compare(n,b,p,q,p1s):
 
 
 def main():
-    logit_compare(n=1000,b=100,p=100,q=.2,p1s[5,10,15,20,25])
+    logit_compare(n=1000,b=100,p=100,q=.2,p1s=[5,10,15,20,25])
 
 if __name__ == '___main__':
     status = main()
