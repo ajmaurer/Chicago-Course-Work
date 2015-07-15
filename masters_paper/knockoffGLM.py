@@ -69,7 +69,7 @@ def solve_sdp(G):
 
 class knockoff_net(object):
     """ Parent class for knockoff lasso and knockoff logistic regression. Defines everything besides fitting the particular GlmNet object """
-    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,tol=1E-5,maxiter=100,full_A=False):
+    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,tol=1E-5,maxiter=40,full_A=False):
         self.y      = y
         self.X      = normalize(X.astype(float),norm='l2',axis=0)
         self.X_orig = X
@@ -199,15 +199,19 @@ class knockoff_net(object):
             cond2 = np.outer(mu_lrg,np.ones(2*self.p))+np.outer(np.ones(2*self.p),mu_lrg) -1 <= self.M
             testmat = np.logical_or(np.logical_and(cond1,cond2),np.diag(np.ones(2*self.p)))  # ignore diagonal
             test = np.min(testmat)
+
+            shrink_s = False
+            if shrink_s:
+                if shrink<.25:
+                    test = True
                 
-            #if test and shrink<1:
-            #    print "s had to be shrunk by a factor of %.2f" % shrink
+                if test and shrink<1:
+                    print "s had to be shrunk by a factor of %.2f" % shrink
 
-            if shrink<.05:
-                print "Still won't work"
-                test = True
-
-            shrink = shrink*.90
+                shrink = shrink*.90
+            elif not test:
+                test = True 
+                print "Cross moment test failed, didn't do anything about it"
 
         ####################################################
         # Fit the A matrix for the original variables first. 

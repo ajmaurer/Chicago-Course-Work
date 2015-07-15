@@ -7,7 +7,7 @@ import scipy as sp
 import scipy.linalg as splin
 import scipy.stats as spstat
 import matplotlib.pyplot as plt
-import requests
+import urllib3, certifi
 from scipy.special import expit as invlogit
 from scipy.special import logit
 
@@ -31,8 +31,13 @@ def getRandomIntegers(num=1000,min=1,max=1000000000,base=10):
     
     Since I'm not using random.org's API (do I look like I'm made out of money?!?), a maximum of 10,000 random numbers can be generated, and they min and max must be within +/- 1,000,000,000
     """
+
+    http = urllib3.PoolManager(
+        cert_reqs='CERT_REQUIRED', # Force certificate check.
+        ca_certs=certifi.where(),  # Path to the Certifi bundle.
+    )
     address = 'https://www.random.org/integers/?num=%d&min=%d&max=%d&col=1&base=%d&format=html&rnd=new' % (num,min,max,base)
-    r       = requests.get(address)
+    r       = http.request('get',address)
     uniList = BeautifulSoup(r.text).find('pre',class_='data').text.split()
     numList = map(int,uniList)
     return numList
@@ -55,13 +60,13 @@ def genXy_given_X_norm_y(seed,data,n,p1,pnull,sd=1,beta_sd=1):
     X_null = X[:,p1:]
     beta   = npran.randn(p1)*beta_sd
     if p1>0:
-        eta    = np.dot(X_1,beta)+logit(base_prob)
+        eta    = np.dot(X_1,beta)
         y      = eta + npran.normal(0,sd,n)
     else:
         y      = npran.normal(0,sd,n)
     return X,y
 
-def genXy_binary_X_norm_y(seed,n,p1,pnull,base_prob=.25,beta_sd=1,A_base_diag=-1,A_sd=.2):
+def genXy_binary_X_norm_y(seed,n,p1,pnull,sd=1,beta_sd=1,A_base_diag=-1,A_sd=.2):
     ''' X is binary from the isling model, with the coefficients drawn from a normal. Y is binary, with beta's coefficients also from a normal '''
     if not seed == None:
         npran.seed(seed)
@@ -196,13 +201,14 @@ def gen_w_s(kwargs):
         elif kwargs['model']=='lasso':
             knockoff_model = ko.knockoff_lasso(y,X,kwargs['q'],knockoff=kwargs['knockoff'])
         knockoff_model.fit()
-        return (knockoff_model.w_value, knockoff_model.S)
+        return (knockoff_model.w_value, knockoff_model.S.astype(int))
 
 def batch_gen_w_s(procs,seeds,**kwargs):
     ''' Will calculate a w statistic using the key words arguments passed to gen_w for each seed using procs processors'''
     pool = Pool(processes=procs)
     input = [merge_two_dicts({'seed':seed},kwargs) for seed in seeds]
     outlist   = pool.map(gen_w_s,input)
+    pool.close()
     Ws    = [w for w,s in outlist]
     Ss    = [s for w,s in outlist]
     return (Ws,Ss)
@@ -220,7 +226,7 @@ class ko_test(object):
         # The Ws - matrix, with the first row the value, second the rank by absolute value,
         #    and the third the sign (did knockoff or original come in first?), and the forth whether it is a true predictor
         Ws,Ss   = batch_gen_w_s(procs,seeds,**kwargs)
-        if kwargs['knockoff']=='both':
+        if kwargs['knockoff']!='both':
             self.Ws =   [
                             np.vstack(
                                 (
@@ -265,10 +271,10 @@ class ko_test(object):
                 plt.plot(np.arange(self.p)+1,self.null_orig_rank_rate,'g-', label = 'Null Predictors')
             end_val = self.null_orig_rank_rate[-1]
             if xlabel:
-                plt.xlabel('Rank Variable Entered Model')
+                plt.xlabel('Absolute Rank W')
             if ylabel:
-                plt.ylabel('Cumulative % Original Features')
-            plt.title(title+'\n %.3f of Null Originals Entered First' % end_val)
+                plt.ylabel('Cumulative % Positive W')
+            plt.title(title+'\n %.3f Total Positive W' % end_val)
             plt.axis([1,self.p,0,1])
             plt.legend(loc='lower right')
             plt.show()
@@ -280,30 +286,30 @@ class ko_test(object):
                 plot.plot(np.arange(self.p)+1,self.null_orig_rank_rate,'g-', label = 'Null Predictors')
             end_val = self.null_orig_rank_rate[-1]
             if xlabel:
-                plot.set_xlabel('Rank Variable Entered Model')
+                plot.set_xlabel('Absolute Rank W')
             if ylabel:
-                plot.set_ylabel('Cumulative % Original Features')
-            plot.set_title(title+'\n %.3f of Null Originals Entered First' % end_val)
+                plot.set_ylabel('Cumulative % Positive W')
+            plot.set_title(title+'\n %.3f Total Positive W' % end_val)
             plot.set_xlim(1,self.p)
             plot.set_ylim(0,1)
             plot.legend(loc='lower right')
 
     def calc_fdr_power(self):
-        trueS = np.arange(self.p)<self.p1
+        trueS = (np.arange(self.p)<self.p1).astype(int)
         if self.kwargs['knockoff']=='both':
-            self.binFDRs  = map(lambda (S,other): np.dot(S,1-trueS)/max(np.sum(S),1),self.Ss)
-            self.binpowers= map(lambda (S,other): np.dot(S,trueS)/max(np.sum(trueS),1),self.Ss)
-            self.oriFDRs  = map(lambda (other,S): np.dot(S,1-trueS)/max(np.sum(S),1),self.Ss)
-            self.oripowers= map(lambda (other,S): np.dot(S,trueS)/max(np.sum(trueS),1),self.Ss)
+            self.binFDRs  = map(lambda (Sbin,Sori): np.dot(Sbin,1-trueS)/max(np.sum(Sbin),1),self.Ss)
+            self.binpowers= map(lambda (Sbin,Sori): np.dot(Sbin,trueS)  /max(self.p1,1),self.Ss)
+            self.oriFDRs  = map(lambda (Sbin,Sori): np.dot(Sori,1-trueS)/max(np.sum(Sori),1),self.Ss)
+            self.oripowers= map(lambda (Sbin,Sori): np.dot(Sori,trueS)  /max(self.p1,1),self.Ss)
             self.corr     = map(lambda (Sbin,Sori): np.corrcoef(Sbin,Sori)[0,1],self.Ss)
             self.corr     = [ c for c in self.corr if not np.isnan(c)]
-            return (np.mean(self.binFDRs),np.mean(self.oriFDRs),np.mean(self.binFDRs),np.mean(self.oriFDRs),np.mean(self.corr))
+            return (np.mean(self.binFDRs),np.mean(self.oriFDRs),np.mean(self.binpowers),np.mean(self.oripowers),np.mean(self.corr))
 
 
         else:
             self.FDRs  = map(lambda S: np.dot(S,1-trueS)/max(np.sum(S),1),self.Ss)
-            self.powers  = map(lambda S: np.dot(S,trueS)/max(np.sum(trueS),1),self.Ss)
-            return (np.mean(self.FDRs),np.mean(self.Ss))
+            self.powers  = map(lambda S: np.dot(S,trueS)/max(self.p1,1),self.Ss)
+            return (np.mean(self.FDRs),np.mean(self.powers))
 
     
 
