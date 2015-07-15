@@ -38,7 +38,7 @@ def getRandomIntegers(num=1000,min=1,max=1000000000,base=10):
     )
     address = 'https://www.random.org/integers/?num=%d&min=%d&max=%d&col=1&base=%d&format=html&rnd=new' % (num,min,max,base)
     r       = http.request('get',address)
-    uniList = BeautifulSoup(r.text).find('pre',class_='data').text.split()
+    uniList = BeautifulSoup(r.data).find('pre',class_='data').text.split()
     numList = map(int,uniList)
     return numList
 
