@@ -85,11 +85,11 @@
     FDR is controlled at level $q$ if FDR is less than $q$ irrespective of the coefficients $\beta$. \par
 
     The knockoff filter achieves FDR control in several steps, the first of which is creating a set of `knockoff' features $\tilde X_j$ which imitate the original $X_j$ while being less correlated with $y$. In particular, the matrix of knockoffs $\tilde X$ has the same internal correlation structure as $X$, the knockoff feature $\tilde X_j$ has the same correlation with other $X_i$ as $X_j$ does, but the correlation between $\tilde X_j$ and $X_j$ is minimized. In other words, where $\hat \Sigma := X^TX$, 
-    \[ \tilde X^T\tilde X=\hat\Sigma \textrm{ and } \tilde X^T X = \Sigma - \diag{\mathbf s}\]
+    \[ \tilde X^T\tilde X=\Sigma \textrm{ and } \tilde X^T X = \Sigma - \diag{\mathbf s}\]
     for some vector $s\in \R^p$ such that, where $\diag{\Sigma}$ is the vector made from the main diagonal of $\Sigma$, $\diag{\Sigma} - \mathbf s$ is small. Since $\tilde X_j$ and $X_j$ have relatively low correlation, as long as $X_j$ is created independently of $\mathbf y$, $\tilde X_j$ will have lower correlation with $\mathbf y$ than $X_j$. In the case where $X_j$ is uncorrelated with $\mathbf y$, $\tilde X_j$ will also be uncorrelated with $\mathbf y$. How these knockoffs are actually generated will be described shortly.\par
-    The second step is to fit a series of Lasso model of $\mathbf y$ on the combined design matrix $[X \; \tilde X]$ so as to determine the largest value $\lambda$ at which the coefficient for each $X_j$ and $\tilde X_j$ is nonzero.\footnote{Other statistics besides the $\lambda$s can also be used in the knockoff method, but are not considered in this paper} Recall, for a given $\lambda$, the estimated coefficient from the Lasso regression will be 
-    \[ \beta(\lambda) = \textrm{argmin}_\mathbf b \left\{\frac{1}{2}\|\mathbf y - [X\; \tilde X]\mathbf b\|^2_2 + \lambda\|b\|_1 \right\}\]
-    In the general case, the coefficient for one feature in a Lasso regression being first nonzero for a larger value of $\lambda$ than another feature is an indication that the first feature is a stronger predictor of the outcome than the second. Thus, since, by construction, the knockoff features are weaker predictors than the originals, we would expect the original features to have nonzero coefficients sooner than the knockoff features when the original is a valid predictor. On the other hand, since $\beta(\lambda)$ only depends on $[X\; \tilde X]$ through the sufficient statistics $[X\; \tilde X]^T[X\; \tilde X]$ and $[X\; \tilde X]^T\mathbf y$, for null predictors, the coefficients of the original features won't enter any sooner on average than knockoff feature. This can be seen by switching a null $X_j$ with $\tilde X_j$; by construction, $[X\; \tilde X]^T[X\; \tilde X]$ will be unaltered, while $\E\left[[X\; \tilde X]^T\mathbf y\right]$ will also be unchanged, since $\E[X_j^T\mathbf y]=\E[\tilde X_j^T\mathbf y]=0$. \par
+    The second step is to fit a series of Lasso model of $\mathbf y$ on the combined design matrix $X_L=[X \; \tilde X]$ so as to determine the largest value $\lambda$ at which the coefficient for each $X_j$ and $\tilde X_j$ is nonzero. The subscript $L$ refers to the large design matrix with both features and knockoffs. \footnote{Other statistics besides the $\lambda$s can also be used in the knockoff method, but are not considered in this paper} Recall, for a given $\lambda$, the estimated coefficient from the Lasso regression will be 
+    \[ \beta(\lambda) = \textrm{argmin}_\mathbf b \left\{\frac{1}{2}\|\mathbf y - X_L\mathbf b\|^2_2 + \lambda\|b\|_1 \right\}\]
+    In the general case, the coefficient for one feature in a Lasso regression being first nonzero for a larger value of $\lambda$ than another feature is an indication that the first feature is a stronger predictor of the outcome than the second. Thus, since, by construction, the knockoff features are weaker predictors than the originals, we would expect the original features to have nonzero coefficients sooner than the knockoff features when the original is a valid predictor. On the other hand, since $\beta(\lambda)$ only depends on $X_L$ through the sufficient statistics $\Sigma_L=X_L^TX_L$ and $X_L^T\mathbf y$, for null predictors, the coefficients of the original features won't enter any sooner on average than knockoff feature. This can be seen by switching a null $X_j$ with $\tilde X_j$; by construction, $\Sigma_L$ will be unaltered, while $\E\left[X_L^T\mathbf y\right]$ will also be unchanged, since $\E[X_j^T\mathbf y]=\E[\tilde X_j^T\mathbf y]=0$. \par
    This observation leads to the final step. Let $Z_j$ be the largest $\lambda$ such that feature $j$ has a nonzero coefficient and $\tilde Z_j$ the largest $\lambda$ such that knockoff $j$ has a nonzero coefficient. Then, define $W_j$ as 
    \[ W_j = \begin{cases}   Z_j         &\mbox{if } Z_j>\tilde Z_j \\ 
                             -\tilde Z_j &\mbox{if } Z_j<\tilde Z_j \\
@@ -109,12 +109,12 @@
 
 \subsection{Original Knockoff Features}
     The original formulation of the method offers two similar methods of constructing knockoffs. Both of these will, by construction, have exactly the property that
-    \[ \tilde X^T\tilde X=\hat\Sigma \textrm{ and } \tilde X^T X = \Sigma - \diag{\mathbf s}.\]
-    For both methods, the first step is to normalize the matrix $X$ such that $X_j^TX_j=1$ for all $j$. Then, let the Gram matrix of $[X\; \tilde X]$ be
-    \[ G:= [X\; \tilde X]^T[X\; \tilde X] = \left[ \begin{array}{cc} \Sigma & \Sigma - \diag{\mathbf s} \\ \Sigma - \diag{\mathbf s} & \Sigma \end{array}\right] \]
-    $A$, the Schur complement of $\Sigma$ in $G$ can be calculated as 
+    \[ \tilde X^T\tilde X=\Sigma \textrm{ and } \tilde X^T X = \Sigma - \diag{\mathbf s}.\]
+    For both methods, the first step is to normalize the matrix $X$ such that $X_j^TX_j=1$ for all $j$. Then, let the Gram matrix of $X_L$ is
+    \[ \Sigma_L= [X\; \tilde X]^T[X\; \tilde X] = \left[ \begin{array}{cc} \Sigma & \Sigma - \diag{\mathbf s} \\ \Sigma - \diag{\mathbf s} & \Sigma \end{array}\right] \]
+    $A$, the Schur complement of $\Sigma$ in $\Sigma_L$ can be calculated as 
     \[ A = 2\,\diag{\mathbf s} - \diag{\mathbf s}\Sigma^{-1}\diag{\mathbf s} \]
-    For $G$ to exist, $G$ must be positive semi-definite, which happens if and only if $A$ is positive semi-definite, which happens in turn if and only if\footnote{A fleshed out version of this argument can be found in the original knockoff paper} 
+    For $\Sigma_L$ to exist, $\Sigma_L$ must be positive semi-definite, which happens if and only if $A$ is positive semi-definite, which happens in turn if and only if\footnote{A fleshed out version of this argument can be found in the original knockoff paper} 
     \[ \diag{\mathbf s} \succeq 0  \; \textrm{ and } \; 2\Sigma - \diag{\mathbf s} \succeq 0 \]
     Given this is true, $A$ can be factored as $A=C^TC$. Combining this with a satisfactory $\mathbf s$ and an orthonormal matrix $\tilde U\in\R^{n\times p}$ such that $\tilde U^T X = 0$, a $\tilde X$ fulfilling the desired properties can be calculated as 
     \[ \tilde X = X(I-\Sigma^{-1}\,\diag{\mathbf s}) + \tilde UC\]
@@ -150,19 +150,19 @@ The rest of this paper will be organized in the following fashion:
 \section{Issues With Deterministic Knockoffs} 
     The knockoff filter and $W$ statistics have a very natural extension to generalized linear models. Here, where $l(\beta\st X, \tilde X)$ is the log likelihood of coefficients $\beta$ given the model, the $L1$ regularized regression model will have estimated coefficient vector
     \[ \beta(\lambda) = \textrm{argmin}_\mathbf b \left\{l(\beta\st X, \tilde X) + \lambda\|b\|_1 \right\}\]
-    The $Z_j$ and $\tilde Z_j$ are then once again the largest $\lambda$ such that the given original or knockoff feature has a positive coefficient, and then $W_j$ is constructed exactly as before. The problem with this is that if the given GLM doesn't have the same sufficient statistics as linear regression, there is no theoretical guarantee that the knockoff filter will control FDR. This is since, for null $X_j$, there is no theory to guarantee the $Z_j$ and $\tilde Z_j$ are exchangeable, and thus $W_j$ is not guaranteed to be symmetrically distributed around $0$. \par
+    The $Z_j$ and $\tilde Z_j$ are then, once again, the largest $\lambda$ such that the given original or knockoff feature has a positive coefficient, and then $W_j$ is constructed exactly as before. The problem with this is that if the given GLM doesn't have the same sufficient statistics as linear regression, there is no theoretical guarantee that the knockoff filter will control FDR. This is since, for null $X_j$, there is no theory to guarantee the $Z_j$ and $\tilde Z_j$ are exchangeable, and thus $W_j$ is not guaranteed to be symmetrically distributed around $0$. \par
     \begin{figure}[h]
         \begin{center}
-        \includegraphics[width=15cm]{images/entryrate_original_logit}
+        \includegraphics[width=14cm]{images/entryrate_original_logit}
     \end{center}
         \caption{The mean cumulative portion of $W$ statistic which are positive by absolute rank of the value. The mean is over 1000 simulations. On the left side, the features are drawn from a random standard normal distribution. On the right side, they are drawn as Bernoulli with probability $.25$ of being 1. The top has 50 features uncorrelated with the outcome, while the bottom has 40 features uncorrelated with the outcome and 10 correlated with it.}
     \end{figure}
  
+    To test how bad this problem is, I tested the method using original style knockoffs in logistic regression. The results can be seen in figure 1, which shows cumulatively, starting with the largest absolute value, what portion of the $W_j$ are positive. For the method to work, for the null predictors, this should be a consistent $50\%$, indicative of the desired symmetric distribution. This is particularly important for high values, which play the largest roll in selecting a threshold. We see that in the top left corner, when all features are null and normally distributed, that we almost achieve this, with only a small, but consistent, deviation from $50\%$. However, in the top right, when the predictors are binary, the null originals enter first far more often, which will result in the FDR being too high. \par
     \FloatBarrier
-    To test how bad this problem is, I simulated the method with the original knockoffs with logistic regression. The results can be seen in figure 1, which shows cumulatively, starting with the largest absolute value, what portion of the $W_j$ are positive. For the method to work, for the null predictors, this should be a consistent $50\%$, indicative of the desired symmetric distribution. This is particularly important for high values, which play the largest roll in selecting a threshold. We see that in the top left corner, when all features are null and normally distributed, that we almost achieve this, with only a small, but consistent, deviation from $50\%$. However, in the top right, when the predictors are binary, the null originals enter first far more often, which will the FDR too high. \par
-    This gets much worse when some true predictors are included, in the bottom row of the figure. For both normal and binary predictors, the originals come in first far more often in the beginning. This will completely ruin FDR control, since the portion of null predictors will be assumed far lower than it actually is. It is worth noting that the particular shape of the curve in the diagram, with the plateau for the null predictors through 10, is partially an artifact of how the totals were tabulated. The mean through the first ten is the mean for null predictors that came in first out of both null and true predictors; since the largest ten $W_j$ will tend to be true predictors, the average over the null predictors represent the few extreme $W_j$ which managed to beat out some number of true predictors.  \par
+    This gets much worse when some true predictors are included, as shown in the bottom row of the figure. For both normal and binary predictors, the originals come in first far more often in the beginning. This will completely ruin FDR control, since the portion of null predictors will be assumed far lower than it actually is. It is worth noting that the particular shape of the curve in the diagram, with the plateau for the null predictors through 10, is partially an artifact of how the totals were tabulated. The mean through the first ten is the mean for null predictors that came in first out of both null and true predictors; since the largest ten $W_j$ will tend to be true predictors, the average over the null predictors represent the few extreme $W_j$ which managed to beat out some number of true predictors.  \par
     \begin{figure}[h]
-        \includegraphics[width=15cm]{images/normalQQ}
+        \includegraphics[width=14cm]{images/normalQQ}
         \caption{Normal Q-Q of original variables and knockoffs for simulation with $4$ variables and 1,000 observations}
     \end{figure}
 
@@ -170,97 +170,89 @@ The rest of this paper will be organized in the following fashion:
     Upon examination, the issue seems to be that the original style knockoff features have a very different empirical distribution than the features they are imitating. This is obviously true with the binary features, but even with the normal features, the distributions differ a lot. In figure 2, the distribution of four feature and the original style knockoff are plotted against a normal distribution in Q-Q plots. As you can see, they don't match at all. This is suggestive of a solution; if the knockoff variables match the marginal distribution of the original features better, the result may be more suitable for FDR control in GLMs. \par
     \FloatBarrier
 
-\section{Random Bernoulli Knockoffs}
-    My solution to the issues with the 
+\section{Random Binary Knockoffs}
+Random binary knockoffs $\mathbf{\tilde x}$, which maintain the correlation condition in expectation, fit the bill in this regard. The method to produce them is based heavily on more general methodology to random binary vector variables with internal correlation.
 
-    generate $\bf \tilde x$ randomly such that it has the desired knockoff properties in expectation. In particular, both  should have similar marginal densities, expectations, and second moments. However, $\bf \tilde x\st \bf x$ should also have desired knockoff property that $\E(\mathbf{\tilde x}^T\mathbf x\st \mathbf x) = \Sigma-\mathbf s$, where $\|\diag{\Sigma}-s\|$ is small. In the general case, this is likely infeasible; however, if $\bf x$ is a binary vector, as is often the case, we know we are dealing with a much more limited class of random variables, and it should be possible to randomly generate $\bf \tilde x\st \bf x$ so as to have the desired properties. At worst, this method will provide a suitable replacement for deterministic $\bf \tilde x$ for use with LASSO, and if we are lucky, it will work reasonably for other regularized GLMs. 
-
-\subsection{Random Bernoulli Generation}
-Thankfully, there has been a reasonable amount of work on how one can generate random Bernoulli vectors with some kind of correlation among among the values. A random Bernoulli vector $\bf x$ can be summarized by its first two moments: a mean vector $\E(\bf x)=m\in(0,1)^p$ and cross-moment matrix $\E(\bf x\bf x^T)=M\in(0,1)^{p\times p}$. Obviously, $m_i = \p(x_i=1)$, $M_{ij} = \p(x_i=x_j=1)$, and $\mathbf m=\diag{M}$. For an arbitrary symmetric $M$ to be valid cross-moment matrix, $M-mm^T\succeq0$, and
+\subsection{Random Binary Vector Generation}
+The full class of random binary vector variables on $\{0,1\}^p$ can be specified as multinomial on the $2^p$ elements of the set. However, in practice, it is generally impractical to specify or estimate all $2^p$ necessary parameters, so it is useful to, as is desirable for knockoffs, pick a method to match the first two moments. These are the mean vector $\E(\bf x)=m\in(0,1)^p$ and the cross-moment matrix $\E(\bf x\bf x^T)=M\in(0,1)^{p\times p}$. Obviously, $m_i = \p(x_i=1)$, $M_{ij} = \p(x_i=x_j=1)$, and $\mathbf m=\diag{M}$. For an arbitrary symmetric $M$ to be valid cross-moment matrix for some random binary vector variable, $M-mm^T\succeq0$, and
     \[ \max\{0,m_i+m_j -1\} \leq M_{ij} \leq \min\{m_i,m_j\}\]
-    for all $i\neq j$\footnote{``On parametric families for sampling binary data with specified mean and correlation" - http://arxiv.org/abs/1111.0576}. Given a qualifying $M$, or observed $X$, there are a few ways of generating more random $\bf x$.
+    for all $i\neq j.$ Given a qualifying $M$, or observed $X$, there are then a few methods for generating additional random values.
 
 \subsubsection{Gaussian Copula Family}
-    Since multivariate normal distributions are easy to randomly draw, the idea is to find some random normal variable $\mathbf z\sim N_p({\bf 0},\Sigma)$ such that,for $x_i = I(z_i<0)$, $x$ has the desired properties. There are a number of ways to do this\footnote{``On the Generation of Correlated Artificial Binary Data" - http://epub.wu.ac.at/286/1/document.pdf}\footnote{``On parametric families for sampling binary data with specified mean and correlation"}, but it turns out that there is only certain to exist a working $\Sigma$ in the bivariate case. 
+Since multivariate normal distributions are easy to randomly draw from and defined by their first two moments, an obvious choice is to use them to generate random binary vectors. This might be done by finding $\mu$ and $\Sigma$ such that for $\mathbf z\sim N_p(\mu,\Sigma)$, $x_i$ can be generated as $x_i = \mathrm{sign}(z_i)$, and have the desired first two moments. However, this is only guaranteed to be feasible in the bivariate case. For higher dimensions, this method can generally only provide random binary vectors with approximately the right moments, and the quality of the approximation quickly degenerates as $p$ increases.
 
 \subsubsection{$\mu$-Conditionals family}
     There exists a more flexible family which will always work for arbitrary $M$ called $\mu$-conditionals. The basic idea is that the $X$ is generate sequentially as 
-
     \[ \p(x_{i}=1\st x_{1},...,x_{i-1}) = \mu\left(a_{ii}+\sum_{k=1}^{i-1}a_{ik}x_i\right) \]
-
     for some monotone function $\mu:\R\to(0,1)$. This is essentially a binomial family GLM for a link function $\mu$. If one takes all of the $a_{kj}$, they can form a lower triangular matrix $A$, and then the joint density can be expressed as 
 
     \[ \p(\mathbf x=\mathbf \gamma) \propto \mu(\mathbf{\gamma}^T A\mathbf \gamma)\]
 
-    If $\mu$ is chosen such that it is a bijection and differentiable, there is a unique $A$ such that $\E(\mathbf x \mathbf x^T)=M$ when generated from this model\footnote{``On parametric families for sampling binary data with specified mean and correlation"}. The natural choice for $\mu$ is the logistic link function, which yields the Ising model, the ``binary analogue of the multivariate normal distribution which is the maximum entropy distribution on $\R^p$ having a given covariance matrix." Additionally, it has the usual benefit that the coefficients can be viewed as a log odds ratio:
+    If $\mu$ is chosen such that it is a bijection and differentiable, there is a unique $A$ such that $\E(\mathbf x \mathbf x^T)=M$ when generated from this model. The natural choice for $\mu$ is the logistic link function $L(x)=\frac{1}{1-e^{-x}}$, which yields the Ising model, the ``binary analogue of the multivariate normal distribution which is the maximum entropy distribution on $\R^p$ having a given covariance matrix." Additionally, it has the usual benefit that the coefficients can be viewed as a log odds ratio:
     \[a_{ij} = \log\left(\frac{\p(x_j=x_k=1)\p(x_j=x_k=0)}{\p(x_j=0,x_k=1)\p(x_j=1,x_k=0)}\right) \]
-    when $i\neq j$. I think this dictates that if $\bf x$ is generated from this model with $a_{ij}=0$, then $x_i$ and $x_j$ are independent.  \par
+    when $i\neq j$. When $\bf x$ is generated from this model with $a_{ij}=0$, then $x_i$ and $x_j$ are conditionally independent.  \par
 
-    There is no closed form to calculate the entries in $A$ if $p>1$, but they can be derived numerically two ways.  
-    \begin{enumerate}
-        \item If one is attempting to replicate the empirical cross-moments from a data matrix $X$, $a_{1i}$ to $a_{ii}$ can be derived from fitting successive logistic regressions of $X_i$ on $X_{1} \ldots X_{i-1}$ using maximum likelihood. $a_{ji}$ for $i\neq j$ will then be the coefficient on $X_j$ while $a_{ii}$ is the intercept of the regression.
-        \item If one is just working with a desired cross-moment matrix $M$, the successive rows of $A$ can be fit via Newton-Raphson. \par
-            Let us say that the first $i-1$ rows have already been fit, resulting in the upper left $(i-1)\times(i-1)$ sub matrix $A_{-i}$ of $A$. Let us say that $\mathbf a_i$ is the first $i$ entries of the $i$th row of $A$ (the rest will be 0 anyway). As well, let $\mathbf m_i$ be similarly the first $i$ entries of the $i$th row of $M$. In other words, $\mathbf{m}_i = [\E(x_i x_j)]_{j=1}^{i}$. Finally, let us say that $\mathbf x_{-i}$ is the first $i-1$ entries of $\mathbf x$. We want to solve for $\mathbf a_i$ such that
+    There is no closed form to calculate the entries in $A$ if $p>1$, but they can be derived numerically two ways. The first of these, when one is attempting to replicate the empirical cross-moments from a data matrix $X$, $a_{1i}$ to $a_{ii}$ is by fitting successive binomial family GLM regressions. The link function is the given function $\mu$, and $X_i$ is regressed on $X_{1} \ldots X_{i-1}$ using maximum likelihood. $a_{ji}$ for $i\neq j$ will then be the coefficient on $X_j$ while $a_{ii}$ is the intercept of the regression. \par
+    Otherwise, if one is just working with a desired cross-moment matrix $M$, the successive rows of $A$ can be fit via Newton-Raphson. This is performed successively on each row of $A$. If the first $i-1$ rows have been fit, then the upper left $(i-1)\times(i-1)$ sub matrix $A_{-i}$ of $A$ has already been filled. Next, $\mathbf a_i$, the first $i$ entries of the $i$th row of $A$ must be fit, while the rest of the row will be 0. This corresponds to $\mathbf m_i$, the first $i$ entries of the $i$th row of $M$. In other words, $\mathbf{m}_i = [\E(x_i x_j)]_{j=1}^{i}$. Finally, let us say that $\mathbf x_{-i}$ is the first $i-1$ entries of $\mathbf x$. $\mathbf a_i$ must satisfy 
             \begin{align*}
                 \mathbf m_i &= \E\left(x_i \left[\begin{array}{c} \mathbf x_{-i} \\ x_i \end{array}\right]\right) \\
                 \mathbf m_i &= \E\left(\E\left(x_i \left[\begin{array}{c} \mathbf x_{-i} \\ x_i \end{array}\right]\;\bigg \vert\; \mathbf x_{-i}\right)\right)\\
                 \mathbf m_i &= \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \p(\mathbf x_{-i})\p(x_i=1\st \mathbf x_{-i}) \left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right] \\
-        \mathbf m_i &= \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}\mu\left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) \mu\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right] \\
             \end{align*}
-            Where $c$ is the appropriate normalizing constant. Let us define the quantity on the right in the last line as $f(\mathbf a_i)$. We can solve for $f(\mathbf a_i)=\mathbf{m}_i$ by successive Newton-Raphson iterations defined by 
+            When $\mu$ is the logistic link function $L$, this is
+            \[ \mathbf m_i = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L\left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right] \]
+            Where $c$ is the appropriate normalizing constant. Let us define the quantity on the right in the last line as $f(\mathbf a_i)$. This equation $f(\mathbf a_i)=\mathbf{m}_i$ can be solved by successive Newton-Raphson iterations defined by 
             \[\mathbf a_i^{(k+1)} = \left[H f\left(\mathbf a_i^{(k)}\right)\right]^{-1}\left[f\left(\mathbf a_i^{(k)}\right)-\mathbf m_i\right] \]
-            The Hessian matrix is calculated as 
-        \[ H f\left(\mathbf a_i\right) = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}\mu \left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf x_{-i}^T & 1 \end{array}\right] \]
-            With $2^{i-1}$ possible values for $\mathbf x_{-i}$, this can quickly become computationally expensive. Instead, with a series of values $\mathbf x_{-i}^{(k)}\sim \mathbf x_{-i}$, we can approximate
-            \[f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K \mu\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right] \]
+            To do so, the Hessian matrix is calculated as 
+        \[ H f\left(\mathbf a_i\right) = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L \left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf x_{-i}^T & 1 \end{array}\right] \]
+            With $2^{i-1}$ possible values for $\mathbf x_{-i}$, this can quickly become computationally expensive. Instead, with a series of values $\mathbf x_{-i}^{(k)}\sim \mathbf x_{-i}$, the simulated values 
+            \[f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right] \]
             and
-            \[H f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
-            Though in theory $A$ should always exist, in practice numerical issues may compound to the point that the Newton-Raphson method won't converge. In this case, one can solve instead for $\mathbf m_i^*(\tau)$, where, for $\tau\in[0,1]$
+            \[H f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
+            can be used. \par
+            Though, in theory, $A$ should always exist, in practice numerical issues may compound to the point that the Newton-Raphson method won't converge. In this case, one can solve instead for $\mathbf m_i^*(\tau)$, where, for $\tau\in[0,1]$
     \[\mathbf m_i^*(\tau) = (1-\tau)\mathbf m_i + \tau \left[ \begin{array}{cccc} 0 & \ldots & 0 & M_{ii} \end{array} \right]^T \]
-            When $\tau=0$, this yields the original problem, while when $\tau=1$, it is treating $x_i$ as independent of $\mathbf x_{-i}$. The latter will always have the solution
+            When $\tau=0$, this yields the original problem, while when $\tau=1$, it is treats $x_i$ as independent of $\mathbf x_{-i}$. The latter will always have the solution
             \[\mathbf a_i = \left[ \begin{array}{cccc} 0 & \ldots & 0 & \log\left(\frac{M_{ii}}{1-M_{ii}}\right) \end{array} \right]^T \]
             The hope is that for some $\tau$ close to $0$, convergence can be achieved, only causing a slight distortion from the desired cross moments.
-    \end{enumerate}
 
 \subsection{Generating Binary Knockoffs}
-    My method for generating binary knockoffs broadly involves two steps:
-    \begin{enumerate}
-        \item I use either the equal correlation method or the SDP method described in the original knockoff paper to find $\mathbf s$ such that $\|\diag{\hat\Sigma}-\mathbf s\|$ is small and 
-        \[ \Sigma_L = \left[\begin{array}{cc}  \hat\Sigma & \hat\Sigma - \diag{\mathbf s }\\ \hat\Sigma - \diag{\mathbf s} & \hat\Sigma \end{array}\right] \succeq 0 \]
-        I use a subscript $L$ for large to denote items associated with the joint distribution of $[\mathbf x \; \mathbf{\tilde x}]$. If $\mathbf m_L = \E\left([\mathbf x \; \mathbf{\tilde x}]\right)^T = [\mathbf m \; \mathbf m]^T$, then the desired cross moment matrix of the joint distribution is 
+This theory provides the tools to generate random binary knockoffs. This is done is done sequentially as two steps, the first of which is to come up with the target covariance matrix for $\mathbf x_L = [\mathbf x\; \mathbf{\tilde x}]$. Much as before with the original knockoffs, both the equi-correlated and SDP method can be used to select  $\mathbf s$  such that $\diag{\Sigma}-\mathbf s$ is small and 
+        \[ \Sigma_L = \left[\begin{array}{cc}  \Sigma & \Sigma - \diag{\mathbf s }\\ \Sigma - \diag{\mathbf s} & \Sigma \end{array}\right] \succeq 0 \]
+        Additionally though, the moment condition must hold for this to correspond to a proper random binary vector. If $\mathbf m_L = \E\left(\mathbf x_L\right) = [\mathbf m \; \mathbf m]$, then the desired cross moment matrix of the joint distribution is 
         \[ M_L = \Sigma_L + \mathbf m_L\mathbf m_L^T\]
-        To ensure that this is a valid cross moment matrix for a binary random vector is that 
-        \[\max\{0,\mathbf m_{L,i} + \mathbf m_{L,j} -1\} \leq M_{L,ij} \leq \min\{\mathbf m_{L,i}, \mathbf m_{L,j}\} \]
-        I've built a check into the code for this, but in practice it shouldn't be a worry. This condition is always satisfied in a neighborhood of $M_{L,ij} = \mathbf m_{L,j}\mathbf m_{L,i}$. Since the we are either keeping the value $M_{L,ij}$ from a valid cross moment matrix or minimizing $\vert M_{L,ij} - \mathbf m_{L,j}\mathbf m_{L,i}\vert$, it would be very surprising if this condition was violated.
-        
-        \item I can fit the matrix $A$ that will generate random binary variables similarly to the method described in section $3.2$ which have cross moments $X_L$. This can be used to generate the $\tilde x_i$ sequentially as $\tilde x_i \st \mathbf x,\tilde x_1,\ldots,\tilde x_{i-1}$ so as to create $\tilde X \st X$. 
-    \end{enumerate}
-    \subsection{More Detail on Fitting $A$}
-        I could fit $A$ based on $M_L$ exactly as described in the second method of $3.2$, however, this isn't exactly what I do. First off, with $p$ being potentially large, the simulation method for estimating $f(\mathbf a)$ and $H f(\mathbf a)$ was the obvious choice. This involves fitting $\mathbf a_i$ based on the conditional distribution of $\mathbf x_{L,i}$ given randomly drawn partial vectors $\mathbf x_{L,-i}$. There is no need to simulate the marginal distribution of $\mathbf x$ though, since the simulation is only approximate and we already have a number of realizations in $X$. Thus, I only fit the lower half of $A$, using this process: 
+        So it must be the case that  
+        \[\max\{0,\mathbf m_{L,i} + \mathbf m_{L,j} -1\} \leq \Sigma_{L,ij} + \mathbf m_i \mathbf m_j \leq \min\{\mathbf m_{L,i}, \mathbf m_{L,j}\} \]
+        However, since $\Sigma$ and $\mathbf m$ are from an actual random binary vector, the entries of $\Sigma$ satisfy this property by default. Only off diagonal entries which have had $\mathbf s$ subtracted from them could possibly violate this condition. Furthermore, for these entries, the goal is to make $\Sigma_{L,ij}$ as close to $0$ as possible. Since the condition is always satisfied in a neighborhood of $M_{L,ij} = \mathbf m_{L,j}\mathbf m_{L,i}$, this implies that this method should normally be satisfied. For the SDP method though, the restriction can be built directly into the optimization problem, yielding the updated problem
+            \begin{center}
+                \begin{tabular}{r l}
+                    minimize & $\|\mathbf 1-\diag{\Sigma}^{-1}\mathbf s\|_1$ \\
+                    subject to & $ 0 \preceq \diag{\mathbf s} \preceq 2\Sigma $ \\
+                               & $ 2\mathbf m_i -1 \leq \Sigma_{ii}-\mathbf s_i + \mathbf m_i^2 \leq \mathbf m_i  \quad \forall i$
+                \end{tabular} 
+            \end{center} 
+        replacing $\mathbf s$ with $\diag{\Sigma}^{-1}\mathbf s$ in the objective is to account for not normalizing $X$, as is usually done with the original knockoffs. \par
+        Once a proper cross moment matrix $M_L$ has been selected, one could simply apply the Newton-Raphson method to fit a corresponding $A$ matrix, and then generate $\mathbf{ \tilde x}$ sequentially conditioned on $x$, as $\tilde x_i \st \mathbf x,\tilde x_1,\ldots,\tilde x_{i-1}$. However, there are a few computational wrinkles which can be chosen to speed up the process:
         \begin{enumerate}
-            \item To get a simulation of size at least $K$, I create a matrix $X_F$ ($F$ for fixed) which is initially $X$ stacked up until it has $K'\geq K$ rows. 
-            \item For each $p<i\leq 2p$,
-                \begin{itemize}
-                    \item Where $\mathbf x_F^{(k)}$ is the $k$th row of $X_F$, the rows $\mathbf a_i$ are fit sequentially by Newton-Raphson iterations with 
-                    \[f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right] \]
-                    and
-                    \[H f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_F^{(k)}]^T & 1 \end{array}\right] \]
-                    \item If the iterations won't converge, I attempt to fit $f(\mathbf a_i)=m_i^*(\tau)$ instead for increasing values of $\tau$ until it converges.
-                    \item After $\mathbf a_i$ is fit, a new column $X_i$ is drawn as independent Bernoulli with probability vector $\mu(X_F \mathbf a_i)$.   
-                    \item $X_F$ is updated to 
-                    \[ X_F = [X_F \; X_i] \]
-                \end{itemize}
-            \item At the end, the first $n$ rows of $X_F$ are taken as $[X \; \tilde X]$, though the rows corresponding to any copy of $X$ would work equally well, since these all should have the desired distribution.
+            \item If the whole $A$ matrix is being fit, then the upper half of the matrix, corresponding to $\mathbf x$, can be fit via the regression method, since they arise from real data $X$. This will tend to be quicker, since the calculation lends itself to parallel computing, and the data set will often be smaller than the space of all binary vectors or a simulation of that space. The second half of the matrix still must be fit via Newton-Raphson.
+            \item One can avoid fitting the first half of the $A$ matrix entirely though if performing Newton-Raphoson with by using the actual observed values in $X$ to simulate $\mathbf x$. This can be done by either bootstrapping rows from $X$ or using some number of copies of $X$ exactly. The advantage of this is the saved computation and that $\tilde x$ should be built to match the correlation condition more exactly. The downside is that, since these values won't be from the Ising model, the theoretical guarantee of a suitable $A$ may no longer hold.
+            \item As $A$ is being fit, even the parts of $\mathbf x_{-i}$ corresponding to knockoffs need not be  redrawn for each Newton-Raphson iteration or each successive $i$. This saves computation, and the multiplication
+            \[ \left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [\mathbf x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
+                doesn't need to be recomputed for each Newton-Raphson iteration, and the upper left portion, $\mathbf x_{-i}^{(k)}[\mathbf{x}_{-i}^{(k)}]^T$ doesn't have to be recomputed for successive $i$. This may result in slight deviations in any particular draw compounding into a more severe error over time.
         \end{enumerate}
-        Some thoughts/concerns/explanations:
-        \begin{itemize}
-            \item Since $x_{-i}^{(k)}$ is replaced with $x_F^{(k)}$, which is a hybrid of real and simulated data, I am not sure there is the same theoretical guarantee that a unique $A$ matrix exists. In practice though it still worked pretty well, and has the advantage that we are deriving $\tilde X$ such that $\E(X'\tilde X) = \hat \Sigma- \diag{\mathbf s}$.
-            \item A hybrid of simulating $x_{-i}^{(k)}$ and keeping fixed $x_F^{(k)}$ would be to draw from the rows of $X$ $K$ times, with replacement, then simulating the rest of the $x_{-i}^{(k)}$ vector. I'm not convinced there is a good reason to do this. 
-            \item By not simulating, there is the advantage of not needing to fit the upper half of $A$.
-            \item By not redrawing $x_{-i}^{(k)}$ each time, there is less computation for the computer. As well, the multiplication
-                \[ \left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_F^{(k)}]^T & 1 \end{array}\right] \]
-            needn't be redone for each iteration, and only partially recalculated for each $i$ (though I don't have this implemented yet). The downside might be that error is getting compounded over each $i$.
-        \end{itemize}
+        Combining the second and third trick leads to the final formulation. Rather then $K$ simulations of $\mathbf x$, the simulation is started with the matrix $X_F$, which is $X$ stacked up $m$ times to get $n\times m=K'\geq K$ rows. The following process is then repeated for $p<i\leq 2p$:
+        
+         \begin{itemize}
+             \item Where $\mathbf x_F^{(k)}$ is the $k$th row of $X_F$, the row $\mathbf a_i$ is fit by Newton-Raphson iterations with 
+             \[f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right] \]
+             and
+             \[H f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_F^{(k)}]^T & 1 \end{array}\right] \]
+             \item If the iterations won't converge, the relaxed equation $f(\mathbf a_i)=m_i^*(\tau)$ is attempted instead for increasing values of $\tau$ until it converges.
+             \item After $\mathbf a_i$ is fit, a new column $X_i$ is drawn as independent Bernoulli with probability vector $\mu(X_F \mathbf a_i)$.   
+             \item $X_F$ is updated to 
+             \[ X_F = [X_F \; X_i] \]
+         \end{itemize}
+         At the end, the any $n$ rows of $X_F$ corresponding to the rows of $X$ can be taken as $X_L$. Any such set should have the desired distribution for $\tilde X$.
 
 \section{Bernoulli Knockoff Performance}
 For each of thses, exaimine these situatations:

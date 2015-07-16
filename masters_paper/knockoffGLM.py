@@ -137,6 +137,7 @@ class knockoff_net(object):
             self._create_equicor()
         else: 
             self._create_SDP()
+        self.X_lrg = np.concatenate((self.X_orig,self.X_ko), axis=1)
 
     def _binary_knockoff(self):
         ''' This creates the new binary knockoffs, which are random multivariate bernoulli which should have, in expectation,
@@ -148,17 +149,21 @@ class knockoff_net(object):
 
         # First, calculate s
         # Largely replicates begining of self._create_equicor()/self._create_SDP()
+        # However, we now want to perform calculations on the covariance matrix
+        # The goal is minimize the correlation between X_i and ~X_i
+        # Generate the second moment matrix Sigma
+        M    = np.dot(self.X_orig.T,self.X_orig)/self.n
+        Cov  = np.cov(self.X_orig,rowvar=0,bias=1)      # I'm doing redundant calculations here
+        Corr = np.corrcoef(self.X_orig,rowvar=0,bias=1)
 
         # SVD and come up with perpendicular matrix
-        U, d, V = nplin.svd(self.X,full_matrices=True) 
+        d, V = nplin.eig(Corr)
+        #U, d, V = nplin.svd(self.X,full_matrices=True) 
         d[d<0] = 0
         if   self.cov_type == 'SDP': 
-            # Compute the Gram matrix and its (pseudo)inverse.
-            G     = np.dot(V.T * d**2 ,V)
-            G_inv = np.dot(V.T * d**-2,V)
          
             # Optimize the parameter s of Equation 1.3 using SDP.
-            s = solve_sdp(G)
+            s = solve_sdp(Corr)
             s[s <= self.zerotol] = 0
 
         # Same as first part self._create_equicor 
@@ -168,20 +173,12 @@ class knockoff_net(object):
             lambda_min = min(d)**2
             s = np.ones(self.p)*min(2*lambda_min,1)
 
-        # Return to the original X
-        self.X = self.X_orig              # Now that we've adjusted the variance, revert back to the original X 
+        # Scale s up to original variance
+        s     = s*np.diag(Cov)        # scale s back up to original variance
 
         # Calculate first moments 
-        mu       = np.mean(self.X,axis=0)
+        mu       = np.mean(self.X_orig,axis=0)
         mu_lrg   = np.concatenate((mu,mu))
-
-        # Scale s up to original variance
-
-        # Generate the covariance matrix Sigma
-        M    = np.dot(self.X.T,self.X)/self.n
-        Sigma = M - np.outer(mu,mu)
-        s     = s*np.diag(Sigma)        # scale s back up to original variance
-
 
         # Generate the large Sigma matrix, and keep shrinking s until its a valid crossmoment matrix
         test = False 
@@ -191,8 +188,8 @@ class knockoff_net(object):
             s = s*shrink
 
             # Generate large Sigma and crossmoment matrix
-            Sigma_lrg = np.hstack(((np.vstack((Sigma,Sigma-np.diag(s)))),np.vstack((Sigma-np.diag(s),Sigma))))
-            self.M   = Sigma_lrg + np.outer(mu_lrg,mu_lrg)
+            Cov_lrg = np.hstack(((np.vstack((Cov,Cov-np.diag(s)))),np.vstack((Cov-np.diag(s),Cov))))
+            self.M   = Cov_lrg + np.outer(mu_lrg,mu_lrg)
 
             # Check condition 2.1 from Schafer - make sure its a valid crossmoment matrix
             cond1 = self.M <= np.minimum(np.outer(mu_lrg,np.ones(2*self.p)),np.outer(np.ones(2*self.p),mu_lrg))
@@ -225,7 +222,7 @@ class knockoff_net(object):
             A[1,1] = logit(mu[0])
             for i in np.arange(0,self.p):
             # inject the paramters from the logit X_i ~ X_1 + ... + X_(i-1) + 1 into the ith row of A
-                A[i,0:(i+1)] = sm.GLM(self.X[:,i],np.hstack((self.X[:,0:i],np.ones((self.n,1)))),family=sm.families.Binomial()).fit().params
+                A[i,0:(i+1)] = sm.GLM(self.X_orig[:,i],np.hstack((self.X_orig[:,0:i],np.ones((self.n,1)))),family=sm.families.Binomial()).fit().params
 
         ###################################################
         # Derive remaing A from Newton-Raphson
@@ -239,7 +236,7 @@ class knockoff_net(object):
         # This definitely makes sense for the orignal X vars (why simulate when we already have it), but possibly less sense for the knockoffs
         # To get the desired size of montecarlo simulation, I will replicate X until it has at least self.MCsize rows
         repl = np.min((self.MCsize//self.n,1))
-        X_fix = np.repeat(self.X,repl,0)
+        X_fix = np.repeat(self.X_orig,repl,0)
         nMC   = X_fix.shape[0]
         ones  = np.ones((nMC,1))
 
@@ -302,6 +299,7 @@ class knockoff_net(object):
 
         # since we've been drawing the X along the way, can subset X_fix to get X_ko
         self.X_ko = X_fix[0::repl,self.p:]
+        self.X_lrg = np.concatenate((self.X_orig,self.X_ko), axis=1)
 
         # hang onto A
         self.A = A
@@ -335,11 +333,9 @@ class knockoff_logit(knockoff_net):
         if   self.knockoff_type == 'original': self._original_knockoff()
         elif self.knockoff_type == 'binary':   self._binary_knockoff()
 
-        X_lrg = np.concatenate((self.X,self.X_ko), axis=1)
-
         # initialize and fit the glmnet object
         self.lognet = LogisticNet(alpha=1) 
-        self.lognet.fit(X_lrg,self.y,normalize=False,include_intercept=False)
+        self.lognet.fit(self.X_lrg,self.y,normalize=False,include_intercept=False)
 
         # pull out some values from the glmnet object and clean
         self.lambdas = self.lognet.out_lambdas
@@ -367,11 +363,9 @@ class knockoff_lasso(knockoff_net):
         if   self.knockoff_type == 'original': self._original_knockoff()
         elif self.knockoff_type == 'binary':   self._binary_knockoff()
 
-        X_lrg = np.concatenate((self.X,self.X_ko), axis=1)
-
         # initialize the glmnet object
         self.elasticnet = ElasticNet(alpha=1) 
-        self.elasticnet.fit(X_lrg,self.y,normalize=False,include_intercept=False)
+        self.elasticnet.fit(self.X_lrg,self.y,normalize=False,include_intercept=False)
 
         # pull out some values from the glmnet object and clean
         self.lambdas = self.elasticnet.out_lambdas

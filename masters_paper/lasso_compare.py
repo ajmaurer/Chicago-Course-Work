@@ -48,7 +48,7 @@ def lasso_compare(id,n,b,p,q,p1s,new_seeds=False,procs=4,plot=False):
                                 ).calc_fdr_power()
         print "Done Ising %d" % (i+1)
         # save data
-        fi = open('data/lasso_genetic_' +id + '.npy','w')
+        fi = open('data/lasso_isling_' +id + '.npy','w')
         np.save(fi,isl_data_lasso)
         fi.close()
 
@@ -66,7 +66,7 @@ def lasso_compare(id,n,b,p,q,p1s,new_seeds=False,procs=4,plot=False):
                                ).calc_fdr_power()
         print "Done Genetic %d" % (i+1)
         # save data 
-        fg = open('data/lasso_ising_' +id + '.npy','w')
+        fg = open('data/lasso_genetic_' +id + '.npy','w')
         np.save(fg,gen_data_lasso)
         fg.close()
 
@@ -116,7 +116,7 @@ def lasso_compare(id,n,b,p,q,p1s,new_seeds=False,procs=4,plot=False):
  
         subplts[1].legend(bbox_to_anchor=(1.05, 0), loc='lower left', borderaxespad=0.)
  
-        plt.savefig('images/lasso_corr'+id+'.pdf',bbox_inches='tight')  
+        plt.savefig('images/lasso_corr_'+id+'.pdf',bbox_inches='tight')  
 
 
 def main():

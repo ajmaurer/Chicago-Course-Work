@@ -66,7 +66,7 @@ def logit_compare(id,n,b,p,q,p1s,new_seeds=False,procs=4,plot=False):
                                ).calc_fdr_power()
         print "Done Genetic %d" % (i+1)
         # save data 
-        fg = open('data/logit_ising_' +id + '.npy','w')
+        fg = open('data/logit_genetic_' +id + '.npy','w')
         np.save(fg,gen_data_logit)
         fg.close()
 
