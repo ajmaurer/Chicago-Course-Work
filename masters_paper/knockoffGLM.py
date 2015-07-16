@@ -155,6 +155,8 @@ class knockoff_net(object):
         M    = np.dot(self.X_orig.T,self.X_orig)/self.n
         Cov  = np.cov(self.X_orig,rowvar=0,bias=1)      # I'm doing redundant calculations here
         Corr = np.corrcoef(self.X_orig,rowvar=0,bias=1)
+        Corr[np.isnan(Corr)]=0
+        Corr = np.max((Corr,np.identity(2*self.p)),axis=0) 
 
         # SVD and come up with perpendicular matrix
         d, V = nplin.eig(Corr)
