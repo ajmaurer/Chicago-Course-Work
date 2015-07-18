@@ -341,6 +341,8 @@ class knockoff_net(object):
         self.M_distortion = nplin.norm(self.M-np.dot(self.X_lrg.T,self.X_lrg)/self.n)/nplin.norm(self.M)
 
         self.emp_ko_corr= np.corrcoef(self.X_lrg,rowvar=0,bias=1)[:self.p,self.p:2*self.p][np.identity(self.p)==1]
+        if np.sum(np.isnan(self.emp_ko_corr))>0:
+            print "There were %d out of %d variables who had missing correlation" % (np.sum(np.isnan(self.emp_ko_corr)),self.p)
 
     def _vector_objective(self,a,X_fix,m):
         return np.mean(invlogit(np.dot(X_fix,a))[:,np.newaxis]*X_fix,axis=0) - m

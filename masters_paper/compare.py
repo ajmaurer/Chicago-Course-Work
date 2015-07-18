@@ -9,6 +9,8 @@ import scipy.stats as spstat1gt
 import matplotlib.pyplot as plt
 import knockoffGLM as ko
 import simulate as sim
+import statsmodels.api as sm
+from statsmodels.tools.sm_exceptions import PerfectSeparationError
 from multiprocessing import Pool
 from scipy.special import expit as invlogit
 from scipy.special import logit
@@ -19,18 +21,18 @@ def cutoff(array,min=-50,max=50):
     cut_array = np.max((min*np.ones(shape),cut_array),axis=0)
     return cut_array
 
-def make_X_ind(X,q=.02):
+def make_X_ind(X,q=.05):
     """ Add some random noise to make X linearly independent """
     n,p = X.shape
-    v = np.min(nplin.svd(X)[1])
-    if v<1E-5:
-        for i in range(p):
-            v = np.min(nplin.svd(X[:,:(i+1)])[1])
-            while v<1E-5:
+    for i in range(p):
+        while True:
+            try:
+                model = sm.GLM(self.X_orig[:,i],np.hstack((np.ones((n,1)),X[:,:i])),family=sm.families.Binomial()).fit()
+            except:
                 # Keep flipping a few bits until we have linear independence
                 X[:,i] = np.where(npran.binomial(1,q*np.ones(n)),1-X[:,i],X[:,i])
-                v = np.min(nplin.svd(X[:,:(i+1)])[1])
-                lmin = np.min(v)
+                v = np.min(nplin.svd(np.hstack((np.ones((n,1)),X[:,:(i+1)])))[1])
+                break
     return X
 
 def ising_X(p,n,A_base_diag=-1,A_sd=.2):
@@ -77,6 +79,7 @@ def bern_y(X,p1,base_prob=.25,beta_sd=1):
 def gen_logit(input):
     """ Testing function, all parameters are in a single tuple """
     seed,gen,p0,p1 = input
+    npran.seed(seed)
     if gen.lower() == "ising":
         X = ising_X(p1+p0,1000)
         y = bern_y(X,p1)
@@ -105,6 +108,7 @@ def gen_logit(input):
 def gen_lasso(input):
     """ Testing function, all parameters are in a single tuple """
     seed,gen,p0,p1 = input
+    npran.seed(seed)
     if gen.lower() == "ising":
         X = ising_X(p1+p0,1000)
         y = norm_y(X,p1)
@@ -139,7 +143,7 @@ def gen_lasso(input):
     with open('data/lasso_test_'+str(p0+p1)+'.txt','a') as f:
         f.write("%d\t%s\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, bin_model.M_distortion, np.mean(bin_model.emp_ko_corr), bin_FDR, bin_power, np.mean(ori_model.emp_ko_corr), ori_FDR, ori_power, corr))
 
-def batch_lasso(b,p,p1s,gens,procs=4):
+def batch_lasso(b,p,p1s,gens,start_seed,procs=4):
     with open('data/backup_seeds.txt','r') as f:
         seeds = [int(seed) for seed in f.read().split()]
     inputs = []
@@ -147,14 +151,14 @@ def batch_lasso(b,p,p1s,gens,procs=4):
     for b in range(b):
         for p1 in p1s:
             for gen in gens:
-                inputs.append((seeds[i],gen,p-p1,p1))
+                inputs.append((seeds[i+start_seed],gen,p-p1,p1))
                 i += 1
 
     pool = Pool(processes=procs)
     pool.map(gen_lasso,inputs)
     pool.close()
 
-def batch_logit(b,p,gens,p1s,procs=4):
+def batch_logit(b,p,p1s,gens,start_seed,procs=4):
     with open('data/backup_seeds.txt','r') as f:
         seeds = [int(seed) for seed in f.read().split()]
     inputs = []
@@ -162,7 +166,7 @@ def batch_logit(b,p,gens,p1s,procs=4):
     for b in range(b):
         for p1 in p1s:
             for gen in gens:
-                inputs.append((seeds[i],gen,p-p1,p1))
+                inputs.append((seeds[i+start_seed],gen,p-p1,p1))
                 i += 1
 
     pool = Pool(processes=procs)
