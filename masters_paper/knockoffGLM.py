@@ -16,16 +16,14 @@ import scipy as sp
 import scipy.linalg as splin
 import scipy.stats as spstat
 import matplotlib.pyplot as plt
-import cvxpy as cvx
-import rpy2 as rp 
-import rpy2.robjects.numpy2ri
-import statsmodels.api as sm 
-from rpy2.robjects.packages import importr
+#import cvxpy as cvx 
+import statsmodels.api as sm
 from glmnet import LogisticNet, ElasticNet
 from sklearn.preprocessing import normalize
 from scipy.special import expit as invlogit
 from scipy.special import logit
 from sys import float_info
+from scipy.optimize import root 
 
 def dinvlogit(x):
     '''Derivative of logit function at each point of vextor x'''
@@ -39,6 +37,15 @@ def get_index_z(coef_vector):
         if abs(coef_vector[index])>1e-6: return index
         index+=1
     return n+1
+
+def draw_random_binary(n,A):
+    ''' If p is the size of the square, lower triangular A, creates a n by p matrix of random binary vectors using Schafer's method '''
+    m,p = A.shape
+    ones   = np.ones((n,1))
+    output = np.empty((n,p))
+    for i in np.arange(0,p):
+        output[:,i] = npran.binomial(1,invlogit(np.dot(np.hstack((output[:,0:i],ones)),A[i,0:(i+1)])))
+    return output
 
 def solve_sdp(G):
     """ Solves the SDP problem:
@@ -69,7 +76,7 @@ def solve_sdp(G):
 
 class knockoff_net(object):
     """ Parent class for knockoff lasso and knockoff logistic regression. Defines everything besides fitting the particular GlmNet object """
-    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,tol=1E-5,maxiter=40,full_A=False):
+    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,tol=1E-5,fresh_sim=True,pseudocount=0,opt_method='anderson',intercept=False):
         self.y      = y
         self.X      = normalize(X.astype(float),norm='l2',axis=0)
         self.X_orig = X
@@ -79,10 +86,12 @@ class knockoff_net(object):
         self.cov_type = cov_method     # how are we generating the desired covariance matrix - equicor or SDP?
         self.randomize=False
         self.tol = tol
-        self.maxiter = maxiter
         self.MCsize = MCsize   # how many values for Monte Carlo simulation
         self.zerotol = 1E-5
-        self.full_A = full_A
+        self.fresh_sim = fresh_sim 
+        self.pseudocount=pseudocount
+        self.opt_method = opt_method
+        self.intercept = intercept 
 
     def _create_SDP(self):
         """ Creates the SDP knockoff of X"""
@@ -101,13 +110,14 @@ class knockoff_net(object):
         G_inv = np.dot(V.T * d**-2,V)
  
         # Optimize the parameter s of Equation 1.3 using SDP.
-        s = solve_sdp(G)
-        s[s <= self.zerotol] = 0
+        self.s = solve_sdp(G)
+        self.s[s <= self.zerotol] = 0
  
         # Construct the knockoff according to Equation 1.4:
-        C_U,C_d,C_V = nplin.svd(2*np.diag(s) - (s * G_inv.T).T * s)
+        C_U,C_d,C_V = nplin.svd(2*np.diag(s) - (self.s * G_inv.T).T * self.s)
         C_d[C_d < 0] = 0
-        self.X_ko = self.X - np.dot(self.X,G_inv*s) + np.dot(U_perp*np.sqrt(C_d),C_V)
+        X_ko = self.X - np.dot(self.X,G_inv*s) + np.dot(U_perp*np.sqrt(C_d),C_V)
+        self.X_lrg = np.concatenate((self.X_orig,X_ko), axis=1)
 
     def _create_equicor(self):
         """ Creates the equal correlation knockoff of X"""
@@ -124,12 +134,13 @@ class knockoff_net(object):
         # Set s = min(2 * smallest eigenvalue of X'X, 1), so that all the correlations
         # have the same value 1-s.
         lambda_min = min(d)**2
-        s = min(2*lambda_min,1)
+        self.s = min(2*lambda_min,1)
  
         # Construct the knockoff according to Equation 1.4.
-        s_diff = 2*s - (s/d)**2
+        s_diff = 2*self.s - (self.s/d)**2
         s_diff[s_diff<0]=0 # can be negative due to numerical error
-        self.X_ko = np.dot(U*(d-s/d) + U_perp*(np.sqrt(s_diff)) , V)
+        X_ko = np.dot(U*(d-self.s/d) + U_perp*(np.sqrt(s_diff)) , V)
+        self.X_lrg = np.concatenate((self.X_orig,X_ko), axis=1)
 
     def _original_knockoff(self):
         """ Creates the original style knockoffs"""
@@ -137,11 +148,10 @@ class knockoff_net(object):
             self._create_equicor()
         else: 
             self._create_SDP()
-        self.X_lrg = np.concatenate((self.X_orig,self.X_ko), axis=1)
+        self.emp_ko_corr= np.dot(self.X_lrg.T,self.X_lrg)[:self.p,self.p:2*self.p][np.identity(self.p)==1]/self.n
 
-    def _binary_knockoff(self):
-        ''' This creates the new binary knockoffs, which are random multivariate bernoulli which should have, in expectation,
-        the same first two moments as X. Only will work if X is all binaray '''
+    def _derive_crossmoments(self):
+        """Figures out desired cross momemnt matrix matrix for binary knockoffs"""
 
         ###############################################
         # Figure out desired cross moment matrix
@@ -152,11 +162,13 @@ class knockoff_net(object):
         # However, we now want to perform calculations on the covariance matrix
         # The goal is minimize the correlation between X_i and ~X_i
         # Generate the second moment matrix Sigma
-        M    = np.dot(self.X_orig.T,self.X_orig)/self.n
-        Cov  = np.cov(self.X_orig,rowvar=0,bias=1)      # I'm doing redundant calculations here
-        Corr = np.corrcoef(self.X_orig,rowvar=0,bias=1)
-        Corr[np.isnan(Corr)]=0
-        Corr = np.max((Corr,np.identity(self.p)),axis=0) 
+        mu   = np.mean(self.X_orig,axis=0)
+        relaxer = np.where(np.identity(self.p),np.diag(mu),np.outer(mu,mu))
+        M    = (np.dot(self.X_orig.T,self.X_orig) + self.pseudocount*relaxer)/(self.n + self.pseudocount)
+        Cov  = M - np.outer(mu,mu)
+        #Cov  = np.cov(self.X_orig,rowvar=0,bias=1)      # I'm doing redundant calculations here
+        Corr = Cov/np.sqrt(np.outer(mu*(1-mu),mu*(1-mu)))
+        #Corr = np.corrcoef(self.X_orig,rowvar=0,bias=1)
 
         # SVD and come up with perpendicular matrix
         d, V = nplin.eig(Corr)
@@ -165,66 +177,88 @@ class knockoff_net(object):
         if   self.cov_type == 'SDP': 
          
             # Optimize the parameter s of Equation 1.3 using SDP.
-            s = solve_sdp(Corr)
-            s[s <= self.zerotol] = 0
+            self.s = solve_sdp(Corr)
+            self.s[s <= self.zerotol] = 0
 
         # Same as first part self._create_equicor 
         elif self.cov_type == 'equicor':
             # Set s = min(2 * smallest eigenvalue of X'X, 1), so that all the correlations
             # have the same value 1-s.
             lambda_min = min(d)**2
-            s = np.ones(self.p)*min(2*lambda_min,1)
+            self.s = np.ones(self.p)*min(2*lambda_min,1)
 
         # Scale s up to original variance
-        s     = s*np.diag(Cov)        # scale s back up to original variance
+        self.s     = self.s*np.diag(Cov)        # scale s back up to original variance
 
         # Calculate first moments 
-        mu       = np.mean(self.X_orig,axis=0)
-        mu_lrg   = np.concatenate((mu,mu))
+        self.mu_lrg   = np.concatenate((mu,mu))
 
         # Generate the large Sigma matrix, and keep shrinking s until its a valid crossmoment matrix
-        test = False 
-        shrink = 1 
-        while not test:
+        test1, test2 = True, True
+        shrink = 1
+        while test1 or test2:
             # s will be shrunk a little more each time the test is failed
-            s = s*shrink
+            self.s = self.s*shrink
 
             # Generate large Sigma and crossmoment matrix
-            Cov_lrg = np.hstack(((np.vstack((Cov,Cov-np.diag(s)))),np.vstack((Cov-np.diag(s),Cov))))
-            self.M   = Cov_lrg + np.outer(mu_lrg,mu_lrg)
+            Cov_lrg = np.hstack(((np.vstack((Cov,Cov-np.diag(self.s)))),np.vstack((Cov-np.diag(self.s),Cov))))
+            self.M   = Cov_lrg + np.outer(self.mu_lrg,self.mu_lrg)
 
             # Check condition 2.1 from Schafer - make sure its a valid crossmoment matrix
-            cond1 = self.M <= np.minimum(np.outer(mu_lrg,np.ones(2*self.p)),np.outer(np.ones(2*self.p),mu_lrg))
-            cond2 = np.outer(mu_lrg,np.ones(2*self.p))+np.outer(np.ones(2*self.p),mu_lrg) -1 <= self.M
-            testmat = np.logical_or(np.logical_and(cond1,cond2),np.diag(np.ones(2*self.p)))  # ignore diagonal
-            test = np.min(testmat)
+            test1, test2 = False, False
+            cond1 = self.M >= np.minimum(np.outer(self.mu_lrg,np.ones(2*self.p)),np.outer(np.ones(2*self.p),self.mu_lrg))
+            cond1 = np.logical_and(np.diag(1-np.ones(2*self.p)),cond1)
+            if (np.sum(cond1)) > 0:
+                print "%d cross moments which were too high" % (np.sum(cond1))
+                test1 = True
+            cond2 = np.outer(self.mu_lrg,np.ones(2*self.p))+np.outer(np.ones(2*self.p),self.mu_lrg) -1 >= self.M
+            cond2 = np.logical_and(np.diag(1-np.ones(2*self.p)),cond2)
+            if (np.sum(cond2)) > 0:
+                print "%d cross moments which were too low" % (np.sum(cond2))
+                test2 = True
 
-            shrink_s = False
-            if shrink_s:
-                if shrink<.25:
-                    test = True
-                
-                if test and shrink<1:
-                    print "s had to be shrunk by a factor of %.2f" % shrink
+            if test1 or test2:
+                if shrink>.1:
+                    shrink = .9*shrink
+                else:
+                    test1, test2 = False, False
+                    "Shrinking didn't solve the issue"
 
-                shrink = shrink*.90
-            elif not test:
-                test = True 
-                print "Cross moment test failed, didn't do anything about it"
+            if not (test1 or test2) and shrink<1:
+                print "s had to be shrunk by a factor of %.2f" % shrink
+
+    def _binary_knockoff(self):
+        ''' This creates the new binary knockoffs, which are random multivariate bernoulli which should have, in expectation,
+        the same first two moments as X. Only will work if X is all binaray '''
+
+        self._derive_crossmoments()
 
         ####################################################
-        # Fit the A matrix for the original variables first. 
+        # Get the data corresponding to the original x for the simulations 
         ####################################################
 
         A = np.zeros((2*self.p,2*self.p))
 
-        # we don't actually need to fit A on the original data; we use the original points to simulate
-        if self.full_A == True:
-            # We can fit on the actual data, making this easier
-            A[1,1] = logit(mu[0])
+        # Simulate fresh x based on the original data
+        if self.fresh_sim: 
+            # Fit the upperhalf of A on the actual data, making this easier
+            A[1,1] = logit(self.mu_lrg[0])
             for i in np.arange(0,self.p):
             # inject the paramters from the logit X_i ~ X_1 + ... + X_(i-1) + 1 into the ith row of A
                 A[i,0:(i+1)] = sm.GLM(self.X_orig[:,i],np.hstack((self.X_orig[:,0:i],np.ones((self.n,1)))),family=sm.families.Binomial()).fit().params
+
+            # Then draw the X
+            X_fix = draw_random_binary(self.MCsize,A[:self.p,:self.p])
+            nMC = self.MCsize
+        
+        # just repeat X a bunch of times
+        else:
+            # Rather than simulate entirely new X at each stage, I will used a fixed set of X_1 ... X_(i-1)
+            # This definitely makes sense for the orignal X vars (why simulate when we already have it), but possibly less sense for the knockoffs
+            # To get the desired size of montecarlo simulation, I will replicate X until it has at least self.MCsize rows
+            repl = np.min((self.MCsize//self.n,1))
+            X_fix = np.repeat(self.X_orig,repl,0)
+            nMC   = X_fix.shape[0]
 
         ###################################################
         # Derive remaing A from Newton-Raphson
@@ -234,27 +268,17 @@ class knockoff_net(object):
 
         # the current value and the derivatves are derived by simulation
 
-        # Rather than simulate entirely new X at each stage, I will used a fixed set of X_1 ... X_(i-1)
-        # This definitely makes sense for the orignal X vars (why simulate when we already have it), but possibly less sense for the knockoffs
-        # To get the desired size of montecarlo simulation, I will replicate X until it has at least self.MCsize rows
-        repl = np.min((self.MCsize//self.n,1))
-        X_fix = np.repeat(self.X_orig,repl,0)
-        nMC   = X_fix.shape[0]
-        ones  = np.ones((nMC,1))
-
         # sequence of portions between 0 and 1 to deal with case of ill conditioned hessian
-        por_seq = np.append(0,invlogit(np.arange(-5,5,.5)))
-        por_seq = np.append(por_seq,1)
+        por_seq = np.arange(0,1.01,.2)
         self.por = np.empty((1,0))
 
         for i in np.arange(self.p,2*self.p):
             # m are the cross moments we are trying to fit
             m = self.M[i,0:(i+1)]
             # X_tmp is the list of (x_k,1) vectors
-            X_tmp     = np.hstack((X_fix,ones))
-            # X_out_tmp is the array of (x_k,1)'(x_k,1) matricies (emperical cross moments for the vector)
-            # I shouldn't have to do the full multiplication each time (only the X_fix*ones part is new). improve later
-            X_out_tmp = X_tmp[:,:,np.newaxis]*X_tmp[:,np.newaxis,:]
+            X_fix     = np.hstack((X_fix,np.ones((nMC,1))))
+
+            #X_tmp_out = X_fix[:,:,np.newaxis]*X_fix[:,np.newaxis,:]
 
             # Now, the Newton-Raphson steps
             # If the hessian becomes singular, we will relax the cross moment requirements, as described in Schafer 5.1 point 2
@@ -265,46 +289,61 @@ class knockoff_net(object):
                 m = (1-por)*self.M[i,0:(i+1)] + por*self.M[i,i]*np.append(np.diag(self.M)[0:i],1)
 
                 # a is the row we are adding to A. Initialize with values as if independent all other vars
-                a = np.append(np.zeros(i),logit(mu_lrg[i]))
-                error, counter = np.Inf,0
+                a = np.append(np.zeros(i),logit(self.mu_lrg[i]))
 
                 # If we fit the given m without running into ill-conditioned hessians, we can stop
                 illcond = False
-                while error > self.tol and self.maxiter>counter and not illcond:
-                    # mu is the probability of X_i=1|X_1 ... X_(i-1) times the normalizing constant
-                    mu = invlogit(np.dot(X_tmp,a))[:,np.newaxis]
-                    # fa is the current estimate of the cross moments
-                    fa = np.mean(mu*X_tmp      ,axis=0)
-                    # mup is the derivative of mu with respect to np.dot(X_tmp,a)
-                    mup = dinvlogit(np.dot(X_tmp,a))[:,np.newaxis,np.newaxis]
-                    # fa is the Hessian of fa with respect to a
-                    fap = np.mean(mup*X_out_tmp,axis=0)
-                    if nplin.cond(fap) < 1/float_info.epsilon:
-                        a = a - np.dot(nplin.inv(fap),fa-m)
-                        counter += 1
-                        error = nplin.norm(fa-m)  # how close am I?
-                    else:
-                        illcond = True
+
+                # Minimize the actual difference vector
+                opt = root(self._vector_objective,
+                        a,
+                        args=(X_fix,m),
+                        method=self.opt_method,
+                        tol=self.tol,
+                        )
+
+                if opt.success:
+                    a = opt.x
+                else:
+                    print opt.message
+                    illcond = True
 
                 # Stop once have gone through Newton-Raphson without running into ill conditioning 
-                if not illcond:
+                if not illcond or por==1:
                     self.por = np.append(self.por,por)
+                    if por>0:
+                        print "Variable %d relaxed by tau=%.2f" % (i-self.p+1,por)
                     break
 
             # put a into A matrix, draw X_i for 'fixed' matrix, update X_out_fix
             A[i,0:(i+1)] = a
-            X_fix = np.hstack((X_fix,npran.binomial(1,invlogit(np.dot(X_tmp,a)))[:,np.newaxis]))
+            X_fix[:,-1] = npran.binomial(1,invlogit(np.dot(X_fix,a)))
 
         ##############################################
         # Wrapup and get X_ko
         ##############################################
 
-        # since we've been drawing the X along the way, can subset X_fix to get X_ko
-        self.X_ko = X_fix[0::repl,self.p:]
-        self.X_lrg = np.concatenate((self.X_orig,self.X_ko), axis=1)
+
+        if self.fresh_sim: 
+            ones   = np.ones((self.n,1))
+            self.X_lrg = np.hstack((self.X_orig,np.empty((self.n,self.p))))
+            for i in np.arange(self.p,2*self.p):
+                self.X_lrg[:,i] = npran.binomial(1,invlogit(np.dot(np.hstack((self.X_lrg[:,0:i],np.ones((self.n,1)))),A[i,0:(i+1)])))
+
+        else:
+            # since we've been drawing the X along the way, can subset X_fix to get X_ko
+            self.X_lrg = np.concatenate((self.X_orig,X_fix[0::repl,self.p:]), axis=1)
 
         # hang onto A
         self.A = A
+
+        # Evaluate how close we are emperically to M
+        self.M_distortion = nplin.norm(self.M-np.dot(self.X_lrg.T,self.X_lrg)/self.n)/nplin.norm(self.M)
+
+        self.emp_ko_corr= np.corrcoef(self.X_lrg,rowvar=0,bias=1)[:self.p,self.p:2*self.p][np.identity(self.p)==1]
+
+    def _vector_objective(self,a,X_fix,m):
+        return np.mean(invlogit(np.dot(X_fix,a))[:,np.newaxis]*X_fix,axis=0) - m
 
     def _get_z(self): 
         """ Given the coefficient matrix from a glmnet object, returns the Z, the first non-zero entries"""
@@ -337,7 +376,7 @@ class knockoff_logit(knockoff_net):
 
         # initialize and fit the glmnet object
         self.lognet = LogisticNet(alpha=1) 
-        self.lognet.fit(self.X_lrg,self.y,normalize=False,include_intercept=False)
+        self.lognet.fit(self.X_lrg,self.y,normalize=False,include_intercept=self.intercept)
 
         # pull out some values from the glmnet object and clean
         self.lambdas = self.lognet.out_lambdas
@@ -367,7 +406,7 @@ class knockoff_lasso(knockoff_net):
 
         # initialize the glmnet object
         self.elasticnet = ElasticNet(alpha=1) 
-        self.elasticnet.fit(self.X_lrg,self.y,normalize=False,include_intercept=False)
+        self.elasticnet.fit(self.X_lrg,self.y,normalize=False,include_intercept=self.intercept)
 
         # pull out some values from the glmnet object and clean
         self.lambdas = self.elasticnet.out_lambdas

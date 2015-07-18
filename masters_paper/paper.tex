@@ -203,12 +203,12 @@ Since multivariate normal distributions are easy to randomly draw from and defin
             \[ \mathbf m_i = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L\left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right] \]
             Where $c$ is the appropriate normalizing constant. Let us define the quantity on the right in the last line as $f(\mathbf a_i)$. This equation $f(\mathbf a_i)=\mathbf{m}_i$ can be solved by successive Newton-Raphson iterations defined by 
             \[\mathbf a_i^{(k+1)} = \left[H f\left(\mathbf a_i^{(k)}\right)\right]^{-1}\left[f\left(\mathbf a_i^{(k)}\right)-\mathbf m_i\right] \]
-            To do so, the Hessian matrix is calculated as 
-        \[ H f\left(\mathbf a_i\right) = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L \left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf x_{-i}^T & 1 \end{array}\right] \]
+            To do so, the Jacobian matrix is calculated as 
+        \[ J f\left(\mathbf a_i\right) = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L \left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf x_{-i}^T & 1 \end{array}\right] \]
             With $2^{i-1}$ possible values for $\mathbf x_{-i}$, this can quickly become computationally expensive. Instead, with a series of values $\mathbf x_{-i}^{(k)}\sim \mathbf x_{-i}$, the simulated values 
             \[f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right] \]
             and
-            \[H f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
+            \[J f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
             can be used. \par
             Though, in theory, $A$ should always exist, in practice numerical issues may compound to the point that the Newton-Raphson method won't converge. In this case, one can solve instead for $\mathbf m_i^*(\tau)$, where, for $\tau\in[0,1]$
     \[\mathbf m_i^*(\tau) = (1-\tau)\mathbf m_i + \tau \left[ \begin{array}{cccc} 0 & \ldots & 0 & M_{ii} \end{array} \right]^T \]
@@ -217,7 +217,9 @@ Since multivariate normal distributions are easy to randomly draw from and defin
             The hope is that for some $\tau$ close to $0$, convergence can be achieved, only causing a slight distortion from the desired cross moments.
 
 \subsection{Generating Binary Knockoffs}
-This theory provides the tools to generate random binary knockoffs. This is done is done sequentially as two steps, the first of which is to come up with the target covariance matrix for $\mathbf x_L = [\mathbf x\; \mathbf{\tilde x}]$. Much as before with the original knockoffs, both the equi-correlated and SDP method can be used to select  $\mathbf s$  such that $\diag{\Sigma}-\mathbf s$ is small and 
+This theory provides the tools to generate random binary knockoffs. This is done is done sequentially as two steps. The first of these is to come up with the target correlation matrix $C$ for $\mathbf x_L = [\mathbf x\; \mathbf{\tilde x}]$. 
+
+the first of which is to come up with the target covariance matrix for $\mathbf x_L = [\mathbf x\; \mathbf{\tilde x}]$. Much as before with the original knockoffs, both the equi-correlated and SDP method can be used to select  $\mathbf s$  such that $\diag{\Sigma}-\mathbf s$ is small and 
         \[ \Sigma_L = \left[\begin{array}{cc}  \Sigma & \Sigma - \diag{\mathbf s }\\ \Sigma - \diag{\mathbf s} & \Sigma \end{array}\right] \succeq 0 \]
         Additionally though, the moment condition must hold for this to correspond to a proper random binary vector. If $\mathbf m_L = \E\left(\mathbf x_L\right) = [\mathbf m \; \mathbf m]$, then the desired cross moment matrix of the joint distribution is 
         \[ M_L = \Sigma_L + \mathbf m_L\mathbf m_L^T\]
@@ -246,7 +248,7 @@ This theory provides the tools to generate random binary knockoffs. This is done
              \item Where $\mathbf x_F^{(k)}$ is the $k$th row of $X_F$, the row $\mathbf a_i$ is fit by Newton-Raphson iterations with 
              \[f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right] \]
              and
-             \[H f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_F^{(k)}]^T & 1 \end{array}\right] \]
+             \[J f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_F^{(k)}]^T & 1 \end{array}\right] \]
              \item If the iterations won't converge, the relaxed equation $f(\mathbf a_i)=m_i^*(\tau)$ is attempted instead for increasing values of $\tau$ until it converges.
              \item After $\mathbf a_i$ is fit, a new column $X_i$ is drawn as independent Bernoulli with probability vector $\mu(X_F \mathbf a_i)$.   
              \item $X_F$ is updated to 
@@ -254,64 +256,10 @@ This theory provides the tools to generate random binary knockoffs. This is done
          \end{itemize}
          At the end, the any $n$ rows of $X_F$ corresponding to the rows of $X$ can be taken as $X_L$. Any such set should have the desired distribution for $\tilde X$.
 
-\section{Bernoulli Knockoff Performance}
-For each of thses, exaimine these situatations:
-\begin{itemize}
-    \item $X$ arises out of the assumed Isling model, with no high order interactions. 
-    \item $X$ does not arise out of this model, and does have higher order interactions. Could possibly model this by drawing the vector $\mathbf x$ or subsets of it as multinomial with probabilities from a Dirichlet distribution.
-    \item $X$ is from a real world data set, likely something in genetics.
-    \item $y$ is normally distributed around $X\beta$.
-    \item $y$ is drawn from some other distribution, possibly skewed, heavy tailed, or light tailed.
-    \item $y$ is from a real world data set.
-\end{itemize}
-\subsection{Gram Matrix Comparison}
-\subsection{Binary vs. Determinist Knockoffs in LASSO}
-\subsection{Binary Knockoffs in other Regularlized GLMS}
+\section{Binary Knockoff Performance}
+    To evaluate how useful these binary knockoffs will be in practice, it is useful to evaluate their empirical performance under simulation. 
 
-\section{Discussion}
-\subsection{Areas for Further Work}
+\subsection{Convergence to Theoretical Covariance} 
 
-
-\section{Further Work and Simulations}
-As I see it, further simulation work for my paper breaks down into three logical groups: comparison of random Bernoulli knockoffs to the original Knockoffs in LASSO, evaluation of Bernoulli knockoffs in other L1 regularized GLMs, and expanding random knockoffs to more general sorts of variables.
-
-\subsection{Comparison to Original Knockoffs in LASSO}
-The basic idea is to compare how the two sorts of knockoffs compare when $X$ is binary and we are fitting a LASSO regression. Do they select the same variables? Do the binary knockoffs control FDR more or less conservatively? Situations to test:
-\begin{itemize}
-    \item $X$ arises out of the assumed Isling model, with no high order interactions. 
-    \item $X$ does not arise out of this model, and does have higher order interactions. Could possibly model this by drawing the vector $\mathbf x$ or subsets of it as multinomial with probabilities from a Dirichlet distribution.
-    \item $X$ is from a real world data set, likely something in genetics.
-    \item $y$ is normally distributed around $X\beta$.
-    \item $y$ is drawn from some other distribution, possibly skewed, heavy tailed, or light tailed.
-    \item $y$ is from a real world data set.
-\end{itemize}
-
-\subsection{Evaluation of Binary Knockoffs in other GLMS}
-The one of the most interest would be logits. It would be good to see how successful the binary knockoffs are in controlling FDR without the theoretical guarantees that LASSO provides.
-\begin{itemize}
-    \item $X$ arises out of the Isling model, in which case it seems like the knockoffs should control FDR.
-    \item $X$ has higher order interactions, which might make the knockoffs perform poorly.
-    \item $X$ is from a real world data set, likely something in genetics.
-    \item $y$ is simulated based on the assumptions of the regression model.
-    \item $y$ is simulated to violate assumptions of the regression model.
-    \item $y$ is from a real world data set.
-\end{itemize}
-
-\subsection{Generalizations/Harebrained Ideas}
-I have two seeds of ideas for extensions if I have enough time.
-\begin{enumerate}
-    \item Still with binary data, one might be able to simulate binary variables with higher order interactions in the generation of $X$ by including higher order interactions in the regression of $X_i$ on $X_{-i}$. This would lead to $A$ being a matrix of higher dimension. Even if this worked, extending the method to knockoffs may not be obvious.
-    \item In the general case where $X$ is not binary, I can almost imagine a method set up along similar lines to the binary case.
-    \begin{itemize}
-        \item The desired covariance matrix could be chosen as in the original knockoff paper.
-        \item Each $x_i$'s marginal distribution would be approximated by a kernel density estimate on $X_i$.
-        \item A $x_i \st x_1, \ldots, x_{i-1}$ would be drawn from some reweighing of this marginal to achieve the proper covariance. For instance, if $F_i^{-1}$ is the inverse CDF of the marginal kernel density for $x_i$ and $u_i\st x_1, \ldots, x_{i-1}$ is a RV on $(0,1)$, then $x_i=F_i^{-1}(u_i)$.
-        \item Maybe fit generalized additive model for each successive $x_i$ with kernel regression for $x_1,\ldots,x_{i-1}$ to predict mean. Then, skew marginal of $x_i$ until it has that mean. 
-    \end{itemize}
-\end{enumerate}
-
-
-
-    
 
 \end{document}
