@@ -76,7 +76,7 @@ def solve_sdp(G):
 
 class knockoff_net(object):
     """ Parent class for knockoff lasso and knockoff logistic regression. Defines everything besides fitting the particular GlmNet object """
-    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,tol=1E-5,fresh_sim=True,pseudocount=0,opt_method='anderson',intercept=False):
+    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,fresh_sim=True,pseudocount=0,intercept=False):
         self.y      = y
         self.X      = normalize(X.astype(float),norm='l2',axis=0)
         self.X_orig = X
@@ -85,12 +85,10 @@ class knockoff_net(object):
         self.knockoff_type = knockoff  # what type of knockoff are we generating - binary or the original deterministic ones?
         self.cov_type = cov_method     # how are we generating the desired covariance matrix - equicor or SDP?
         self.randomize=False
-        self.tol = tol
         self.MCsize = MCsize   # how many values for Monte Carlo simulation
         self.zerotol = 1E-5
         self.fresh_sim = fresh_sim 
         self.pseudocount=pseudocount
-        self.opt_method = opt_method
         self.intercept = intercept 
 
     def _create_SDP(self):
@@ -269,7 +267,7 @@ class knockoff_net(object):
         # the current value and the derivatves are derived by simulation
 
         # sequence of portions between 0 and 1 to deal with case of ill conditioned hessian
-        por_seq = np.arange(0,1.01,.2)
+        por_seq = np.arange(0,1,.25)
         self.por = np.empty((1,0))
 
         for i in np.arange(self.p,2*self.p):
@@ -284,36 +282,35 @@ class knockoff_net(object):
             # If the hessian becomes singular, we will relax the cross moment requirements, as described in Schafer 5.1 point 2
             # the idea is that the problem is relaxed until X_i is independent of all prior vars
             # as por increases, covariance drops
+            # a is the row we are adding to A. Initialize with values as if independent all other vars
+            a = np.append(np.zeros(i),logit(self.mu_lrg[i]))
+
             for por in por_seq:
                 # m are the cross moments we are trying to fit
                 m = (1-por)*self.M[i,0:(i+1)] + por*self.M[i,i]*np.append(np.diag(self.M)[0:i],1)
-
-                # a is the row we are adding to A. Initialize with values as if independent all other vars
-                a = np.append(np.zeros(i),logit(self.mu_lrg[i]))
-
-                # If we fit the given m without running into ill-conditioned hessians, we can stop
-                illcond = False
 
                 # Minimize the actual difference vector
                 opt = root(self._vector_objective,
                         a,
                         args=(X_fix,m),
-                        method=self.opt_method,
-                        tol=self.tol,
+                        method='anderson',
+                        options = {'maxiter':(i*2+150),'fatol':1E-5,'jac_options':{'M':25}}
                         )
 
-                if opt.success:
-                    a = opt.x
-                else:
-                    print opt.message
-                    illcond = True
+                # update a to most recent estimate, even without convergence
+                a = opt.x
 
-                # Stop once have gone through Newton-Raphson without running into ill conditioning 
-                if not illcond or por==1:
+                # Stop once optimal has been reached
+                if opt.success:
                     self.por = np.append(self.por,por)
                     if por>0:
                         print "Variable %d relaxed by tau=%.2f" % (i-self.p+1,por)
                     break
+
+            if not opt.success:
+                a = np.append(np.zeros(i),logit(self.mu_lrg[i]))
+                self.por = np.append(self.por,1)
+                print "Variable %d fully relaxed" % (i-self.p+1)
 
             # put a into A matrix, draw X_i for 'fixed' matrix, update X_out_fix
             A[i,0:(i+1)] = a
@@ -324,11 +321,25 @@ class knockoff_net(object):
         ##############################################
 
 
+        # If we freshly simulated x, we need to draw ~x based on x
         if self.fresh_sim: 
-            ones   = np.ones((self.n,1))
             self.X_lrg = np.hstack((self.X_orig,np.empty((self.n,self.p))))
             for i in np.arange(self.p,2*self.p):
-                self.X_lrg[:,i] = npran.binomial(1,invlogit(np.dot(np.hstack((self.X_lrg[:,0:i],np.ones((self.n,1)))),A[i,0:(i+1)])))
+                # need to make sure the knockoff isn't uniformly 0 or 1
+                count = 0
+                j=0
+                while count==0 or count==self.n:
+                    # first five times we try regenerating
+                    if j<5: 
+                        self.X_lrg[:,i] = npran.binomial(1,invlogit(np.dot(np.hstack((self.X_lrg[:,0:i],np.ones((self.n,1)))),A[i,0:(i+1)])))
+                        if j>0:
+                            print "Knockoff regenerated to avoid constant value"
+                    # otherwise, just randomly flip a few bits
+                    else:
+                        print "Random noise added to knockoff to avoid constant value"
+                        self.X_lrg[:,i] = np.where(npran.binomial(1,.01*np.ones(self.n)),1-self.X_lrg[:,i],self.X_lrg[:,i])
+                    count = np.sum(self.X_lrg[:,i])
+                    j += 1
 
         else:
             # since we've been drawing the X along the way, can subset X_fix to get X_ko
@@ -370,11 +381,14 @@ class knockoff_net(object):
 class knockoff_logit(knockoff_net):
     """ Preforms the knockoff technique with logistic regression """
 
-    def fit(self):
+    def fit(self,X_lrg=None):
         """ Generates the knockoffs, fits the regression, and performs the FDR calculations """
         # Generate knockoff as inherited from knockoff_net
-        if   self.knockoff_type == 'original': self._original_knockoff()
-        elif self.knockoff_type == 'binary':   self._binary_knockoff()
+        if X_lrg is None:
+            if   self.knockoff_type == 'original': self._original_knockoff()
+            elif self.knockoff_type == 'binary':   self._binary_knockoff()
+        else:
+            self.X_lrg = X_lrg
 
         # initialize and fit the glmnet object
         self.lognet = LogisticNet(alpha=1) 
@@ -400,11 +414,14 @@ class knockoff_logit(knockoff_net):
 class knockoff_lasso(knockoff_net):
     """ Preforms the knockoff technique with lasso """
     
-    def fit(self):
+    def fit(self,X_lrg=None):
         """ Generates the knockoffs, fits the regression, and performs the FDR calculations """
         # Generate knockoff as inherited from knockoff_net
-        if   self.knockoff_type == 'original': self._original_knockoff()
-        elif self.knockoff_type == 'binary':   self._binary_knockoff()
+        if X_lrg is None:
+            if   self.knockoff_type == 'original': self._original_knockoff()
+            elif self.knockoff_type == 'binary':   self._binary_knockoff()
+        else:
+            self.X_lrg = X_lrg
 
         # initialize the glmnet object
         self.elasticnet = ElasticNet(alpha=1) 
