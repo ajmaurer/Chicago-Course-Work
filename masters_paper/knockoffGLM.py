@@ -294,7 +294,7 @@ class knockoff_net(object):
                         a,
                         args=(X_fix,m),
                         method='anderson',
-                        options = {'maxiter':(i*2+150),'fatol':1E-5,'jac_options':{'M':25}}
+                        options = {'maxiter':(i*2+150),'fatol':1E-5,'jac_options':{'M':20}}
                         )
 
                 # update a to most recent estimate, even without convergence

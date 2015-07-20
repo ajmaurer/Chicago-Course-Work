@@ -35,7 +35,7 @@ def make_X_ind(X,q=.05):
                 break
     return X
 
-def ising_X(p,n,A_base_diag=-1,A_sd=.5):
+def ising_X(p,n,A_base_diag=-1,A_sd=.2):
     """ generate X from ising model """
     A = npran.normal(0,A_sd,(p,p))+np.diag(A_base_diag*np.ones(p))
     m,p = A.shape
