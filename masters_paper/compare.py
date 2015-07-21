@@ -43,12 +43,12 @@ def ising_X(p,n,A_base_diag=-1,A_sd=.2):
     X = np.empty((n,p))
     for i in np.arange(0,p):
         X[:,i] = npran.binomial(1,invlogit(np.dot(np.hstack((X[:,0:i],ones)),A[i,0:(i+1)])))
-    return make_X_ind(X)
+    return X
 
 def given_X(p,n,data):
     h,w = data.shape
     X      = data[npran.choice(h,n),:][:,npran.choice(w,p)]
-    return make_X_ind(X)
+    return X
 
 def norm_y(X,p1,sd=1,beta_sd=1):
     """ Generate a normal Y from the X """
@@ -78,7 +78,7 @@ def bern_y(X,p1,base_prob=.25,beta_sd=1):
 
 def generate(input):
     """ Testing function, all parameters are in a single tuple """
-    seed,gen,p0,p1,MCsize = input
+    seed,gen,p0,p1= input
     npran.seed(seed)
     if gen.lower() == "ising":
         X    = ising_X(p1+p0,1000)
@@ -93,8 +93,7 @@ def generate(input):
     # Logit
     model = ko.knockoff_logit(ybin,X,.2,
                               knockoff='binary',
-                              MCsize=MCsize,
-                              fresh_sim=True,
+                              method='approx',
                               intercept=True
                               )
     model.fit()
@@ -109,8 +108,7 @@ def generate(input):
     # LASSO
     bin_model = ko.knockoff_lasso(ynor,X,.2,
                               knockoff='binary',
-                              MCsize=MCsize,
-                              fresh_sim=True,
+                              method='approx',
                               intercept=True
                               )
     bin_model.fit(model.X_lrg)
@@ -130,7 +128,7 @@ def generate(input):
     with open('data/lasso_test_'+str(p0+p1)+'.txt','a') as f:
         f.write("%d\t%s\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, model.M_distortion, np.mean(ko_corr), bin_FDR, bin_power, np.mean(ori_model.emp_ko_corr), ori_FDR, ori_power, corr))
 
-def batch_compare(b,p,p1s,gens,start_seed,MCsize=200000,procs=4):
+def batch_compare(b,p,p1s,gens,start_seed,procs=4):
     with open('data/backup_seeds.txt','r') as f:
         seeds = [int(seed) for seed in f.read().split()]
     inputs = []
@@ -138,7 +136,7 @@ def batch_compare(b,p,p1s,gens,start_seed,MCsize=200000,procs=4):
     for b in range(b):
         for p1 in p1s:
             for gen in gens:
-                inputs.append((seeds[i+start_seed],gen,p-p1,p1,MCsize))
+                inputs.append((seeds[i+start_seed],gen,p-p1,p1))
                 i += 1
 
     pool = Pool(processes=procs)

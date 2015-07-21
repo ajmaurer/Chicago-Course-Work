@@ -16,7 +16,7 @@ import scipy as sp
 import scipy.linalg as splin
 import scipy.stats as spstat
 import matplotlib.pyplot as plt
-#import cvxpy as cvx 
+import cvxpy as cvx 
 import statsmodels.api as sm
 from glmnet import LogisticNet, ElasticNet
 from sklearn.preprocessing import normalize
@@ -74,9 +74,17 @@ def solve_sdp(G):
     # Return as array, not as matrix.
     return np.asarray(s.value).flatten()
 
+def cutoff(array,min=0,max=1):
+    shape = array.shape
+    cut_array = np.min((max*np.ones(shape),array),axis=0)
+    cut_array = np.max((min*np.ones(shape),cut_array),axis=0)
+    return cut_array
+
+
+
 class knockoff_net(object):
     """ Parent class for knockoff lasso and knockoff logistic regression. Defines everything besides fitting the particular GlmNet object """
-    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,fresh_sim=True,pseudocount=0,intercept=False):
+    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,method='fresh_sim',pseudocount=0,intercept=False):
         self.y      = y
         self.X      = normalize(X.astype(float),norm='l2',axis=0)
         self.X_orig = X
@@ -87,7 +95,7 @@ class knockoff_net(object):
         self.randomize=False
         self.MCsize = MCsize   # how many values for Monte Carlo simulation
         self.zerotol = 1E-5
-        self.fresh_sim = fresh_sim 
+        self.method = method
         self.pseudocount=pseudocount
         self.intercept = intercept 
 
@@ -238,7 +246,7 @@ class knockoff_net(object):
         A = np.zeros((2*self.p,2*self.p))
 
         # Simulate fresh x based on the original data
-        if self.fresh_sim: 
+        if self.method == 'fresh_sim': 
             # Fit the upperhalf of A on the actual data, making this easier
             A[1,1] = logit(self.mu_lrg[0])
             for i in np.arange(0,self.p):
@@ -250,79 +258,134 @@ class knockoff_net(object):
             nMC = self.MCsize
         
         # just repeat X a bunch of times
-        else:
-            # Rather than simulate entirely new X at each stage, I will used a fixed set of X_1 ... X_(i-1)
-            # This definitely makes sense for the orignal X vars (why simulate when we already have it), but possibly less sense for the knockoffs
-            # To get the desired size of montecarlo simulation, I will replicate X until it has at least self.MCsize rows
+        elif self.method=='bootstrap':
+            #Rather than simulate entirely new X at each stage, I will used a fixed set of X_1 ... X_(i-1)
+            #This definitely makes sense for the orignal X vars (why simulate when we already have it), but possibly less sense for the knockoffs
+            #To get the desired size of montecarlo simulation, I will replicate X until it has at least self.MCsize rows
             repl = np.min((self.MCsize//self.n,1))
             X_fix = np.repeat(self.X_orig,repl,0)
             nMC   = X_fix.shape[0]
+
+        elif self.method== 'approx':
+            X_fix     = self.X_orig
 
         ###################################################
         # Derive remaing A from Newton-Raphson
         ###################################################
 
-        # Largely from 5.1 in Schafer, including notation
+        if self.method== 'approx':
+            X_tmp = np.hstack((self.X_orig,np.ones((self.n,1)))).T/self.n
+            for i in np.arange(self.p,2*self.p):
+                m = np.append(self.M[i,0:self.p],self.M[i,i])
+         
+                ps = cvx.Variable(self.n)
+                objective = cvx.Minimize(cvx.norm(X_tmp * ps - m ,2))
+                constraints = [0 <= ps, ps<=1]
+                prob = cvx.Problem(objective,constraints)
+                prob.solve()
+         
+                X_fix = np.hstack((X_fix,ps.value))
+         
+            for j in range(2):
+                # make sure order of variables is mixed up
+                for i in np.arange(self.p,2*self.p)[npran.permutation(self.p)]:
+                    X_tmp = X_fix
+                    X_tmp[:,i] = np.ones((self.n,1))
+                    m = self.M[i,:]
+             
+                    ps = cvx.Variable(self.n)
+                    objective = cvx.Minimize(cvx.norm((X_tmp.T/self.n) * ps - m ,2))
+                    constraints = [0 <= ps, ps<=1]
+                    prob = cvx.Problem(objective,constraints)
+                    prob.solve(solver=cvx.SCS)
+             
+                    X_fix[:,i] = ps.value
+         
+                    # draw the actual responses 
+                    X_fix[:,self.p:] = npran.binomial(1,cutoff(X_fix[:,self.p:]))
 
-        # the current value and the derivatves are derived by simulation
+                    
 
-        # sequence of portions between 0 and 1 to deal with case of ill conditioned hessian
-        por_seq = np.arange(0,1,.25)
-        self.por = np.empty((1,0))
-
-        for i in np.arange(self.p,2*self.p):
-            # m are the cross moments we are trying to fit
-            m = self.M[i,0:(i+1)]
-            # X_tmp is the list of (x_k,1) vectors
-            X_fix     = np.hstack((X_fix,np.ones((nMC,1))))
-
-            #X_tmp_out = X_fix[:,:,np.newaxis]*X_fix[:,np.newaxis,:]
-
-            # Now, the Newton-Raphson steps
-            # If the hessian becomes singular, we will relax the cross moment requirements, as described in Schafer 5.1 point 2
-            # the idea is that the problem is relaxed until X_i is independent of all prior vars
-            # as por increases, covariance drops
-            # a is the row we are adding to A. Initialize with values as if independent all other vars
-            a = np.append(np.zeros(i),logit(self.mu_lrg[i]))
-
-            for por in por_seq:
+        if not self.method =='approx':
+            # Largely from 5.1 in Schafer, including notation
+         
+            # the current value and the derivatves are derived by simulation
+         
+            # sequence of portions between 0 and 1 to deal with case of ill conditioned hessian
+            por_seq = np.arange(0,1,.25)
+            self.por = np.empty((1,0))
+         
+         
+            for i in np.arange(self.p,2*self.p):
                 # m are the cross moments we are trying to fit
-                m = (1-por)*self.M[i,0:(i+1)] + por*self.M[i,i]*np.append(np.diag(self.M)[0:i],1)
-
-                # Minimize the actual difference vector
-                opt = root(self._vector_objective,
-                        a,
-                        args=(X_fix,m),
-                        method='anderson',
-                        options = {'maxiter':(i*2+150),'fatol':1E-5,'jac_options':{'M':20}}
-                        )
-
-                # update a to most recent estimate, even without convergence
-                a = opt.x
-
-                # Stop once optimal has been reached
-                if opt.success:
-                    self.por = np.append(self.por,por)
-                    if por>0:
-                        print "Variable %d relaxed by tau=%.2f" % (i-self.p+1,por)
-                    break
-
-            if not opt.success:
+                m = self.M[i,0:(i+1)]
+                # X_tmp is the list of (x_k,1) vectors
+                #X_fix     = np.hstack((X_fix,np.ones((nMC,1))))
+         
+                #X_tmp_out = X_fix[:,:,np.newaxis]*X_fix[:,np.newaxis,:]
+         
+                # Now, the Newton-Raphson steps
+                # If the hessian becomes singular, we will relax the cross moment requirements, as described in Schafer 5.1 point 2
+                # the idea is that the problem is relaxed until X_i is independent of all prior vars
+                # as por increases, covariance drops
+                # a is the row we are adding to A. Initialize with values as if independent all other vars
                 a = np.append(np.zeros(i),logit(self.mu_lrg[i]))
-                self.por = np.append(self.por,1)
-                print "Variable %d fully relaxed" % (i-self.p+1)
+         
+         
+                X_fix     = np.hstack((X_fix,np.ones((self.n,1))))
+         
+                for por in por_seq:
+                    # m are the cross moments we are trying to fit
+                    m = (1-por)*self.M[i,0:(i+1)] + por*self.M[i,i]*np.append(np.diag(self.M)[0:i],1)
+         
+                    # Linear program
+                    ps = cvx.Variable(self.n)
+                    objective = cvx.Minimize(cvx.norm(ps-self.M[i,i],1))
+                    constraints = [0 <= ps, ps<=1, (X_fix.T/self.n) * ps == m]
+                    prob = cvx.Problem(objective,constraints)
+                    prob.solve()
+         
+                    # Minimize the actual difference vector
+                    opt = root(self._vector_objective,
+                            a,
+                            args=(X_fix,m),
+                            method='anderson',
+                            options = {'maxiter':(i*2+150),'fatol':1E-5,'jac_options':{'M':20}}
+                            )
+         
+                    # update a to most recent estimate, even without convergence
+                    a = opt.x
+         
+                    # Stop once optimal has been reached
+                    if prob.status=="optimal":
+                        p = ps.value
+                        self.por = np.append(self.por,por)
+                        if por>0:
+                            print "Variable %d relaxed by tau=%.2f" % (i-self.p+1,por)
+                        print "Variable %d success" % (i-self.p+1)
+                        break
+         
+                if not prob.status=="optimal":
+                    a = np.append(np.zeros(i),logit(self.mu_lrg[i]))
+                    p = np.ones(self.n)*self.M[i,i]
+                    self.por = np.append(self.por,1)
+                    print "Variable %d fully relaxed" % (i-self.p+1)
+         
+                # put a into A matrix, draw X_i for 'fixed' matrix, update X_out_fix
+                A[i,0:(i+1)] = a
+                X_fix[:,-1] = p.squeeze()
 
-            # put a into A matrix, draw X_i for 'fixed' matrix, update X_out_fix
-            A[i,0:(i+1)] = a
-            X_fix[:,-1] = npran.binomial(1,invlogit(np.dot(X_fix,a)))
+        # hang onto A
+        self.A = A
 
-        ##############################################
-        # Wrapup and get X_ko
-        ##############################################
+         
+            ##############################################
+            # Wrapup and get X_ko
+            ##############################################
 
 
         # If we freshly simulated x, we need to draw ~x based on x
-        if self.fresh_sim: 
+        if self.method=='fresh_sim': 
             self.X_lrg = np.hstack((self.X_orig,np.empty((self.n,self.p))))
             for i in np.arange(self.p,2*self.p):
                 # need to make sure the knockoff isn't uniformly 0 or 1
@@ -341,15 +404,15 @@ class knockoff_net(object):
                     count = np.sum(self.X_lrg[:,i])
                     j += 1
 
-        else:
+        elif self.method=='bootstrap':
             # since we've been drawing the X along the way, can subset X_fix to get X_ko
             self.X_lrg = np.concatenate((self.X_orig,X_fix[0::repl,self.p:]), axis=1)
 
-        # hang onto A
-        self.A = A
+        elif self.method=='approx':
+            self.X_lrg = X_fix
 
         # Evaluate how close we are emperically to M
-        self.M_distortion = nplin.norm(self.M-np.dot(self.X_lrg.T,self.X_lrg)/self.n)/nplin.norm(self.M)
+        self.M_distortion = nplin.norm(self.M[:,self.p:]-np.dot(X_fix.T,X_fix[:,self.p:])/self.n)/nplin.norm(self.M[:,self.p:])
 
         self.emp_ko_corr= np.corrcoef(self.X_lrg,rowvar=0,bias=1)[:self.p,self.p:2*self.p][np.identity(self.p)==1]
         if np.sum(np.isnan(self.emp_ko_corr))>0:
@@ -357,6 +420,9 @@ class knockoff_net(object):
 
     def _vector_objective(self,a,X_fix,m):
         return np.mean(invlogit(np.dot(X_fix,a))[:,np.newaxis]*X_fix,axis=0) - m
+
+    def _new_obj(self,eta,X,m):
+        return np.append(np.dot(X.T,invlogit(eta)) - m,np.zeros(X.shape[0]-X.shape[1]))
 
     def _get_z(self): 
         """ Given the coefficient matrix from a glmnet object, returns the Z, the first non-zero entries"""
