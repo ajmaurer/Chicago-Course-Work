@@ -123,7 +123,7 @@ class knockoff_net(object):
         C_U,C_d,C_V = nplin.svd(2*np.diag(s) - (self.s * G_inv.T).T * self.s)
         C_d[C_d < 0] = 0
         X_ko = self.X - np.dot(self.X,G_inv*s) + np.dot(U_perp*np.sqrt(C_d),C_V)
-        self.X_lrg = np.concatenate((self.X_orig,X_ko), axis=1)
+        self.X_lrg = np.concatenate((self.X,X_ko), axis=1)
 
     def _create_equicor(self):
         """ Creates the equal correlation knockoff of X"""
@@ -146,7 +146,7 @@ class knockoff_net(object):
         s_diff = 2*self.s - (self.s/d)**2
         s_diff[s_diff<0]=0 # can be negative due to numerical error
         X_ko = np.dot(U*(d-self.s/d) + U_perp*(np.sqrt(s_diff)) , V)
-        self.X_lrg = np.concatenate((self.X_orig,X_ko), axis=1)
+        self.X_lrg = np.concatenate((self.X,X_ko), axis=1)
 
     def _original_knockoff(self):
         """ Creates the original style knockoffs"""
@@ -274,15 +274,18 @@ class knockoff_net(object):
         ###################################################
 
         if self.method== 'approx':
+            covinv   = np.diag(self.M - np.outer(self.mu_lrg,self.mu_lrg))**-1
+            upwt = 1
             X_tmp = np.hstack((self.X_orig,np.ones((self.n,1)))).T/self.n
             for i in np.arange(self.p,2*self.p):
                 m = np.append(self.M[i,0:self.p],self.M[i,i])
+                wt = np.diag(np.append(np.append(np.ones(i-self.p),upwt),np.ones(2*self.p-i)))*np.diag(np.append(covinv[:self.p],covinv[i]))
          
                 ps = cvx.Variable(self.n)
-                objective = cvx.Minimize(cvx.norm(X_tmp * ps - m ,2))
+                objective = cvx.Minimize(cvx.norm( wt*(X_tmp * ps - m) ,2))
                 constraints = [0 <= ps, ps<=1]
                 prob = cvx.Problem(objective,constraints)
-                prob.solve()
+                prob.solve(solver=cvx.SCS,max_iters=100)
          
                 X_fix = np.hstack((X_fix,ps.value))
          
@@ -292,20 +295,19 @@ class knockoff_net(object):
                     X_tmp = X_fix
                     X_tmp[:,i] = np.ones((self.n,1))
                     m = self.M[i,:]
+                    wt = np.diag(np.append(np.append(np.ones(i-self.p),upwt),np.ones(3*self.p-i-1)))*np.diag(covinv)
              
                     ps = cvx.Variable(self.n)
-                    objective = cvx.Minimize(cvx.norm((X_tmp.T/self.n) * ps - m ,2))
+                    objective = cvx.Minimize(cvx.norm(wt*(X_tmp.T/self.n * ps - m) ,2))
                     constraints = [0 <= ps, ps<=1]
                     prob = cvx.Problem(objective,constraints)
-                    prob.solve(solver=cvx.SCS)
+                    prob.solve(solver=cvx.SCS,max_iters=100)
              
                     X_fix[:,i] = ps.value
          
                     # draw the actual responses 
                     X_fix[:,self.p:] = npran.binomial(1,cutoff(X_fix[:,self.p:]))
-
                     
-
         if not self.method =='approx':
             # Largely from 5.1 in Schafer, including notation
          
@@ -412,7 +414,7 @@ class knockoff_net(object):
             self.X_lrg = X_fix
 
         # Evaluate how close we are emperically to M
-        self.M_distortion = nplin.norm(self.M[:,self.p:]-np.dot(X_fix.T,X_fix[:,self.p:])/self.n)/nplin.norm(self.M[:,self.p:])
+        self.M_distortion = nplin.norm(self.M[:,self.p:]-np.dot(self.X_lrg.T,self.X_lrg[:,self.p:])/self.n)/nplin.norm(self.M[:,self.p:])
 
         self.emp_ko_corr= np.corrcoef(self.X_lrg,rowvar=0,bias=1)[:self.p,self.p:2*self.p][np.identity(self.p)==1]
         if np.sum(np.isnan(self.emp_ko_corr))>0:
@@ -457,7 +459,7 @@ class knockoff_logit(knockoff_net):
             self.X_lrg = X_lrg
 
         # initialize and fit the glmnet object
-        self.lognet = LogisticNet(alpha=1) 
+        self.lognet = LogisticNet(alpha=1,n_lambdas=self.p*20,frac_lg_lambda=min(.000001,.01/(self.p**2))) 
         self.lognet.fit(self.X_lrg,self.y,normalize=False,include_intercept=self.intercept)
 
         # pull out some values from the glmnet object and clean
@@ -490,7 +492,7 @@ class knockoff_lasso(knockoff_net):
             self.X_lrg = X_lrg
 
         # initialize the glmnet object
-        self.elasticnet = ElasticNet(alpha=1) 
+        self.elasticnet = ElasticNet(alpha=1,n_lambdas=self.p*20,frac_lg_lambda=min(.000001,.01/(self.p**2))) 
         self.elasticnet.fit(self.X_lrg,self.y,normalize=False,include_intercept=self.intercept)
 
         # pull out some values from the glmnet object and clean
