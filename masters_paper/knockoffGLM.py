@@ -319,33 +319,18 @@ class knockoff_net(object):
          
          
             for i in np.arange(self.p,2*self.p):
-                # m are the cross moments we are trying to fit
-                m = self.M[i,0:(i+1)]
-                # X_tmp is the list of (x_k,1) vectors
-                #X_fix     = np.hstack((X_fix,np.ones((nMC,1))))
-         
-                #X_tmp_out = X_fix[:,:,np.newaxis]*X_fix[:,np.newaxis,:]
-         
                 # Now, the Newton-Raphson steps
                 # If the hessian becomes singular, we will relax the cross moment requirements, as described in Schafer 5.1 point 2
                 # the idea is that the problem is relaxed until X_i is independent of all prior vars
                 # as por increases, covariance drops
                 # a is the row we are adding to A. Initialize with values as if independent all other vars
+
                 a = np.append(np.zeros(i),logit(self.mu_lrg[i]))
-         
-         
-                X_fix     = np.hstack((X_fix,np.ones((self.n,1))))
+                X_fix     = np.hstack((X_fix,np.ones((nMC,1))))
          
                 for por in por_seq:
                     # m are the cross moments we are trying to fit
                     m = (1-por)*self.M[i,0:(i+1)] + por*self.M[i,i]*np.append(np.diag(self.M)[0:i],1)
-         
-                    # Linear program
-                    ps = cvx.Variable(self.n)
-                    objective = cvx.Minimize(cvx.norm(ps-self.M[i,i],1))
-                    constraints = [0 <= ps, ps<=1, (X_fix.T/self.n) * ps == m]
-                    prob = cvx.Problem(objective,constraints)
-                    prob.solve()
          
                     # Minimize the actual difference vector
                     opt = root(self._vector_objective,
