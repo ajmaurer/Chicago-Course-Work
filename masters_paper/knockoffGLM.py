@@ -344,23 +344,20 @@ class knockoff_net(object):
                     a = opt.x
          
                     # Stop once optimal has been reached
-                    if prob.status=="optimal":
-                        p = ps.value
+                    if opt.success:
                         self.por = np.append(self.por,por)
                         if por>0:
                             print "Variable %d relaxed by tau=%.2f" % (i-self.p+1,por)
-                        print "Variable %d success" % (i-self.p+1)
                         break
          
-                if not prob.status=="optimal":
+                if not opt.success:
                     a = np.append(np.zeros(i),logit(self.mu_lrg[i]))
-                    p = np.ones(self.n)*self.M[i,i]
                     self.por = np.append(self.por,1)
                     print "Variable %d fully relaxed" % (i-self.p+1)
          
                 # put a into A matrix, draw X_i for 'fixed' matrix, update X_out_fix
                 A[i,0:(i+1)] = a
-                X_fix[:,-1] = p.squeeze()
+                X_fix[:,-1] = npran.binomial(1,invlogit(np.dot(X_fix,a)))
 
         # hang onto A
         self.A = A

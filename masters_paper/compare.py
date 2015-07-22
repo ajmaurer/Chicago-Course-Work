@@ -78,7 +78,7 @@ def bern_y(X,p1,base_prob=.25,beta_sd=1):
 
 def generate(input):
     """ Testing function, all parameters are in a single tuple """
-    seed,gen,p0,p1= input
+    seed,gen,p0,p1,method,MCsize= input
     npran.seed(seed)
     if gen.lower() == "ising":
         X    = ising_X(p1+p0,1000)
@@ -91,44 +91,53 @@ def generate(input):
     ynor = norm_y(X,p1)
 
     # Logit
-    model = ko.knockoff_logit(ybin,X,.2,
+    bin_logit = ko.knockoff_logit(ybin,X,.2,
                               knockoff='binary',
-                              method='approx',
+                              method=method,
+                              MCsize=MCsize,
                               intercept=True
                               )
-    model.fit()
-    trueS = (np.arange(p0+p1)<p1).astype(int)
-    FDR   = np.dot(model.S,1-trueS)/max(np.sum(model.S),1)
-    power = np.dot(model.S,trueS)  /max(p1,1)
-    ko_corr = [cor for cor in model.emp_ko_corr if not np.isnan(cor)]
-
-    with open('data/logit_test_'+str(p0+p1)+'.txt','a') as f:
-        f.write("%d\t%s\t%d\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed,gen,p1,model.M_distortion,np.mean(ko_corr),FDR,power))
-
-    # LASSO
-    bin_model = ko.knockoff_lasso(ynor,X,.2,
-                              knockoff='binary',
-                              method='approx',
-                              intercept=True
-                              )
-    bin_model.fit(model.X_lrg)
-    ori_model = ko.knockoff_lasso(ynor,X,.2,
+    bin_logit.fit()
+    ori_logit = ko.knockoff_logit(ybin,X,.2,
                               knockoff='original',
                               intercept=False
                               )
-    ori_model.fit()
+    ori_logit.fit()
     trueS = (np.arange(p0+p1)<p1).astype(int)
-    bin_FDR   = np.dot(bin_model.S,1-trueS)/max(np.sum(bin_model.S),1)
-    bin_power = np.dot(bin_model.S,trueS)  /max(p1,1)
-    ori_FDR   = np.dot(ori_model.S,1-trueS)/max(np.sum(ori_model.S),1)
-    ori_power = np.dot(ori_model.S,trueS)  /max(p1,1)
-    corr      = np.corrcoef(ori_model.S,bin_model.S)[0,1]
-    ko_corr = [cor for cor in model.emp_ko_corr if not np.isnan(cor)]
+    bin_FDR   = np.dot(bin_logit.S,1-trueS)/max(np.sum(bin_logit.S),1)
+    bin_power = np.dot(bin_logit.S,trueS)  /max(p1,1)
+    ori_FDR   = np.dot(ori_logit.S,1-trueS)/max(np.sum(ori_logit.S),1)
+    ori_power = np.dot(ori_logit.S,trueS)  /max(p1,1)
+    corr      = np.corrcoef(ori_logit.S,bin_logit.S)[0,1]
+    ko_corr = [cor for cor in bin_logit.emp_ko_corr if not np.isnan(cor)]
+
+    with open('data/logit_test_'+str(p0+p1)+'.txt','a') as f:
+        f.write("%d\t%s\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, bin_logit.M_distortion, np.mean(ko_corr), bin_FDR, bin_power, np.mean(ori_logit.emp_ko_corr), ori_FDR, ori_power, corr))
+
+    # LASSO
+    bin_lasso = ko.knockoff_lasso(ynor,X,.2,
+                              knockoff='binary',
+                              method=method,
+                              MCsize=MCsize,
+                              intercept=True
+                              )
+    bin_lasso.fit(bin_logit.X_lrg)
+    ori_lasso = ko.knockoff_lasso(ynor,X,.2,
+                              knockoff='original',
+                              intercept=False
+                              )
+    ori_lasso.fit()
+    trueS = (np.arange(p0+p1)<p1).astype(int)
+    bin_FDR   = np.dot(bin_lasso.S,1-trueS)/max(np.sum(bin_lasso.S),1)
+    bin_power = np.dot(bin_lasso.S,trueS)  /max(p1,1)
+    ori_FDR   = np.dot(ori_lasso.S,1-trueS)/max(np.sum(ori_lasso.S),1)
+    ori_power = np.dot(ori_lasso.S,trueS)  /max(p1,1)
+    corr      = np.corrcoef(ori_lasso.S,bin_lasso.S)[0,1]
 
     with open('data/lasso_test_'+str(p0+p1)+'.txt','a') as f:
-        f.write("%d\t%s\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, model.M_distortion, np.mean(ko_corr), bin_FDR, bin_power, np.mean(ori_model.emp_ko_corr), ori_FDR, ori_power, corr))
+        f.write("%d\t%s\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, bin_logit.M_distortion, np.mean(ko_corr), bin_FDR, bin_power, np.mean(ori_lasso.emp_ko_corr), ori_FDR, ori_power, corr))
 
-def batch_compare(b,p,p1s,gens,start_seed,procs=4):
+def batch_compare(b,p,p1s,gens,start_seed,method='fresh_sim',MCsize=100000,procs=4):
     with open('data/backup_seeds.txt','r') as f:
         seeds = [int(seed) for seed in f.read().split()]
     inputs = []
@@ -136,7 +145,7 @@ def batch_compare(b,p,p1s,gens,start_seed,procs=4):
     for b in range(b):
         for p1 in p1s:
             for gen in gens:
-                inputs.append((seeds[i+start_seed],gen,p-p1,p1))
+                inputs.append((seeds[i+start_seed],gen,p-p1,p1,method,MCsize))
                 i += 1
 
     pool = Pool(processes=procs)
