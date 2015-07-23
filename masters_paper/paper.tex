@@ -204,13 +204,13 @@ Since multivariate normal distributions are easy to randomly draw from and defin
             Where $c$ is the appropriate normalizing constant. Let us define the quantity on the right in the last line as $f(\mathbf a_i)$. This equation $f(\mathbf a_i)=\mathbf{m}_i$ can be solved by successive Newton-Raphson iterations defined by 
             \[\mathbf a_i^{(k+1)} = \left[H f\left(\mathbf a_i^{(k)}\right)\right]^{-1}\left[f\left(\mathbf a_i^{(k)}\right)-\mathbf m_i\right] \]
             To do so, the Jacobian matrix is calculated as 
-        \[ J f\left(\mathbf a_i\right) = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L \left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf x_{-i}^T & 1 \end{array}\right] \]
+        \[ J\left( f\left(\mathbf a_i\right)\right) = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L \left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf x_{-i}^T & 1 \end{array}\right] \]
             With $2^{i-1}$ possible values for $\mathbf x_{-i}$, this can quickly become computationally expensive. Instead, with a series of values $\mathbf x_{-i}^{(k)}\sim \mathbf x_{-i}$, the simulated values 
             \[f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right] \]
             and
-            \[J f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
+            \[J\left( f\left(\mathbf a_i\right)\right) \approx \frac{1}{K}\sum_{k=1}^K L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
             can be used. \par
-            Though, in theory, $A$ should always exist, in practice numerical issues may compound to the point that the Newton-Raphson method won't converge. In this case, one can solve instead for $\mathbf m_i^*(\tau)$, where, for $\tau\in[0,1]$
+            Though, in theory, $A$ should always exist, in practice limited accuracy may dictate that Newton-Raphson method won't converge. In the simulation method in particular, if $K$ is not large enough, the equations can be very difficult or impossible to solve. When the intial problem can't be solved, besides increasing the simulation size or numerical accuracy, one can instead solve the relaxed problem  $f(\mathbf a)=\mathbf m_i^*(\tau)$, where, for $\tau\in[0,1]$
     \[\mathbf m_i^*(\tau) = (1-\tau)\mathbf m_i + \tau \left[ \begin{array}{cccc} 0 & \ldots & 0 & M_{ii} \end{array} \right]^T \]
             When $\tau=0$, this yields the original problem, while when $\tau=1$, it is treats $x_i$ as independent of $\mathbf x_{-i}$. The latter will always have the solution
             \[\mathbf a_i = \left[ \begin{array}{cccc} 0 & \ldots & 0 & \log\left(\frac{M_{ii}}{1-M_{ii}}\right) \end{array} \right]^T \]
@@ -224,36 +224,64 @@ This theory provides the tools to generate random binary knockoffs. This is done
         \[ M_L = \Sigma_L + \mathbf m_L\mathbf m_L^T\]
         So it must be the case that  
         \[\max\{0,\mathbf m_{L,i} + \mathbf m_{L,j} -1\} \leq \Sigma_{L,ij} + \mathbf m_i \mathbf m_j \leq \min\{\mathbf m_{L,i}, \mathbf m_{L,j}\} \]
-        However, since $\Sigma$ and $\mathbf m$ are from an actual random binary vector, the entries of $\Sigma$ satisfy this property by default. Only off diagonal entries which have had $\mathbf s$ subtracted from them could possibly violate this condition. Furthermore, for these entries, the goal is to make $\Sigma_{L,ij}$ as close to $0$ as possible. Since the condition is always satisfied in a neighborhood of $M_{L,ij} = \mathbf m_{L,j}\mathbf m_{L,i}$, this implies that this method should normally be satisfied. This is the principle advantage of targeting low covariance between $X_i$ and $\tilde X_i$ rathervh. For the SDP method though, the restriction can be built directly into the optimization problem, yielding the updated problem
+        However, since $\Sigma$ and $\mathbf m$ are from an actual random binary vector, the entries of $\Sigma$ satisfy this property by default. Only off diagonal entries which have had $\mathbf s$ subtracted from them could possibly violate this condition. Furthermore, for these entries, the goal is to make $\Sigma_{L,ij}$ as close to $0$ as possible. Since the condition is always satisfied in a neighborhood of $M_{L,ij} = \mathbf m_{L,j}\mathbf m_{L,i}$, this implies that this method should normally be satisfied. This is the principle advantage minimizing the $\textrm{cor}(x_i,\tilde x_i)$ rather than $\E[x_i\tilde x_i]$. For the SDP method though, the restriction can be built directly into the optimization problem. If $\sigma = \diag{\Sigma}^{\frac{1}{2}}$ is the vector of standard deviations, the updated problem is
             \begin{center}
                 \begin{tabular}{r l}
-                    minimize & $\|\mathbf 1-\diag{\Sigma}^{-1}\mathbf s\|_1$ \\
+                    minimize & $\|\mathbf 1-\diag{\sigma}^{-1}\mathbf s\|_1$ \\
                     subject to & $ 0 \preceq \diag{\mathbf s} \preceq 2\Sigma $ \\
                                & $ 2\mathbf m_i -1 \leq \Sigma_{ii}-\mathbf s_i + \mathbf m_i^2 \leq \mathbf m_i  \quad \forall i$
                 \end{tabular} 
             \end{center} 
-        replacing $\mathbf s$ with $\diag{\Sigma}^{-1}\mathbf s$ in the objective is to account for not normalizing $X$, as is usually done with the original knockoffs. \par
-        Once a proper cross moment matrix $M_L$ has been selected, one could simply apply the Newton-Raphson method to fit a corresponding $A$ matrix, and then generate $\mathbf{ \tilde x}$ sequentially conditioned on $x$, as $\tilde x_i \st \mathbf x,\tilde x_1,\ldots,\tilde x_{i-1}$. However, there are a few computational wrinkles which can be chosen to speed up the process:
+            the factor of $\diag{\sigma}^{-1}$ in the objective is to account for the $x_i$ not being normalized, as was the case with the original knockoffs. \par
+\subsubsection{Fitting via $\mu$-conditionals}
+        Once a proper cross moment matrix $M_L$ has been selected, the most obvious approach to generate knockoffs is to apply the Newton-Raphson method to fit the matching $A$ matrix. This can be used to generate $\mathbf{ \tilde x}$ sequentially conditioned on $x$, as $\tilde x_i \st \mathbf x,\tilde x_1,\ldots,\tilde x_{i-1}$. However, there are a few variations of this process which are preferable depending on the situation. 
         \begin{enumerate}
             \item If the whole $A$ matrix is being fit, then the upper half of the matrix, corresponding to $\mathbf x$, can be fit via the regression method, since they arise from real data $X$. This will tend to be quicker, since the calculation lends itself to parallel computing, and the data set will often be smaller than the space of all binary vectors or a simulation of that space. The second half of the matrix still must be fit via Newton-Raphson.
-            \item One can avoid fitting the first half of the $A$ matrix entirely though if performing Newton-Raphoson with by using the actual observed values in $X$ to simulate $\mathbf x$. This can be done by either bootstrapping rows from $X$ or using some number of copies of $X$ exactly. The advantage of this is the saved computation and that $\tilde x$ should be built to match the correlation condition more exactly. The downside is that, since these values won't be from the Ising model, the theoretical guarantee of a suitable $A$ may no longer hold.
-            \item As $A$ is being fit, even the parts of $\mathbf x_{-i}$ corresponding to knockoffs need not be  redrawn for each Newton-Raphson iteration or each successive $i$. This saves computation, and the multiplication
+            \item One can avoid fitting the first half of the $A$ matrix entirely though if performing Newton-Raphoson with by using the actual observed values in $X$ to simulate the first half of $\mathbf x_L$. This can be done by either bootstrapping rows from $X$ or using some number of copies of $X$ exactly. The advantage of this is the saved computation and that $\tilde x$ should be built to match the correlation condition more exactly. The downside is that, since these values won't be from the Ising model, the theoretical guarantee of a suitable $A$ may no longer hold. As well, if $n$ isn't big enough, the equations will quickly become difficult to solve, since the observed samples will provide a noisy and incomplete sample of the probability space.
+            \item As $A$ is being fit, even the parts of $\mathbf x_{-i}$ corresponding to knockoffs need not be redrawn for each Newton-Raphson iteration or each successive $i$. To fit $\mathbf a$ for feature $i$, the $\mathbf x_{-i}^{(k)}$ will remain constant; then, once $\mathbf a$ has been fit, the $x_i^{(k)}$ need only be drawn once. This saves computation, and the multiplication
             \[ \left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [\mathbf x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
-                doesn't need to be recomputed for each Newton-Raphson iteration, and the upper left portion, $\mathbf x_{-i}^{(k)}[\mathbf{x}_{-i}^{(k)}]^T$ doesn't have to be recomputed for successive $i$. This may result in slight deviations in any particular draw compounding into a more severe error over time.
+                needs only be partially recalculated for each Newton-Raphson iteration since the upper left portion, $\mathbf x_{-i}^{(k)}[\mathbf{x}_{-i}^{(k)}]^T$, won't change. This may result in slight deviations in any particular draw compounding into a more severe error over time.
+            \item As $p$ grows large, and $K$ necessarily along with it, the cost of calculating the Jacobian matrix grows far quicker than the cost of calculating $f(\mathbf a)$. This is since it has $O(Kp^2)$ complexity compared to $O(Kp)$ complexity for $f(\mathbf a)$. This can quickly become prohibitive. One might instead estimate the full Jacobian based on first differences, but in practice Anderson Mixing, a quasi-Newtonian method, works well. In general, quasi-Newtonian methods perform Newton-Raphson iterations, but replace the full inverted Jacobian with an approximation. {\bf MORE DETAILS} 
         \end{enumerate}
-        Combining the second and third trick leads to the final formulation. Rather then $K$ simulations of $\mathbf x$, the simulation is started with the matrix $X_F$, which is $X$ stacked up $m$ times to get $n\times m=K'\geq K$ rows. The following process is then repeated for $p<i\leq 2p$:
-        
-         \begin{itemize}
-             \item Where $\mathbf x_F^{(k)}$ is the $k$th row of $X_F$, the row $\mathbf a_i$ is fit by Newton-Raphson iterations with 
-             \[f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right] \]
-             and
-             \[J f\left(\mathbf a_i\right) \approx \frac{1}{K'}\sum_{k=1}^{K'} \mu'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_F^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_F^{(k)}]^T & 1 \end{array}\right] \]
-             \item If the iterations won't converge, the relaxed equation $f(\mathbf a_i)=m_i^*(\tau)$ is attempted instead for increasing values of $\tau$ until it converges.
-             \item After $\mathbf a_i$ is fit, a new column $X_i$ is drawn as independent Bernoulli with probability vector $\mu(X_F \mathbf a_i)$.   
-             \item $X_F$ is updated to 
-             \[ X_F = [X_F \; X_i] \]
-         \end{itemize}
-         At the end, the any $n$ rows of $X_F$ corresponding to the rows of $X$ can be taken as $X_L$. Any such set should have the desired distribution for $\tilde X$.
+        In practice, it seemed that combining the first, third, and fourth variation was the most successful technique. However, should $n$ be sufficiently large, the second variation also saves a lot of time. 
+
+\subsubsection{Fitting via Quadratic Programing}
+
+        Random binary knockoffs which produce the desired cross moment matrix $M_L$ need not arise from a generative model for $\mathbf{\tilde x}$ however. It is sufficient to have a random matrix $\tilde X \in \{0,1\}^{n\times p}$ such that 
+        \[ \E_{\tilde X}(X^T \tilde X) = \Sigma - \diag{s} \quad \& \quad \E_{\tilde X}(\tilde X^T \tilde X) = \Sigma\]
+        The simplest way to do this is based on a probability matrix $P\in (0,1)^{n\times p}$ where each $X_{ij}$ is drawn independently as $X_{ij}\sim\textrm{Bernoulli}(P_{ij})$. This requirement can be stated as the quadratic feasibility problem
+            \begin{center}
+                \begin{tabular}{r l}
+                    exists     & $P$ \\
+                    subject to & $X^TP=\Sigma-\diag{s} $ \\
+                               & $P^TP=\Sigma $ \\
+                               & $0 \leq P \leq 1$
+                \end{tabular} 
+            \end{center}
+        If such a matrix exists and can be found, then $\tilde X$ can easily be generated. However, the constraints likely result in infeasibility much of the time. Instead, one can try to minimize how far the expected moments given $P$ would be from those desired for $M_L$. Ideally, this would take the form
+            \begin{center}
+                \begin{tabular}{r l}
+                    minimize     & $\|X^TP-(\Sigma-\diag{s})\|_{fro}^2 + \|P^TP-\Sigma\|_{fro}^2 $\\
+                    subject to   & $ \mathbf 1^T P = \mathbf m_L $ \\
+                                 & $0 \leq P \leq 1$
+                \end{tabular} 
+            \end{center}
+            Here, the marginal distribution of $\tilde X_i$ will be the same as $X_i$, and the crossmoments shouldn't deviate to far from $M_L$. This problem can be stated as the quadratic program via the introduction of slack variables:
+            \begin{center}
+                \begin{tabular}{r l}
+                    minimize     & $\|W\|_{fro}^2 + \|V\|_{fro}^2 $ \\
+                    subject to   & $ X^TP-(\Sigma-\diag{s})\leq W $ \\
+                                 & $ P^TP-\Sigma \leq V $ \\
+                                 & $ \mathbf 1^T P = \mathbf m_L $ \\
+                                 & $0 \leq P \leq 1$
+                \end{tabular} 
+            \end{center}
+            Though there are nice tools and theory for solving quadratic programs, $n\times p$ would have to be fairly small for this optimization problem to be computationally reasonable in practice. Ideally, there would be a method to breakdown this problem into a series of smaller optimization problems which would yield the same solution. A optimistic numerical analyst would hope that iterating through the columns, optimizing each in individually, would achieve this. 
+
+            
+
+
+
 
 \section{Binary Knockoff Performance}
     To evaluate how useful these binary knockoffs will be in practice, it is useful to evaluate their empirical performance under simulation. 
