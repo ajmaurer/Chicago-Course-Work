@@ -80,11 +80,9 @@ def cutoff(array,min=0,max=1):
     cut_array = np.max((min*np.ones(shape),cut_array),axis=0)
     return cut_array
 
-
-
 class knockoff_net(object):
     """ Parent class for knockoff lasso and knockoff logistic regression. Defines everything besides fitting the particular GlmNet object """
-    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,method='fresh_sim',pseudocount=0,intercept=False):
+    def __init__(self,y,X,q,knockoff='binary',cov_method='equicor',randomize=False,MCsize=10000,method='fresh_sim',pseudocount=0,intercept=False,stacks=1):
         self.y      = y
         self.X      = normalize(X.astype(float),norm='l2',axis=0)
         self.X_orig = X
@@ -97,6 +95,7 @@ class knockoff_net(object):
         self.zerotol = 1E-5
         self.method = method
         self.pseudocount=pseudocount
+        self.stacks = stacks
         self.intercept = intercept 
 
     def _create_SDP(self):
@@ -370,7 +369,7 @@ class knockoff_net(object):
 
         # If we freshly simulated x, we need to draw ~x based on x
         if self.method=='fresh_sim': 
-            self.X_lrg = np.hstack((self.X_orig,np.empty((self.n,self.p))))
+            self.X_lrg = np.hstack((np.repeat(self.X_orig,self.stacks,0),np.empty((self.n*self.stacks,self.p))))
             for i in np.arange(self.p,2*self.p):
                 # need to make sure the knockoff isn't uniformly 0 or 1
                 count = 0

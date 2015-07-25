@@ -78,7 +78,7 @@ def bern_y(X,p1,base_prob=.25,beta_sd=1):
 
 def generate(input):
     """ Testing function, all parameters are in a single tuple """
-    seed,gen,p0,p1,method,MCsize= input
+    seed,gen,p0,p1,method,MCsize,stacks= input
     npran.seed(seed)
     if gen.lower() == "ising":
         X    = ising_X(p1+p0,1000)
@@ -95,7 +95,8 @@ def generate(input):
                               knockoff='binary',
                               method=method,
                               MCsize=MCsize,
-                              intercept=True
+                              intercept=True,
+                              stacks = stacks
                               )
     bin_logit.fit()
     ori_logit = ko.knockoff_logit(ybin,X,.2,
@@ -119,7 +120,8 @@ def generate(input):
                               knockoff='binary',
                               method=method,
                               MCsize=MCsize,
-                              intercept=True
+                              intercept=True,
+                              stacks = stacks
                               )
     bin_lasso.fit(bin_logit.X_lrg)
     ori_lasso = ko.knockoff_lasso(ynor,X,.2,
@@ -137,7 +139,7 @@ def generate(input):
     with open('data/lasso_test_'+str(p0+p1)+'.txt','a') as f:
         f.write("%d\t%s\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, bin_logit.M_distortion, np.mean(ko_corr), bin_FDR, bin_power, np.mean(ori_lasso.emp_ko_corr), ori_FDR, ori_power, corr))
 
-def batch_compare(b,p,p1s,gens,start_seed,method='fresh_sim',MCsize=100000,procs=4):
+def batch_compare(b,p,p1s,gens,start_seed,method='fresh_sim',MCsize=100000,stacks=1,procs=4):
     with open('data/backup_seeds.txt','r') as f:
         seeds = [int(seed) for seed in f.read().split()]
     inputs = []
@@ -145,7 +147,7 @@ def batch_compare(b,p,p1s,gens,start_seed,method='fresh_sim',MCsize=100000,procs
     for b in range(b):
         for p1 in p1s:
             for gen in gens:
-                inputs.append((seeds[i+start_seed],gen,p-p1,p1,method,MCsize))
+                inputs.append((seeds[i+start_seed],gen,p-p1,p1,method,MCsize,stacks))
                 i += 1
 
     pool = Pool(processes=procs)
