@@ -65,6 +65,7 @@
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem{example}[theorem]{Example}
+\DeclareMathOperator*{\argmin}{arg\min}
 
 \newcommand{\hwhead}[1]{#1 \hfill Aaron Maurer \vspace{2mm} \hrule \vspace{2mm}}
 
@@ -88,7 +89,7 @@
     \[ \tilde X^T\tilde X=G \textrm{ and } \tilde X^T X = G - \diag{\mathbf s}\]
     for some vector $s\in \R^p$ such that, where $\diag{G}$ is the vector made from the main diagonal of $G$, $\diag{G} - \mathbf s$ is small. Since $\tilde X_j$ and $X_j$ have relatively low correlation, as long as $X_j$ is created independently of $\mathbf y$, $\tilde X_j$ will have lower correlation with $\mathbf y$ than $X_j$. In the case where $X_j$ is uncorrelated with $\mathbf y$, $\tilde X_j$ will also be uncorrelated with $\mathbf y$. How these knockoffs are actually generated will be described shortly.\par
     The second step is to fit a series of Lasso model of $\mathbf y$ on the combined design matrix $X_L=[X \; \tilde X]$ so as to determine the largest value $\lambda$ at which the coefficient for each $X_j$ and $\tilde X_j$ is nonzero. The subscript $L$ refers to the large design matrix with both features and knockoffs. \footnote{Other statistics besides the $\lambda$s can also be used in the knockoff method, but are not considered in this paper} Recall, for a given $\lambda$, the estimated coefficient from the Lasso regression will be 
-    \[ \beta(\lambda) = \textrm{argmin}_\mathbf b \left\{\frac{1}{2}\|\mathbf y - X_L\mathbf b\|^2_2 + \lambda\|b\|_1 \right\}\]
+    \[ \beta(\lambda) = \argmin_\mathbf b \left\{\frac{1}{2}\|\mathbf y - X_L\mathbf b\|^2_2 + \lambda\|b\|_1 \right\}\]
     In the general case, the coefficient for one feature in a Lasso regression being first nonzero for a larger value of $\lambda$ than another feature is an indication that the first feature is a stronger predictor of the outcome than the second. Thus, since, by construction, the knockoff features are weaker predictors than the originals, we would expect the original features to have nonzero coefficients sooner than the knockoff features when the original is a valid predictor. On the other hand, since $\beta(\lambda)$ only depends on $X_L$ through the sufficient statistics $G_L=X_L^TX_L$ and $X_L^T\mathbf y$, for null predictors, the coefficients of the original features won't enter any sooner on average than knockoff feature. This can be seen by switching a null $X_j$ with $\tilde X_j$; by construction, $G_L$ will be unaltered, while $\E\left[X_L^T\mathbf y\right]$ will also be unchanged, since $\E[X_j^T\mathbf y]=\E[\tilde X_j^T\mathbf y]=0$. \par
    This observation leads to the final step. Let $Z_j$ be the largest $\lambda$ such that feature $j$ has a nonzero coefficient and $\tilde Z_j$ the largest $\lambda$ such that knockoff $j$ has a nonzero coefficient. Then, define $W_j$ as 
    \[ W_j = \begin{cases}   Z_j         &\mbox{if } Z_j>\tilde Z_j \\ 
@@ -149,7 +150,7 @@ The rest of this paper will be organized in the following fashion:
 
 \section{Issues With Deterministic Knockoffs} 
     The knockoff filter and $W$ statistics have a very natural extension to generalized linear models. Here, where $l(\beta\st X, \tilde X)$ is the log likelihood of coefficients $\beta$ given the model, the $L1$ regularized regression model will have estimated coefficient vector
-    \[ \beta(\lambda) = \textrm{argmin}_\mathbf b \left\{l(\beta\st X, \tilde X) + \lambda\|b\|_1 \right\}\]
+    \[ \beta(\lambda) = \argmin_\mathbf b \left\{l(\beta\st X, \tilde X) + \lambda\|b\|_1 \right\}\]
     The $Z_j$ and $\tilde Z_j$ are then, once again, the largest $\lambda$ such that the given original or knockoff feature has a positive coefficient, and then $W_j$ is constructed exactly as before. The problem with this is that if the given GLM doesn't have the same sufficient statistics as linear regression, there is no theoretical guarantee that the knockoff filter will control FDR. This is since, for null $X_j$, there is no theory to guarantee the $Z_j$ and $\tilde Z_j$ are exchangeable, and thus $W_j$ is not guaranteed to be symmetrically distributed around $0$. \par
     \begin{figure}[h]
         \begin{center}
@@ -202,13 +203,13 @@ Since multivariate normal distributions are easy to randomly draw from and defin
             When $\mu$ is the logistic link function $L$, this is
             \[ \mathbf m_i = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L\left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right] \]
             Where $c$ is the appropriate normalizing constant. Let us define the quantity on the right in the last line as $f(\mathbf a_i)$. This equation $f(\mathbf a_i)=\mathbf{m}_i$ can be solved by successive Newton-Raphson iterations defined by 
-            \[\mathbf a_i^{(k+1)} = \left[H f\left(\mathbf a_i^{(k)}\right)\right]^{-1}\left[f\left(\mathbf a_i^{(k)}\right)-\mathbf m_i\right] \]
-            To do so, the Jacobian matrix is calculated as 
-        \[ J\left( f\left(\mathbf a_i\right)\right) = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L \left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf x_{-i}^T & 1 \end{array}\right] \]
+            \[\mathbf a_i^{(k+1)} = \mathbf a_i^{(k)} - \left[J\left(\mathbf a_i^{(k)}\right) \right]^{-1}\left[f\left(\mathbf a_i^{(k)}\right)-\mathbf m_i\right] \]
+            where $J$ is the Jacobian of $f$. To do so, the Jacobian matrix is calculated as 
+        \[ J\left( \mathbf a_i\right) = \sum_{\mathbf x_{-i} \in \{0,1\}^{i-1}} \frac{1}{c}L \left(\mathbf x_{-i}^TA_{-i}\mathbf x_{-i}\right) L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf x_{-i}^T & 1 \end{array}\right] \]
             With $2^{i-1}$ possible values for $\mathbf x_{-i}$, this can quickly become computationally expensive. Instead, with a series of values $\mathbf x_{-i}^{(k)}\sim \mathbf x_{-i}$, the simulated values 
             \[f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right] \]
             and
-            \[J\left( f\left(\mathbf a_i\right)\right) \approx \frac{1}{K}\sum_{k=1}^K L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
+            \[J\left( \mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
             can be used. \par
             Though, in theory, $A$ should always exist, in practice limited accuracy may dictate that Newton-Raphson method won't converge. In the simulation method in particular, if $K$ is not large enough, the equations can be very difficult or impossible to solve. When the intial problem can't be solved, besides increasing the simulation size or numerical accuracy, one can instead solve the relaxed problem  $f(\mathbf a)=\mathbf m_i^*(\tau)$, where, for $\tau\in[0,1]$
     \[\mathbf m_i^*(\tau) = (1-\tau)\mathbf m_i + \tau \left[ \begin{array}{cccc} 0 & \ldots & 0 & M_{ii} \end{array} \right]^T \]
@@ -241,7 +242,20 @@ This theory provides the tools to generate random binary knockoffs. This is done
             \item As $A$ is being fit, even the parts of $\mathbf x_{-i}$ corresponding to knockoffs need not be redrawn for each Newton-Raphson iteration or each successive $i$. To fit $\mathbf a$ for feature $i$, the $\mathbf x_{-i}^{(k)}$ will remain constant; then, once $\mathbf a$ has been fit, the $x_i^{(k)}$ need only be drawn once. This saves computation, and the multiplication
             \[ \left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [\mathbf x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
                 needs only be partially recalculated for each Newton-Raphson iteration since the upper left portion, $\mathbf x_{-i}^{(k)}[\mathbf{x}_{-i}^{(k)}]^T$, won't change. This may result in slight deviations in any particular draw compounding into a more severe error over time.
-            \item As $p$ grows large, and $K$ necessarily along with it, the cost of calculating the Jacobian matrix grows far quicker than the cost of calculating $f(\mathbf a)$. This is since it has $O(Kp^2)$ complexity compared to $O(Kp)$ complexity for $f(\mathbf a)$. This can quickly become prohibitive. One might instead estimate the full Jacobian based on first differences, but in practice Anderson Mixing, a quasi-Newtonian method, works well. In general, quasi-Newtonian methods perform Newton-Raphson iterations, but replace the full inverted Jacobian with an approximation. {\bf MORE DETAILS} 
+            \item As $p$ grows large, and $K$ necessarily along with it, the cost of calculating the Jacobian matrix grows far quicker than the cost of calculating $f(\mathbf a)$. This is since it has $O(Kp^2)$ complexity compared to $O(Kp)$ complexity for $f(\mathbf a)$. This can quickly become prohibitive. One might instead estimate the full Jacobian based on first differences, but in practice Anderson Mixing, a quasi-Newtonian method, works well. In general, quasi-Newtonian methods perform Newton-Raphson iterations but replace the full inverted Jacobian at each itteration $k$ with an approximation $G_k$. Thus, to solve for a variable $\mathbf z$ such that $f(\mathbf z)=\mathbf 0$, the best approximation for the zero is updated as $\mathbf z_{k+1}=\mathbf z_k - G_k f(\mathbf{z}_k)$. \par
+    Anderson mixing does this implicitly, with no extra recalculation of $f$, by approximating $f$ with the affine space spanning the previous $m$ evaluations of $f$, at $\mathbf z_{k}$ through $\mathbf z_{k-m+1}$. The best approximation for $f(\mathbf z)=0$ in this space is defined by
+    \[ \mathbf \alpha = \argmin_{\|\mathbf w\|_1=1} \|\sum_{i=1}^m f(\mathbf z_{k-i+1}) w_i \|_2 \]
+    This leads to the updated approximation
+    \[ \mathbf z_{k+1} = \sum_{i=1}^{m} w_i \mathbf z_{k-i+1} \]
+    There is no explicit calculation of $G_k$ needed here, and to do so in practice would be slower. However, it's presence can be seen through an equivalent formulation. Let 
+    \[ \mathcal F = [(f(\mathbf z_k) - f(\mathbf z_{k-1})) \ldots (f(\mathbf z_k) - f(\mathbf z_{k-m}))] \]
+    and
+    \[ \mathcal Z = [(\mathbf z_k - \mathbf z_{k-1})\ldots (\mathbf z_k - \mathbf z_{k-m})] \]
+    This means $\mathbf \alpha$ is now
+    \[ \mathbf \alpha \; = \;\argmin_{\|\mathbf w\|_1=1} \|f(\mathbf z_{k}) - \mathcal  F \mathbf w\|_2\; = \;(\mathcal F^T \mathcal F)^{-1}\mathcal F^T\mathbf z_k \]
+    so 
+    \[ \mathbf z_{k+1} \;= \;\mathbf z_{k+1} - \mathcal Z \alpha\; = \;z_{k+1} + \mathcal Z(\mathcal F^T \mathcal F)^{-1}\mathcal F^T\mathbf z_k \]
+    Which yields the approximated inverse Jacobian $G_k= \mathcal Z(\mathcal F^T \mathcal F)^{-1}\mathcal F^T$
         \end{enumerate}
         In practice, it seemed that combining the first, third, and fourth variation was the most successful technique. However, should $n$ be sufficiently large, the second variation also saves a lot of time. 
 
@@ -270,13 +284,32 @@ This theory provides the tools to generate random binary knockoffs. This is done
             \begin{center}
                 \begin{tabular}{r l}
                     minimize     & $\|W\|_{fro}^2 + \|V\|_{fro}^2 $ \\
-                    subject to   & $ X^TP-(\Sigma-\diag{s})\leq W $ \\
-                                 & $ P^TP-\Sigma \leq V $ \\
+                    subject to   & $ -W \leq X^TP-(\Sigma-\diag{s})\leq W $ \\
+                                 & $ -V \leq P^TP-\Sigma \leq V $ \\
                                  & $ \mathbf 1^T P = \mathbf m_L $ \\
                                  & $0 \leq P \leq 1$
                 \end{tabular} 
             \end{center}
-            Though there are nice tools and theory for solving quadratic programs, $n\times p$ would have to be fairly small for this optimization problem to be computationally reasonable in practice. Ideally, there would be a method to breakdown this problem into a series of smaller optimization problems which would yield the same solution. A optimistic numerical analyst would hope that iterating through the columns, optimizing each in individually, would achieve this. 
+            Though there are nice tools and theory for solving quadratic programs, $n\times p$ would have to be fairly small for this optimization problem to be computationally reasonable in practice. Ideally, there would be a method to breakdown this problem into a series of smaller optimization problems which would yield the same solution. An optimist might hope that iterating through the columns of $P$, optimizing each to hit its desired crossmoments individually conditioned on the estimate of the rest of $P$, would achieve this. In practice, this does seem to yield reasonable results, and is far quicker than other methods for large $p$.In particular, this method seemed to work well:
+    \begin{enumerate}
+        \item Optimize initial $P_i$ as such that $X_j^T P_i = M_ij$ if $i\neq j$ and $X_i^T P_i = \sigma_i(1-s)$.   
+            \begin{center}
+                \begin{tabular}{r l}
+                    minimize     & $ \left(\frac{1}{n}X_i^T P_i - (M_{ij}-\sigma_i(1-s))\right)^2 + \sum_{i\neq j}(\frac{1}{n}X_j^T P_i - M_ij)^2$ \\
+                    subject to   & $ \frac{1}{n}\mathbf 1^T P_i = M_{ii} $ \\
+                                 & $0 \leq P_i \leq 1$
+                \end{tabular} 
+            \end{center}
+        \item Draw initial $\tilde X_i$ as independent Bernoulli with probability $P_i$.
+        \item Iterate through $1\leq i \leq p$, fitting new $P_i$ such that 
+            \begin{center}
+                \begin{tabular}{r l}
+                    minimize     & $ \left(\frac{1}{n}X_i^T P_i - (M_{ij}-\sigma_i(1-s))\right)^2 + \sum_{i\neq j}(\frac{1}{n}X_j^T P_i - M_ij)^2 + \sum_{i\neq j}(\frac{1}{n}\tilde X_j^T P_i - M_ij)^2$  \\
+                    subject to   & $ \frac{1}{n}\mathbf 1^T P_i = M_{ii} $ \\
+                                 & $0 \leq P_i \leq 1$
+                \end{tabular} 
+            \end{center}
+    \end{enumerate}
 
             
 
