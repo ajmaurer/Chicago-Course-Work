@@ -13,6 +13,11 @@
 % listings lets you stick in blocks of code
 % placeins defines "\FloatBarrier", which stops tables from moving around
 \usepackage{amsmath, amscd, amssymb, amsthm, multirow, multicol, enumerate, graphicx, listings, placeins, caption} 
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[style=numeric,backend=biber]{biblatex}
+\addbibresource{bibli.bib}
+
 \captionsetup{font={small,singlespacing},margin=1cm}
 \newcommand{\Z}{\mathbb{Z}}
 \newcommand{\R}{\mathbb{R}}
@@ -70,9 +75,52 @@
 \newcommand{\hwhead}[1]{#1 \hfill Aaron Maurer \vspace{2mm} \hrule \vspace{2mm}}
 
 \begin{document}
-\title{Using Probabilistic Knockoffs of Binary Variables to Control the False Discovery Rate}
-\author{Aaron Maurer}
-\maketitle
+
+\noindent
+\thispagestyle{empty}
+\underline{\bf Master's Paper of the Department of Statistics, the University of Chicago} 
+    \\~~(Internal document only, not for circulation) 
+
+\vspace{1.8in}
+\begin{center}
+    {\bf\LARGE Using Probabilistic Knockoffs of Binary Variables to Control the False Discovery Rate}
+
+    \vspace{1.4in}
+    {\Large Aaron Maurer}
+
+    \vspace{1.3in}
+    {\Large Advisor: Rina Foygel Barber }
+
+\end{center}
+
+\vspace{.6in}
+{\Large Approved} ~\underline{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+
+\vspace{.2in}
+{\Large Date} ~\underline{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+
+\vfill
+\begin{center}{\large August-31, 2015}\end{center}
+
+\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+
+\begin{abstract}
+
+    \vspace{7mm}\noindent  Variable selection for regression is a key problem in applied statistics. The knockoff filter method provides one method of variable selection for linear regression. It relies on generating 'knockoff' features, which replicate the correlation structure of the original variable; when the full path of LASSO regression is fit, the point at which a a null variable and its knockoff have nonzero coefficients will be exchangeable. However, for other GLMs, the method breaks down. I will provide an alternative method of randomly generating knockoffs for binary variables which will will satisfy the original correlation condition in expectation and offer improved performance for other GLMs. \end{abstract}
+
+\newpage
+\vspace{1.5in}
+\tableofcontents
+
+
+\newpage
+
+%\title{Using Probabilistic Knockoffs of Binary Variables to Control the False Discovery Rate}
+%\author{Aaron Maurer}
+%\maketitle
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
     Variable selection is an essential problem to fitting a regression model. For linear regression, the knockoff filter (Barber and Cand\`{e}s, 2014) offers a method of exact FDR control. However, the method as originally formulated does not extend to other generalized linear models such as logistic regression. This paper offers an extension of this method which will work with binary features in the context of linear regression, but also will extend to other GLMs.  
@@ -368,21 +416,13 @@ This theory provides the tools to generate random binary knockoffs. This is done
     \FloatBarrier
 
 \section{Discussion}
-    Binary knockoffs, as a practical tool for statistical inference, are still a work in progress. Currently, they work best for high values of $n$, for which the empirical cross-moment matrix deviates little, and relatively small values of $p$, for which the computational time is not prohibitive. Considering that FDR control in feature selection is most essential when $p$ is large, this is not a edifying state of affairs. However, the approach suggests paths forward to a much more complete tool. 
-    
-\subsection{Dealing With Small $n$}
-    With random generation of knockoffs, random variation from desired cross-moments is necessarily going to be an issue. However, there are likely ways to mitigate this problem by using multiple draws of $\tilde X$. For instance, if the $A$ or $P$ matrices were fit once, several draws of $\tilde X$ could be made from it, and a variable selection could be made for each of the corresponding $X_L$. Then these could be combined into a single variable selection, most obviously by selecting the variables which were selected for the majority of the $X_L$. 
-    
-\subsection{Computational Issues}
-    The biggest drawback of this method is its computational requirements. As $p$ increases, a larger and larger matrix $A$ must be fit for the Ising model as well as a larger $P$ for the quadratic program. For the Ising model, $K$ must similarly grow to provide accurate estimates of the probability space. This causes an explosion in computation time. Some of this can likely be mitigated by improvements in implementation, and the most time intensive issue, calculating $f(\mathbf a)$, can be easily parallelized. A simpler method would still be desirable though. A method based on optimizing each column of $P$ individually is thus appealing. Certainly, in cases such as the EM algorithm, methods have been developed which have strong guarantees for global optimization using such piecewise methods. If a similar development could be made here, or merely a method that hits the desired cross-moments more closely in practice, the result would be far more useful tool.
-
-\subsection{Random Binary Variables With Higher Order Interactions}
-    
-    
-    
-
- 
+    Binary knockoffs, as a practical tool for statistical inference, are still a work in progress. Currently, they provide approximate FDR control for LASSO and seem like they also provide approximate FDR control for logistic regression. However, there are no theoretical guarantees for logistic regression, and the quality of FDR control for LASSO depends on how far the realized cross-moment matrix deviates from the desired $M_L$. In cases where $n$ is large, this should only be a small issue, but for smaller $n$ FDR control fails in a meaningful way. As well, computational issues make binary knockoffs hard to generate for large $p$; as $p$ increases, the Ising model to generate the knockoffs gets rapidly more computationally intensive to fit, as do the methods based on quadratic programs. This leaves the method, as currently developed, only suitable for relatively high values of $n$ and low values of $p$. Considering FDR control for variable selection is most important for data sets with large $p$, this is not terribly satisfying. \par
+    However, this method, with the real possibility of extending the knockoff filter to GLMs, offers an interesting development if these issues can be resolved. For the issue with the deviation from the desired cross-moment matrix, a solution would likely take the form of an ensemble method. Rather than fit the $A$ and $P$ matrix to generate one $\tilde X$, several $\tilde X$ might be generated and used to make variable selections $S_m$. A finally variable selection $S$ could be made based on theses, perhaps only selecting the variables selected by the majority of the $S_m$. This, or some other sort of average across multiple realizations of $\tilde X$, could likely be used to dampen the effect of variance in the generation of $\tilde X$. This would at least make binary knockoffs reliable for Lasso. \par
+    The computational issues will likely be more difficult to deal with. As $p$ increases, a larger and larger matrix $A$ must be fit for the Ising model as well as a larger $P$ for the quadratic program. For the Ising model, the simulation size $K$ must similarly grow to provide accurate estimates of the probability space. This causes an explosion in computation time. Some of this can likely be mitigated by improvements in implementation, and the most time intensive issue, calculating $f(\mathbf a)$, can be easily parallelized. A less computationally intensive method to derive either $A$ or $P$ is necessary to make $p$ in the hundreds or thousands feasible. A method based on optimizing each column of $P$ individually is thus appealing. So far, only approximate solutions have resulted from this method. However, in similar situations methods, such as the EM algorithm, have been developed which have strong guarantees for global optimization using such piecewise optimization. If a similar development could be made here, or merely a method that hits the desired cross-moments more closely in practice, the result would be far more useful tool. \par
+    The final area of concern is how binary knockoffs will occur when the $X$ matrix is not fit well by the Ising model due to significant high order interactions. Hopefully, having matched the first and second moments of $X$, binary knockoffs will continue to provide reasonable FDR control. An avenue to deal with this though would be to explicitly model these higher order interactions. One might introduce higher order moments into the fitting of $\mu$-conditionals. For instance, if $A$ is a three dimensional matrix whose entry $a_{ijk}$ would be added to the linear predictor when $x_i=x_j=x_k=1$. Just as the $\mu$-conditionals are based on a regression of $X_i$ on $X_{1:i-1}$ with no interactions, this would be akin to adding two way interactions. This can be used to replicate arbitrary binary vectors to an arbitrary desired level of precision. However, in practice this has big limitations. For one, adding additional levels of interactions will make the computation much more difficult very quickly. As well, as far as generating knockoffs, it will become more and more difficult to reduce the correlation between $x_i$ and $\tilde x_i$ as higher order interactions are insisted on. Nonetheless, this may be an avenue for further investigation.
 
     
 
+\nocite{*}
+\printbibliography[heading=bibintoc]
 \end{document}
