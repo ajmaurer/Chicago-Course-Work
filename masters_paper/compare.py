@@ -152,3 +152,50 @@ def batch_compare(b,p,p1s,gens,start_seed,method='fresh_sim',MCsize=100000,procs
     pool.map(generate,inputs)
     pool.close()
 
+def distortion(input):
+    """ Testing function, all parameters are in a single tuple """
+    seed,p,n= input
+    npran.seed(seed)
+    X    = ising_X(p,n)
+    ybin = bern_y(X,1)
+
+    if   p<=10:
+        MCsize =10000
+    elif p<=20:
+        MCsize =30000
+    elif p<=30:     
+        MCsize =70000
+    elif p<=40:    
+        MCsize =100000
+    else:    
+        MCsize =150000
+
+    # Logit
+    bin_logit = ko.knockoff_logit(ybin,X,.2,
+                              knockoff='binary',
+                              method='fresh_sim',
+                              MCsize=MCsize,
+                              intercept=True
+                              )
+    bin_logit._binary_knockoff()
+
+    with open('data/distortion.txt','a') as f:
+        f.write("%d\t%d\t%d\t%.5f\n" % (seed, p, n, bin_logit.M_distortion))
+
+def batch_distortion(b,ps,ns,start_seed,procs=4):
+    with open('data/backup_seeds.txt','r') as f:
+        seeds = [int(seed) for seed in f.read().split()]
+    inputs = []
+    i = 0
+    for b in range(b):
+        for p in ps:
+            for n in ns:
+                inputs.append((seeds[i+start_seed],p,n))
+                i += 1
+
+    pool = Pool(processes=procs)
+    pool.map(distortion,inputs)
+    pool.close()
+
+
+
