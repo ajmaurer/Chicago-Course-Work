@@ -242,22 +242,22 @@ This theory provides the tools to generate random binary knockoffs. This is done
             \item As $A$ is being fit, even the parts of $\mathbf x_{-i}$ corresponding to knockoffs need not be redrawn for each Newton-Raphson iteration or each successive $i$. To fit $\mathbf a$ for feature $i$, the $\mathbf x_{-i}^{(k)}$ will remain constant; then, once $\mathbf a$ has been fit, the $x_i^{(k)}$ need only be drawn once. This saves computation, and the multiplication
             \[ \left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [\mathbf x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
                 needs only be partially recalculated for each Newton-Raphson iteration since the upper left portion, $\mathbf x_{-i}^{(k)}[\mathbf{x}_{-i}^{(k)}]^T$, won't change. This may result in slight deviations in any particular draw compounding into a more severe error over time.
-            \item As $p$ grows large, and $K$ necessarily along with it, the cost of calculating the Jacobian matrix grows far quicker than the cost of calculating $f(\mathbf a)$. This is since it has $O(Kp^2)$ complexity compared to $O(Kp)$ complexity for $f(\mathbf a)$. This can quickly become prohibitive. One might instead estimate the full Jacobian based on first differences, but in practice Anderson Mixing, a quasi-Newtonian method, works well. In general, quasi-Newtonian methods perform Newton-Raphson iterations but replace the full inverted Jacobian at each itteration $k$ with an approximation $G_k$. Thus, to solve for a variable $\mathbf z$ such that $f(\mathbf z)=\mathbf 0$, the best approximation for the zero is updated as $\mathbf z_{k+1}=\mathbf z_k - G_k f(\mathbf{z}_k)$. \par
-    Anderson mixing does this implicitly, with no extra recalculation of $f$, by approximating $f$ with the affine space spanning the previous $m$ evaluations of $f$, at $\mathbf z_{k}$ through $\mathbf z_{k-m+1}$. The best approximation for $f(\mathbf z)=0$ in this space is defined by
-    \[ \mathbf \alpha = \argmin_{\|\mathbf w\|_1=1} \|\sum_{i=1}^m f(\mathbf z_{k-i+1}) w_i \|_2 \]
+            \item As $p$ grows large, and $K$ necessarily along with it, the cost of calculating the Jacobian matrix grows far quicker than the cost of calculating $f(\mathbf a)$. This is since it has $O(Kp^2)$ complexity compared to $O(Kp)$ complexity for $f(\mathbf a)$, quickly becoming prohibitive. One might instead estimate the full Jacobian based on first differences, but in practice an even simpler method called Anderson mixing, which avoids additional computation of $f(\mathbf a)$, works well. Anderson mixing is one of several related quasi-Newtonian methods, which performs Newton-Raphson iteration $k$ with an approximation of the inverted inverted Jacobian labeled $G_k$. Thus, to solve for a variable $\mathbf z$ such that $f(\mathbf z)=\mathbf 0$, the best approximation for the zero is updated as $\mathbf z_{k+1}=\mathbf z_k - G_k f(\mathbf{z}_k)$ at each iteration. \par
+    Anderson mixing does this implicitly, with no extra recalculation of $f$, by approximating $f$ with the affine space spanning the previous $m$ evaluations of $f$. These values are $f(\mathbf z_{k})$ through $f(\mathbf z_{k-m+1})$. The best approximation for $f(\mathbf z)=0$ in the affine space which spans them is defined by
+    \[ \mathbf \alpha = \argmin_{\mathbf w:\, \sum_{i=1}^m w_i=1} \left\|\sum_{i=1}^m  w_i f(\mathbf z_{k-i+1}) \right\|_2 \]
     This leads to the updated approximation
-    \[ \mathbf z_{k+1} = \sum_{i=1}^{m} w_i \mathbf z_{k-i+1} \]
-    There is no explicit calculation of $G_k$ needed here, and to do so in practice would be slower. However, it's presence can be seen through an equivalent formulation. Let 
-    \[ \mathcal F = [(f(\mathbf z_k) - f(\mathbf z_{k-1})) \ldots (f(\mathbf z_k) - f(\mathbf z_{k-m}))] \]
+    \[ \mathbf z_{k+1} = \sum_{i=1}^{m} \alpha_{i} \mathbf z_{k-i+1} \]
+    $G_k$ doesn't need to be calculated here, and the quickest implementation finds $\alpha$ without calculating it. However, it's presence can be seen through an equivalent formulation. Let $\Delta \mathbf f_i = f(\mathbf z_k) - f(\mathbf z_{k-i})$, $\Delta \mathbf z_i = \mathbf z_k - \mathbf z_{k-i}$, 
+    \[ \mathcal F = [\Delta \mathbf f_1 \ldots \Delta \mathbf f_{m-1}] \]
     and
-    \[ \mathcal Z = [(\mathbf z_k - \mathbf z_{k-1})\ldots (\mathbf z_k - \mathbf z_{k-m})] \]
-    This means $\mathbf \alpha$ is now
-    \[ \mathbf \alpha \; = \;\argmin_{\|\mathbf w\|_1=1} \|f(\mathbf z_{k}) - \mathcal  F \mathbf w\|_2\; = \;(\mathcal F^T \mathcal F)^{-1}\mathcal F^T\mathbf z_k \]
+    \[ \mathcal Z = [\Delta \mathbf z_1 \ldots \Delta \mathbf z_{m-1}] \]
+    This means that $\mathbf\alpha$ has been replaced by $\mathbf\theta$ such that
+    \[ \mathbf \theta \; = \;\argmin_{\mathbf w} \left\|f(\mathbf z_{k}) - \mathcal  F \mathbf w\right\|_2\; = \;(\mathcal F^T \mathcal F)^{-1}\mathcal F^Tf(\mathbf z_k) \]
     so 
-    \[ \mathbf z_{k+1} \;= \;\mathbf z_{k+1} - \mathcal Z \alpha\; = \;z_{k+1} + \mathcal Z(\mathcal F^T \mathcal F)^{-1}\mathcal F^T\mathbf z_k \]
+    \[ \mathbf z_{k+1} \;= \;\mathbf z_{k} - \mathcal Z \mathbf \theta\; = \; \mathbf z_{k} - \mathcal Z(\mathcal F^T \mathcal F)^{-1}\mathcal F^T f(\mathbf z_k) \]
     Which yields the approximated inverse Jacobian $G_k= \mathcal Z(\mathcal F^T \mathcal F)^{-1}\mathcal F^T$
         \end{enumerate}
-        In practice, it seemed that combining the first, third, and fourth variation was the most successful technique. However, should $n$ be sufficiently large, the second variation also saves a lot of time. 
+        In practice, it seemed that combining the first, third, and fourth of these variations leads to the most successful technique. However, should $n$ be large enough to provide a good approximation of the probability space, the second variation also saves a lot of time. 
 
 \subsubsection{Fitting via Quadratic Programing}
 
@@ -272,7 +272,7 @@ This theory provides the tools to generate random binary knockoffs. This is done
                                & $0 \leq P \leq 1$
                 \end{tabular} 
             \end{center}
-        If such a matrix exists and can be found, then $\tilde X$ can easily be generated. However, the constraints likely result in infeasibility much of the time. Instead, one can try to minimize how far the expected moments given $P$ would be from those desired for $M_L$. Ideally, this would take the form
+        If such a matrix exists and can be found, then $\tilde X$ can easily be generated. However, the constraints likely result in infeasibility much of the time. Instead, one can try to minimize how far the expected moments given $P$ would be from those desired for $M_L$. This would take the form
             \begin{center}
                 \begin{tabular}{r l}
                     minimize     & $\|X^TP-(\Sigma-\diag{s})\|_{fro}^2 + \|P^TP-\Sigma\|_{fro}^2 $\\
@@ -290,12 +290,12 @@ This theory provides the tools to generate random binary knockoffs. This is done
                                  & $0 \leq P \leq 1$
                 \end{tabular} 
             \end{center}
-            Though there are nice tools and theory for solving quadratic programs, $n\times p$ would have to be fairly small for this optimization problem to be computationally reasonable in practice. Ideally, there would be a method to breakdown this problem into a series of smaller optimization problems which would yield the same solution. An optimist might hope that iterating through the columns of $P$, optimizing each to hit its desired crossmoments individually conditioned on the estimate of the rest of $P$, would achieve this. In practice, this does seem to yield reasonable results, and is far quicker than other methods for large $p$.In particular, this method seemed to work well:
+            Though there are nice tools and theory for solving quadratic programs, $n\times p$ would have to be fairly small for this optimization problem to be computationally reasonable in practice. Ideally, there would be a method to breakdown this problem into a series of smaller optimization problems which would yield the same solution. An optimist might hope that iterating through the columns of $P$, optimizing each to hit its desired crossmoments individually conditioned on the estimate of the rest of $P$, would achieve this. In practice, this does seem to yield reasonable results, and is far quicker than other methods for large $p$. In particular, the following method seemed to work well:
     \begin{enumerate}
-        \item Optimize initial $P_i$ as such that $X_j^T P_i = M_ij$ if $i\neq j$ and $X_i^T P_i = \sigma_i(1-s)$.   
+        \item Optimize initial $P_i$ as such that $X_j^T P_i = M_{ij}$ if $i\neq j$ and $X_i^T P_i = \sigma_i(1-s)$.   
             \begin{center}
                 \begin{tabular}{r l}
-                    minimize     & $ \left(\frac{1}{n}X_i^T P_i - (M_{ij}-\sigma_i(1-s))\right)^2 + \sum_{i\neq j}(\frac{1}{n}X_j^T P_i - M_ij)^2$ \\
+                    minimize     & $ \left(\frac{1}{n}X_i^T P_i - (M_{ij}-\sigma_i(1-s))\right)^2 + \sum_{i\neq j}(\frac{1}{n}X_j^T P_i - M_{ij})^2$ \\
                     subject to   & $ \frac{1}{n}\mathbf 1^T P_i = M_{ii} $ \\
                                  & $0 \leq P_i \leq 1$
                 \end{tabular} 
@@ -304,22 +304,75 @@ This theory provides the tools to generate random binary knockoffs. This is done
         \item Iterate through $1\leq i \leq p$, fitting new $P_i$ such that 
             \begin{center}
                 \begin{tabular}{r l}
-                    minimize     & $ \left(\frac{1}{n}X_i^T P_i - (M_{ij}-\sigma_i(1-s))\right)^2 + \sum_{i\neq j}(\frac{1}{n}X_j^T P_i - M_ij)^2 + \sum_{i\neq j}(\frac{1}{n}\tilde X_j^T P_i - M_ij)^2$  \\
+                    minimize     & $ \left(\frac{1}{n}X_i^T P_i - (M_{ij}-\sigma_i(1-s))\right)^2 + \sum_{i\neq j}(\frac{1}{n}X_j^T P_i - M_{ij})^2 + \sum_{i\neq j}(\frac{1}{n}\tilde X_j^T P_i - M_{ij})^2$  \\
                     subject to   & $ \frac{1}{n}\mathbf 1^T P_i = M_{ii} $ \\
                                  & $0 \leq P_i \leq 1$
                 \end{tabular} 
             \end{center}
+            After each $P_i$ is fit, redraw $\tilde X_i$ as independent Bernoulli with probability $P_i$.
     \end{enumerate}
-
-            
-
-
-
+    Drawing the $\tilde X_i$ after each step, rather than just leaving the $P_i$, seems counter intuitive, but under experimentation, it seemed to provide better results. As well, though the third step may be repeated several times, in practice this didn't lead to improvement. 
 
 \section{Binary Knockoff Performance}
-    To evaluate how useful these binary knockoffs will be in practice, it is useful to evaluate their empirical performance under simulation. 
+    While the theory for original knockoffs and random binary variable generation suggests at how the binary knockoffs should perform, seeing their performance in practice still provides invaluable insight to their uses and limitations. There are three major areas in which this is useful; how well do the binary knockoffs' empirical cross moment matrices converge to their expectation, how well is FDR controlled for linear regression, and how well, if at all, is FDR controlled for other GLMs?
 
-\subsection{Convergence to Theoretical Covariance} 
+\subsection{Convergence to Theoretical Crossmoments} 
+    \FloatBarrier
+        In a certain sense, the question of the convergence of the binary knockoffs' empirical crossmoments is the least interesting of these questions. Assuming the Ising model coefficient $A$ or the probability matrix $P$ was successfully fit, the crossmoment matrices' will converge to their expectation in probability for increasingly large values of $n$. However, especially with the limited numerical accuracy available to fit $A$ or $P$, the rate at which this convergence occurs and the size of the deviation is an issue of paramount importance. The original knockoff theory only provides guarantees when the crossmoments are replicated exactly. Thus, further examination of this convergence for various $n$ and $p$ is essential.
 
+    \FloatBarrier
+\subsection{Performance in Linear Regression} 
+    \FloatBarrier
+    
+    \begin{figure}[h]
+        \begin{center}
+        \includegraphics[width=14cm]{images/lasso_FDR_power_50}
+    \end{center}
+    \caption{The mean FDR and power of binary and original knockoffs. Taken over $200$ simulations of linear regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ generated from Ising model while $y$ normally distributed about $X\beta$.}  
+    \end{figure}
+
+    \begin{figure}[h]
+        \begin{center}
+        \includegraphics[width=7cm]{images/lasso_corr_50}
+    \end{center}
+    \caption{The mean correlation between variables selected using binary and original knockoffs. Taken over $200$ simulations of linear regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ generated from Ising model while $y$ normally distributed about $X\beta$.}  
+    \end{figure}
+
+    \FloatBarrier
+\subsection{Performance in Logistic Regression} 
+    \FloatBarrier
+    \begin{figure}[h]
+        \begin{center}
+        \includegraphics[width=14cm]{images/logit_FDR_power_50}
+    \end{center}
+    \caption{The mean FDR and power of binary and original knockoffs. Taken over $200$ simulations of logistic regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ generated from Ising model while $y$ Bernoulli with $p=L(X\beta)$.}  
+    \end{figure}
+
+    \begin{figure}[h]
+        \begin{center}
+        \includegraphics[width=7cm]{images/logit_corr_50}
+    \end{center}
+    \caption{The mean correlation between variables selected using binary and original knockoffs. Taken over $200$ simulations of logistic regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ generated from Ising model while $y$ Bernoulli with $p=L(X\beta)$.}  
+    \end{figure}
+
+    \FloatBarrier
+
+\section{Discussion}
+    Binary knockoffs, as a practical tool for statistical inference, are still a work in progress. Currently, they work best for high values of $n$, for which the empirical crossmoment matrix deviates little, and relatively small values of $p$, for which the computational time is not prohibitive. Considering that FDR control in feature selection is most essential when $p$ is large, this is not a edifying state of affairs. However, the approach suggests paths forward to a much more complete tool. 
+    
+\subsection{Dealing With Small $n$}
+    With random generation of knockoffs, random variation from desired crossmoments is necessarily going to be an issue. However, there are likely ways to mitigate this problem by using multiple draws of $\tilde X$. For instance, if the $A$ or $P$ matrices were fit once, several draws of $\tilde X$ could be made from it, and a variable selection could be made for each of the corresponding $X_L$. Then these could be combined into a single variable selection, most obviously by selecting the variables which were selected for the majority of the $X_L$. 
+    
+\subsection{Computational Issues}
+    The biggest drawback of this method is its computational requirements. As $p$ increases, a larger and larger matrix $A$ must be fit for the Ising model as well as a larger $P$ for the quadratic program. For the Ising model, $K$ must similarly grow to provide accurate estimates of the probability space. This causes an explosion in computation time. Some of this can likely be mitigated by improvements in implementation, and the most time intensive issue, calculating $f(\mathbf a)$, can be easily parallelized. A simpler method would still be desirable though. A method based on optimizing each column of $P$ individually is thus appealing. Certainly, in cases such as the EM algorithm, methods have been developed which have strong guarantees for global optimization using such piecewise methods. If a similar development could be made here, or merely a method that hits the desired crossmoments more closely in practice, the result would be far more useful tool.
+
+\subsection{Random Binary Variables With Higher Order Interactions}
+    
+    
+    
+
+ 
+
+    
 
 \end{document}
