@@ -78,15 +78,15 @@ def bern_y(X,p1,base_prob=.25,beta_sd=1):
 
 def generate(input):
     """ Testing function, all parameters are in a single tuple """
-    seed,gen,p0,p1,method,MCsize= input
+    seed,gen,p0,p1,n,method,MCsize= input
     npran.seed(seed)
     if gen.lower() == "ising":
-        X    = ising_X(p1+p0,1000)
+        X    = ising_X(p1+p0,n)
         ynor = norm_y(X,p1)
     elif gen.lower() == "genetic":
         genes = np.genfromtxt('data/SNPdata.txt', delimiter=',')
         np.place(genes,genes!=0,1)
-        X = given_X(p1+p0,1000,genes)
+        X = given_X(p1+p0,n,genes)
     ybin = bern_y(X,p1)
     ynor = norm_y(X,p1)
 
@@ -111,8 +111,8 @@ def generate(input):
     corr      = np.corrcoef(ori_logit.S,bin_logit.S)[0,1]
     ko_corr = [cor for cor in bin_logit.emp_ko_corr if not np.isnan(cor)]
 
-    with open('data/logit_test_'+str(p0+p1)+'.txt','a') as f:
-        f.write("%d\t%s\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, bin_logit.M_distortion, np.mean(ko_corr), bin_FDR, bin_power, np.mean(ori_logit.emp_ko_corr), ori_FDR, ori_power, corr))
+    with open('data/logit_test_'+str(p0+p1)+'_w_n.txt','a') as f:
+        f.write("%d\t%s\t%d\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, n, bin_logit.M_distortion, np.mean(ko_corr), bin_FDR, bin_power, np.mean(ori_logit.emp_ko_corr), ori_FDR, ori_power, corr))
 
     # LASSO
     bin_lasso = ko.knockoff_lasso(ynor,X,.2,
@@ -134,8 +134,8 @@ def generate(input):
     ori_power = np.dot(ori_lasso.S,trueS)  /max(p1,1)
     corr      = np.corrcoef(ori_lasso.S,bin_lasso.S)[0,1]
 
-    with open('data/lasso_test_'+str(p0+p1)+'.txt','a') as f:
-        f.write("%d\t%s\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, bin_logit.M_distortion, np.mean(ko_corr), bin_FDR, bin_power, np.mean(ori_lasso.emp_ko_corr), ori_FDR, ori_power, corr))
+    with open('data/lasso_test_'+str(p0+p1)+'_w_n.txt','a') as f:
+        f.write("%d\t%s\t%d\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n" % (seed, gen, p1, n, bin_logit.M_distortion, np.mean(ko_corr), bin_FDR, bin_power, np.mean(ori_lasso.emp_ko_corr), ori_FDR, ori_power, corr))
 
 def batch_compare(b,p,p1s,gens,start_seed,method='fresh_sim',MCsize=100000,procs=4):
     with open('data/backup_seeds.txt','r') as f:

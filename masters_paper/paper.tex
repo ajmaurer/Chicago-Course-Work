@@ -215,13 +215,13 @@ Since multivariate normal distributions are easy to randomly draw from and defin
     \[\mathbf m_i^*(\tau) = (1-\tau)\mathbf m_i + \tau \left[ \begin{array}{cccc} 0 & \ldots & 0 & M_{ii} \end{array} \right]^T \]
             When $\tau=0$, this yields the original problem, while when $\tau=1$, it is treats $x_i$ as independent of $\mathbf x_{-i}$. The latter will always have the solution
             \[\mathbf a_i = \left[ \begin{array}{cccc} 0 & \ldots & 0 & \log\left(\frac{M_{ii}}{1-M_{ii}}\right) \end{array} \right]^T \]
-            The hope is that for some $\tau$ close to $0$, convergence can be achieved, only causing a slight distortion from the desired cross moments.
+            The hope is that for some $\tau$ close to $0$, convergence can be achieved, only causing a slight distortion from the desired cross-moments.
 
 \subsection{Generating Binary Knockoffs}
 This theory provides the tools to generate random binary knockoffs. This is done is done sequentially as two steps, the first of which is to come up with the target covariance matrix $\Sigma_L$ for $\mathbf x_L = [\mathbf x\; \mathbf{\tilde x}]$. This is extremely similar, though not identical, to the method with the original knockoffs, where $X_L^TX_L$ after normalization was targeted. However, much the same method as before can be used. Let the vector of empirical means of the columns of $X$ is $\mathbf m = \frac{1}{n}X^T\mathbf 1$ and the empirical covariance matrix of $X$ is $\Sigma = \frac{1}{n}X^TX - \mathbf{m}\mathbf{m}^T$. Much as before with the original knockoffs, both the equi-correlated and SDP method can be used to select  $\mathbf s$  such that $\diag{\Sigma}-\mathbf s$ is small and 
         \[ \Sigma_L = \left[\begin{array}{cc}  \Sigma & \Sigma - \diag{\mathbf s }\\ \Sigma - \diag{\mathbf s} & \Sigma \end{array}\right] \succeq 0 \]
     While with the original knockoffs, the result was small values for $X_i^T\tilde X_i$, now the result is low covariance between $x_i$ and $\tilde x_i$.\par
-    Additionally though, the moment condition must hold for $\Sigma_L$ to correspond to a proper random binary vector. If $\mathbf m_L = \E\left(\mathbf x_L\right) = [\mathbf m \; \mathbf m]$, then the desired cross moment matrix of the joint distribution is 
+    Additionally though, the moment condition must hold for $\Sigma_L$ to correspond to a proper random binary vector. If $\mathbf m_L = \E\left(\mathbf x_L\right) = [\mathbf m \; \mathbf m]$, then the desired cross-moment matrix of the joint distribution is 
         \[ M_L = \Sigma_L + \mathbf m_L\mathbf m_L^T\]
         So it must be the case that  
         \[\max\{0,\mathbf m_{L,i} + \mathbf m_{L,j} -1\} \leq \Sigma_{L,ij} + \mathbf m_i \mathbf m_j \leq \min\{\mathbf m_{L,i}, \mathbf m_{L,j}\} \]
@@ -235,7 +235,7 @@ This theory provides the tools to generate random binary knockoffs. This is done
             \end{center} 
             the factor of $\diag{\sigma}^{-1}$ in the objective is to account for the $x_i$ not being normalized, as was the case with the original knockoffs. \par
 \subsubsection{Fitting via $\mu$-conditionals}
-        Once a proper cross moment matrix $M_L$ has been selected, the most obvious approach to generate knockoffs is to apply the Newton-Raphson method to fit the matching $A$ matrix. This can be used to generate $\mathbf{ \tilde x}$ sequentially conditioned on $x$, as $\tilde x_i \st \mathbf x,\tilde x_1,\ldots,\tilde x_{i-1}$. However, there are a few variations of this process which are preferable depending on the situation. 
+        Once a proper cross-moment matrix $M_L$ has been selected, the most obvious approach to generate knockoffs is to apply the Newton-Raphson method to fit the matching $A$ matrix for the Ising model. This can be used to generate $\mathbf{ \tilde x}$ sequentially conditioned on $x$, as $\tilde x_i \st \mathbf x,\tilde x_1,\ldots,\tilde x_{i-1}$. However, there are a few variations of this process which are preferable depending on the situation. 
         \begin{enumerate}
             \item If the whole $A$ matrix is being fit, then the upper half of the matrix, corresponding to $\mathbf x$, can be fit via the regression method, since they arise from real data $X$. This will tend to be quicker, since the calculation lends itself to parallel computing, and the data set will often be smaller than the space of all binary vectors or a simulation of that space. The second half of the matrix still must be fit via Newton-Raphson.
             \item One can avoid fitting the first half of the $A$ matrix entirely though if performing Newton-Raphoson with by using the actual observed values in $X$ to simulate the first half of $\mathbf x_L$. This can be done by either bootstrapping rows from $X$ or using some number of copies of $X$ exactly. The advantage of this is the saved computation and that $\tilde x$ should be built to match the correlation condition more exactly. The downside is that, since these values won't be from the Ising model, the theoretical guarantee of a suitable $A$ may no longer hold. As well, if $n$ isn't big enough, the equations will quickly become difficult to solve, since the observed samples will provide a noisy and incomplete sample of the probability space.
@@ -261,7 +261,7 @@ This theory provides the tools to generate random binary knockoffs. This is done
 
 \subsubsection{Fitting via Quadratic Programing}
 
-        Random binary knockoffs which produce the desired cross moment matrix $M_L$ need not arise from a generative model for $\mathbf{\tilde x}$ however. It is sufficient to have a random matrix $\tilde X \in \{0,1\}^{n\times p}$ such that 
+        Random binary knockoffs which produce the desired cross-moment matrix $M_L$ need not arise from a generative model for $\mathbf{\tilde x}$ however. It is sufficient to have a random matrix $\tilde X \in \{0,1\}^{n\times p}$ such that 
         \[ \E_{\tilde X}(X^T \tilde X) = \Sigma - \diag{s} \quad \& \quad \E_{\tilde X}(\tilde X^T \tilde X) = \Sigma\]
         The simplest way to do this is based on a probability matrix $P\in (0,1)^{n\times p}$ where each $X_{ij}$ is drawn independently as $X_{ij}\sim\textrm{Bernoulli}(P_{ij})$. This requirement can be stated as the quadratic feasibility problem
             \begin{center}
@@ -280,7 +280,7 @@ This theory provides the tools to generate random binary knockoffs. This is done
                                  & $0 \leq P \leq 1$
                 \end{tabular} 
             \end{center}
-            Here, the marginal distribution of $\tilde X_i$ will be the same as $X_i$, and the crossmoments shouldn't deviate to far from $M_L$. This problem can be stated as the quadratic program via the introduction of slack variables:
+            Here, the marginal distribution of $\tilde X_i$ will be the same as $X_i$, and the cross-moments shouldn't deviate to far from $M_L$. This problem can be stated as the quadratic program via the introduction of slack variables:
             \begin{center}
                 \begin{tabular}{r l}
                     minimize     & $\|W\|_{fro}^2 + \|V\|_{fro}^2 $ \\
@@ -290,7 +290,7 @@ This theory provides the tools to generate random binary knockoffs. This is done
                                  & $0 \leq P \leq 1$
                 \end{tabular} 
             \end{center}
-            Though there are nice tools and theory for solving quadratic programs, $n\times p$ would have to be fairly small for this optimization problem to be computationally reasonable in practice. Ideally, there would be a method to breakdown this problem into a series of smaller optimization problems which would yield the same solution. An optimist might hope that iterating through the columns of $P$, optimizing each to hit its desired crossmoments individually conditioned on the estimate of the rest of $P$, would achieve this. In practice, this does seem to yield reasonable results, and is far quicker than other methods for large $p$. In particular, the following method seemed to work well:
+            Though there are nice tools and theory for solving quadratic programs, $n\times p$ would have to be fairly small for this optimization problem to be computationally reasonable in practice. Ideally, there would be a method to breakdown this problem into a series of smaller optimization problems which would yield the same solution. An optimist might hope that iterating through the columns of $P$, optimizing each to hit its desired cross-moments individually conditioned on the estimate of the rest of $P$, would achieve this. In practice, this does seem to yield reasonable results, and is far quicker than other methods for large $p$. In particular, the following method seemed to work well:
     \begin{enumerate}
         \item Optimize initial $P_i$ as such that $X_j^T P_i = M_{ij}$ if $i\neq j$ and $X_i^T P_i = \sigma_i(1-s)$.   
             \begin{center}
@@ -314,57 +314,67 @@ This theory provides the tools to generate random binary knockoffs. This is done
     Drawing the $\tilde X_i$ after each step, rather than just leaving the $P_i$, seems counter intuitive, but under experimentation, it seemed to provide better results. As well, though the third step may be repeated several times, in practice this didn't lead to improvement. 
 
 \section{Binary Knockoff Performance}
-    While the theory for original knockoffs and random binary variable generation suggests at how the binary knockoffs should perform, seeing their performance in practice still provides invaluable insight to their uses and limitations. There are three major areas in which this is useful; how well do the binary knockoffs' empirical cross moment matrices converge to their expectation, how well is FDR controlled for linear regression, and how well, if at all, is FDR controlled for other GLMs?
+    While the theory for original knockoffs and random binary variable generation suggests at how the binary knockoffs should perform, seeing their performance in practice still provides invaluable insight to their uses and limitations. There are three major areas in which this is useful; how well do the binary knockoffs' empirical cross-moment matrices converge to their expectation, how well is FDR controlled for linear regression, and how well, if at all, is FDR controlled for other GLMs?
 
-\subsection{Convergence to Theoretical Crossmoments} 
+\subsection{Convergence to Theoretical cross-moments} 
     \FloatBarrier
-        In a certain sense, the question of the convergence of the binary knockoffs' empirical crossmoments is the least interesting of these questions. Assuming the Ising model coefficient $A$ or the probability matrix $P$ was successfully fit, the crossmoment matrices' will converge to their expectation in probability for increasingly large values of $n$. However, especially with the limited numerical accuracy available to fit $A$ or $P$, the rate at which this convergence occurs and the size of the deviation is an issue of paramount importance. The original knockoff theory only provides guarantees when the crossmoments are replicated exactly. Thus, further examination of this convergence for various $n$ and $p$ is essential.
+        In a certain sense, the question of the convergence of the binary knockoffs' empirical cross-moments is the least interesting of these questions. Assuming the Ising model coefficient $A$ or the probability matrix $P$ was successfully fit, the cross-moment matrices' will converge to their expectation in probability for increasingly large values of $n$. However, especially with the limited numerical accuracy available to fit $A$ or $P$, the rate at which this convergence occurs and the size of the deviation is an issue of paramount importance. As is seen in Figure 3, this convergence occurs at similar rates irrespective of $p$, with fairly meaningful deviation until $n$ has reached a few thousand.
+    \begin{figure}[h]
+        \begin{center}
+        \includegraphics[width=9cm]{images/sigma_fit}
+    \end{center}
+    \caption{Measures how much far the empirical cross-moment matrix $\frac{1}{n}X_L^TX_L$ is from the desired cross moment matrix $M_L$ for random binary knockoffs for various $n$ and $p$, averaged over $50$ simulations of $X$ from the Ising model. Where $W = \Sigma - \diag{\mathbf s} + \mathbf m \mathbf m^T$ is the top quadrant of $M_L$, deviation is calculated as \\ $(\|X^T\tilde X - W\|_{fro} + \|\tilde X^T \tilde X - M\|_{fro})/(\|W\|_{fro}+\|M\|_{fro})$}  
+    \end{figure}
+
 
     \FloatBarrier
 \subsection{Performance in Linear Regression} 
     \FloatBarrier
+    When the knockoff filter is used in linear regression, we see that the original knockoffs are still superior to the binary knockoffs. As figure 4 shows, while they both fail to control the FDR when there are only a few true predictors\footnote{This issue is addressed in the original paper; a slightly more conservative filter called knockoff+ avoids this problem}, the original knockoffs properly control FDR for more valid predictors. That it does so rather conservatively is a reflection of the relatively low number of total features compared to the sparsity. On the other hand, though mirroring the trend with the original knockoffs, the binary knockoffs fail to properly control FDR. They select too many variables, which gives higher power at the expense of proper FDR control. As figure 5 shows, both methods make related, but no where near identical variable selections. \par
     
     \begin{figure}[h]
         \begin{center}
         \includegraphics[width=14cm]{images/lasso_FDR_power_50}
     \end{center}
-    \caption{The mean FDR and power of binary and original knockoffs. Taken over $200$ simulations of linear regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ generated from Ising model while $y$ normally distributed about $X\beta$.}  
+    \caption{The mean FDR and power of binary and original knockoffs. Taken over $200$ simulations of linear regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ is generated from Ising model while $y$ is normally distributed about $X\beta$.}  
     \end{figure}
 
     \begin{figure}[h]
         \begin{center}
         \includegraphics[width=7cm]{images/lasso_corr_50}
     \end{center}
-    \caption{The mean correlation between variables selected using binary and original knockoffs. Taken over $200$ simulations of linear regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ generated from Ising model while $y$ normally distributed about $X\beta$.}  
+    \caption{The mean correlation between variables selected using binary and original knockoffs. Taken over $200$ simulations of linear regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ is generated from Ising model while $y$ is normally distributed about $X\beta$.}  
     \end{figure}
+    This is disappointing, but shouldn't be surprising. The binary knockoffs only replicate the correlation structure of the original features in expectation, rather than exactly. Thus, for any given value $n$, the empirical correlation of the combined design matrix $X_L$ won't exactly be $\Sigma_L$, and the method won't work perfectly. However, even here, the actual FDR is only somewhat hire than the desired $.2$, and for larger values of $n$, the empirical correlation will get closer to $\Sigma_L$, and the FDR will be controlled better.
 
     \FloatBarrier
 \subsection{Performance in Logistic Regression} 
     \FloatBarrier
+    In logistic regression, the binary knockoffs do seem to provide an improvement over the original knockoffs, as can be seen in figure 6. Though neither control FDR properly, using binary knockoffs result both in higher power and lower FDR. As well, while the original knockoffs do considerably worse in logistic regression than in linear regression, the binary knockoffs perform only a little worse, having similar FDR and somewhat lower power. This suggests that much of the excess FDR is due the deviation from the desired correlation matrix. It should be noted though that this simulation is very favorable towards the binary knockoffs; the design matrix $X$ is generated from the Ising model, which is also the model used to generate the binary knockoffs. It is quite likely that for $X$ generated with significant high order interactions, the binary knockoffs wouldn't perform as well, though still likely better than the original knockoffs. 
     \begin{figure}[h]
         \begin{center}
         \includegraphics[width=14cm]{images/logit_FDR_power_50}
     \end{center}
-    \caption{The mean FDR and power of binary and original knockoffs. Taken over $200$ simulations of logistic regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ generated from Ising model while $y$ Bernoulli with $p=L(X\beta)$.}  
+    \caption{The mean FDR and power of binary and original knockoffs. Taken over $200$ simulations of logistic regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ is generated from Ising model while $y$ is Bernoulli with $p=L(X\beta)$.}  
     \end{figure}
 
     \begin{figure}[h]
         \begin{center}
         \includegraphics[width=7cm]{images/logit_corr_50}
     \end{center}
-    \caption{The mean correlation between variables selected using binary and original knockoffs. Taken over $200$ simulations of logistic regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ generated from Ising model while $y$ Bernoulli with $p=L(X\beta)$.}  
+    \caption{The mean correlation between variables selected using binary and original knockoffs. Taken over $200$ simulations of logistic regression on $n=1000$, $p=50$, targeted FDR $q=.2$, and varying sparsity, or number of true predictors. $X$ is generated from Ising model while $y$ is Bernoulli with $p=L(X\beta)$.}  
     \end{figure}
 
     \FloatBarrier
 
 \section{Discussion}
-    Binary knockoffs, as a practical tool for statistical inference, are still a work in progress. Currently, they work best for high values of $n$, for which the empirical crossmoment matrix deviates little, and relatively small values of $p$, for which the computational time is not prohibitive. Considering that FDR control in feature selection is most essential when $p$ is large, this is not a edifying state of affairs. However, the approach suggests paths forward to a much more complete tool. 
+    Binary knockoffs, as a practical tool for statistical inference, are still a work in progress. Currently, they work best for high values of $n$, for which the empirical cross-moment matrix deviates little, and relatively small values of $p$, for which the computational time is not prohibitive. Considering that FDR control in feature selection is most essential when $p$ is large, this is not a edifying state of affairs. However, the approach suggests paths forward to a much more complete tool. 
     
 \subsection{Dealing With Small $n$}
-    With random generation of knockoffs, random variation from desired crossmoments is necessarily going to be an issue. However, there are likely ways to mitigate this problem by using multiple draws of $\tilde X$. For instance, if the $A$ or $P$ matrices were fit once, several draws of $\tilde X$ could be made from it, and a variable selection could be made for each of the corresponding $X_L$. Then these could be combined into a single variable selection, most obviously by selecting the variables which were selected for the majority of the $X_L$. 
+    With random generation of knockoffs, random variation from desired cross-moments is necessarily going to be an issue. However, there are likely ways to mitigate this problem by using multiple draws of $\tilde X$. For instance, if the $A$ or $P$ matrices were fit once, several draws of $\tilde X$ could be made from it, and a variable selection could be made for each of the corresponding $X_L$. Then these could be combined into a single variable selection, most obviously by selecting the variables which were selected for the majority of the $X_L$. 
     
 \subsection{Computational Issues}
-    The biggest drawback of this method is its computational requirements. As $p$ increases, a larger and larger matrix $A$ must be fit for the Ising model as well as a larger $P$ for the quadratic program. For the Ising model, $K$ must similarly grow to provide accurate estimates of the probability space. This causes an explosion in computation time. Some of this can likely be mitigated by improvements in implementation, and the most time intensive issue, calculating $f(\mathbf a)$, can be easily parallelized. A simpler method would still be desirable though. A method based on optimizing each column of $P$ individually is thus appealing. Certainly, in cases such as the EM algorithm, methods have been developed which have strong guarantees for global optimization using such piecewise methods. If a similar development could be made here, or merely a method that hits the desired crossmoments more closely in practice, the result would be far more useful tool.
+    The biggest drawback of this method is its computational requirements. As $p$ increases, a larger and larger matrix $A$ must be fit for the Ising model as well as a larger $P$ for the quadratic program. For the Ising model, $K$ must similarly grow to provide accurate estimates of the probability space. This causes an explosion in computation time. Some of this can likely be mitigated by improvements in implementation, and the most time intensive issue, calculating $f(\mathbf a)$, can be easily parallelized. A simpler method would still be desirable though. A method based on optimizing each column of $P$ individually is thus appealing. Certainly, in cases such as the EM algorithm, methods have been developed which have strong guarantees for global optimization using such piecewise methods. If a similar development could be made here, or merely a method that hits the desired cross-moments more closely in practice, the result would be far more useful tool.
 
 \subsection{Random Binary Variables With Higher Order Interactions}
     
