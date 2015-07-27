@@ -293,6 +293,7 @@ class ko_test(object):
             plot.set_xlim(1,self.p)
             plot.set_ylim(0,1)
             plot.legend(loc='lower right')
+            plot.plot((0,self.p),(.5,.5),'k--')
 
     def calc_fdr_power(self):
         trueS = (np.arange(self.p)<self.p1).astype(int)
