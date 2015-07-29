@@ -127,12 +127,55 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Random Binary Knockoffs}
+\begin{frame}{Random Binary Notation}
     \begin{itemize}
-        \item A useful 
+        \item Binary data is common in data analysis and a much more manageable family of distributions.
+        \item We can think of observations in $X$ as observations of random binary vector $\mathbf x\in\{0,1\}^p$.
+        \item The full family for $\mathbf x$ is multinomial on $2^p$ outcomes.
+        \item Still useful to consider first two moments: 
+            \[ \E(\mathbf x) = \mathbf{m} \in [0,1]^p \quad \& \quad \E(\mathbf{x}\mathbf{x}^T) = M \in [0,1]^{p\times p} \]
+        \item For arbitrary $M$ to correspond to a random binary vector, must be case that $ M-\mathbf{m}\mathbf{m}^T = \Sigma \succeq0$
+            \[\max\{0,m_i+m_j -1\} \leq M_{ij} \leq \min\{m_i,m_j\} \]
+
     \end{itemize}
 \end{frame}
 
+\begin{frame}{Random Binary Knockoffs}
+    \begin{itemize}
+        \item Integer programing is np-hard, making finding finding $\tilde X\in\{0,1\}^{n\times p}$ to fit correlations exactly difficult. 
+        \item Instead, introduce a relaxed problem where $\tilde X\st X$ is drawn randomly such that, where $\Sigma=\cov(\mathbf x)$
+            \[ \cov(\mathbf{\tilde x}, \mathbf x) = \Sigma - \diag{\mathbf s} \quad \& \quad \cov(\mathbf{\tilde x}) = \Sigma \]
+        \item Almost same correlation condition as before, just only holds in expectation.
+        \item Switch from Gramian matrix to correlation matrix makes moment condition less likely to be violated. 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Quadratic Programing}
+    \begin{itemize} 
+        \item Simplest approach to Random Binary Knockoffs is to draw the entries of $\tilde X$ independently based on $P\in[0,1]^{n\times p}$.
+        \item The best possible $P$ for the task would satisfy
+            \begin{center}
+                \begin{tabular}{r l}
+                    minimize     & $\|X^TP-(M-\diag{s})\|_{fro}^2 + \sum_{i\neq j}(P_i^T P_j - M_{ij})^2 $\\
+                    subject to   & $ \mathbf 1^T P = \mathbf m $ \\
+                                 & $0 \leq P \leq 1$
+                \end{tabular} 
+            \end{center}
+        \item Can be formulated as a quadratic program with slack variables
+            \begin{center}
+                \begin{tabular}{r l}
+                    minimize     & $\|W\|_{fro}^2 + \|V\|_{fro}^2 $ \\
+                    subject to   & $ -W \leq X^TP-(M-\diag{s})\leq W $ \\
+                                 & $ -V_{ij} \leq P_i^T P_j - M_{ij} \leq V_{ij} \quad \forall i\neq j$ \\
+                                 & $ \mathbf 1^T P = \mathbf m $ \\
+                                 & $0 \leq P \leq 1$
+                \end{tabular} 
+            \end{center}
+        \item Huge optimization problem, likely computationally impractical.
+
+
+    \end{itemize}
+\end{frame}
 
 
 \end{document}
