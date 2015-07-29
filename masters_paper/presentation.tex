@@ -91,11 +91,11 @@
     Knockoff variables can be used to control FDR in linear regression. 
     \begin{itemize}
         \item The idea is to create a forgery of each variable; if the forgeries seem about as good predictors as the originals, the originals are lousy predictors.
-        \item For each variable $X_i$, create a knockoff feature $\tilde X_i$ such that, where $X^TX=G$, $\diag{X^T X} - s$ and 
+        \item For each variable $X_i$, create a knockoff feature $\tilde X_i$ such that, where $X^TX=G$, $\diag{X^T X} - s$ is small and 
             \[ \tilde X^T \tilde X = G \quad \& \quad X^T \tilde X = G - \diag{\mathbf s} \]
+        \item $\tilde X_i$ and $X_i$ will have same correlation with other variables, but only low correlation with each other.
         \item For $\tilde X$ to exist, it must be the case that
             \[ G_L =[X\; \tilde X]^T[X\; \tilde X] = \left[ \begin{array}{cc} G & G - \diag{\mathbf s} \\ G - \diag{\mathbf s} & G \end{array}\right] \succeq 0 \]
-        \item $\tilde X_i$ and $X_i$ will have same correlation with other variables, but only low correlation with each other.
         \item Given $\mathbf s$, $\tilde X$ can be generated via a rotation of $X$.
     \end{itemize}
 \end{frame}
@@ -154,7 +154,7 @@
 
 \begin{frame}{Random Binary Knockoffs}
     \begin{itemize}
-        \item Integer programing is NP-hard, making finding $\tilde X\in\{0,1\}^{n\times p}$ to fit correlations exactly difficult. 
+        \item Integer programing is NP-hard, making finding $\tilde X\in\{0,1\}^{n\times p}$ to fit correlations optimally difficult. 
         \item Instead, introduce a relaxed problem where $\tilde X\st X$ is drawn randomly such that, where $\Sigma=\cov(\mathbf x)$
             \[ \cov(\mathbf{\tilde x}, \mathbf x) = \Sigma - \diag{\mathbf s} \quad \& \quad \cov(\mathbf{\tilde x}) = \Sigma \]
         \item For this to correspond to a random binary vector, must be the case
@@ -166,7 +166,7 @@
 
 \begin{frame}{Quadratic Programing}
     \begin{itemize} 
-        \item Simplest approach to Random Binary Knockoffs is to draw the entries of $\tilde X$ independently based on probabilities $P\in[0,1]^{n\times p}$.
+        \item Simplest approach to is to draw the entries of $\tilde X$ independently based on probabilities $P\in[0,1]^{n\times p}$.
         \item $P$ should satisfy 
             \begin{center}
                 \begin{tabular}{r l}
