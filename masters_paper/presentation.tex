@@ -34,6 +34,7 @@
 \newcommand{\uj}{\{u_j\}_{j=1}^\infty}
 \newcommand{\B}{\mathcal{B}}
 
+\newcommand{\p}{\mathrm{P}}
 \newcommand{\E}{\mathrm{E}}
 \newcommand{\var}{\mathrm{Var}}
 \newcommand{\cov}{\mathrm{Cov}}
@@ -50,7 +51,7 @@
 \DeclareMathOperator*{\argmin}{arg\min}
 
 \title{Using Probabilistic Knockoffs of Binary Variables to Control the False Discovery Rate}
-\author{Aaron Maurer}
+\author{Aaron Maurer \\ Advisor: Rina Foygel Barber}
 \date{July 29th, 2015}
 
 \begin{document}
@@ -86,13 +87,14 @@
     
 \end{frame}
 
-\begin{frame}{Knockoffs}
+\begin{frame}{Knockoff Features}
     Knockoff variables can be used to control FDR in linear regression. 
     \begin{itemize}
         \item The idea is to create a forgery of each variable; if the forgeries seem about as good predictors as the originals, the originals are lousy predictors.
-        \item For each variable $X_i$, create a knockoff feature $\tilde X_i$. Such that. 
-            \[ \tilde X^T \tilde X = X^T X \quad \& \quad X^T \tilde X = X^T X - \diag{\mathbf s} \]
-            Where $\diag{X^T X} - s$ is small but $\diag{X^T X} - s\succeq0$
+        \item For each variable $X_i$, create a knockoff feature $\tilde X_i$ such that, where $X^TX=G$, $\diag{X^T X} - s$ and 
+            \[ \tilde X^T \tilde X = G \quad \& \quad X^T \tilde X = G - \diag{\mathbf s} \]
+        \item For $\tilde X$ to exist, it must be the case that
+            \[ G_L =[X\; \tilde X]^T[X\; \tilde X] = \left[ \begin{array}{cc} G & G - \diag{\mathbf s} \\ G - \diag{\mathbf s} & G \end{array}\right] \succeq 0 \]
         \item $\tilde X_i$ and $X_i$ will have same correlation with other variables, but only low correlation with each other.
         \item Given $\mathbf s$, $\tilde X$ can be generated via a rotation of $X$.
     \end{itemize}
@@ -105,10 +107,20 @@
     \[ \beta(\lambda) = \argmin_\mathbf b \left\{\frac{1}{2}\|\mathbf y - X_L\mathbf b\|^2_2 + \lambda\|b\|_1 \right\}\]
         \item $Z_i$, $\tilde Z_i$ largest $\lambda$ such that $X_i$, $\tilde X_i$ have nonzero coefficient.
         \item $W_i= Z_i$ if $Z_i>\tilde Z_i$, otherwise $W_i = -\tilde Z_i$.
-        \item Since $[\, X \, \tilde X\,]^T[\, X \, \tilde X\,]$ \& $[\, X \, \tilde X\,]^T\mathbf y$ sufficient statistics for $\beta(\lambda)$, $W_i$ symmetrically distributed around $0$ when $X_i$ null predictor.
+        \item Since $G_L$ \& $[\, X \, \tilde X\,]^T\mathbf y$ sufficient statistics for $\beta(\lambda)$, $W_i$ symmetrically distributed around $0$ when $X_i$ null predictor.
         \item Thus, FDR controlled when $\hat S = \{i:W_i>T\}$ for 
             \[ T = \min\left\{ t>0 \;: \; \frac{\vert\{j:W_j\leq -t\}\vert}{\max\{\vert\{j:W_j\geq t\}\vert,1\}}\leq q \right\} \]
     \end{itemize}
+\end{frame}
+
+\begin{frame}{Variable Selection in GLMs}
+    Knockoffs work great for linear regression, but what about GLMs? \\
+    \vspace{1cm}
+    Now, assume, for some link function $g$ and $y_i,\ldots,y_n$ from a exponential family distribution,
+     \[\E(\mathbf{y}) = g(X\beta)\]
+    where $X \in \R^{n\times p}$ and $\beta\in\R^p$. Also, assume sparsity:
+    \[\beta_i = 0 \quad \forall i\not\in S\]
+    How do we pick estimate $\hat S$?
 \end{frame}
 
 \begin{frame}{Where Knockoff Filter Fails}
@@ -129,7 +141,7 @@
 
 \begin{frame}{Random Binary Notation}
     \begin{itemize}
-        \item Binary data is common in data analysis and a much more manageable family of distributions.
+        \item Binary data is common in data analysis and a much more manageable family of distributions for $X$.
         \item We can think of observations in $X$ as observations of random binary vector $\mathbf x\in\{0,1\}^p$.
         \item The full family for $\mathbf x$ is multinomial on $2^p$ outcomes.
         \item Still useful to consider first two moments: 
@@ -145,6 +157,8 @@
         \item Integer programing is np-hard, making finding finding $\tilde X\in\{0,1\}^{n\times p}$ to fit correlations exactly difficult. 
         \item Instead, introduce a relaxed problem where $\tilde X\st X$ is drawn randomly such that, where $\Sigma=\cov(\mathbf x)$
             \[ \cov(\mathbf{\tilde x}, \mathbf x) = \Sigma - \diag{\mathbf s} \quad \& \quad \cov(\mathbf{\tilde x}) = \Sigma \]
+        \item For this to correspond to a random binary vector, must be the case
+            \[ \Sigma_L =\cov([\,\mathbf x\,\mathbf{\tilde x}\,]) = \left[ \begin{array}{cc} \Sigma & \Sigma - \diag{\mathbf s} \\ \Sigma - \diag{\mathbf s} & \Sigma \end{array}\right] \succeq 0 \]
         \item Almost same correlation condition as before, just only holds in expectation.
         \item Switch from Gramian matrix to correlation matrix makes moment condition less likely to be violated. 
     \end{itemize}
@@ -171,11 +185,75 @@
                                  & $0 \leq P \leq 1$
                 \end{tabular} 
             \end{center}
-        \item Huge optimization problem, likely computationally impractical.
+        \item Huge optimization problem, likely computationally difficult.
+    \end{itemize}
+\end{frame}
 
+\begin{frame}{Ising Model}
+    \begin{itemize}
+        \item Instead, what if we found a random binary vector variable $\mathbf{x}_L$ that had cross-moments $M_L$ corresponding to $\Sigma_L$?
+        \item The Ising model can match any $M_L$. If $A$ lower triangular matrix and $L$ logistic link
+            \[ \p(\mathbf x=\mathbf \gamma) \propto L(\mathbf{\gamma}^T A\mathbf \gamma)\]
+        \item The Ising model binary analog of normal distribution; maximum entropy for given covariance matrix.
+        \item Very easy to draw successive entries
+            \[ \p(x_{i}=1\st x_{1},...,x_{i-1}) = L\left(A_{ii}+\sum_{k=1}^{i-1}A_{ik}x_i\right) \]
+        \item Once fit, can draw $\mathbf{\tilde x}\st \mathbf x$ easily.
 
     \end{itemize}
 \end{frame}
 
+\begin{frame}{Fitting Ising Model}
+    \begin{itemize}
+        \item If we were just trying to fit $A$ $X$, we could do so via successive logistic regression to fit row $\mathbf a_i$.
+        \item Instead, simulate $\mathbf m_i = f(\mathbf a_i)$ and fit via Newton-Raphson. Let $\mathbf x_{-i}^{(k)}\sim \mathbf x_{-i}$
+            \[f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right] \]
+            \[J\left( \mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
+        \item Make successive updates
+            \[\mathbf a_i^{(k+1)} = \mathbf a_i^{(k)} - \left[J\left(\mathbf a_i^{(k)}\right) \right]^{-1}\left[f\left(\mathbf a_i^{(k)}\right)-\mathbf m_i\right] \]
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Computational Issues}
+    \begin{itemize}
+        \item $K$ must be very large for big $p$ and high correlation.
+        \item This makes $J\left( \mathbf a_i\right)$ and even $f\left(\mathbf a_i\right)$ very expensive to calculate.
+        \item This makes quasi-Newtonian methods, where $J\left( \mathbf a_i\right)$ is approximated appealing.
+        \item In particular, Anderson Mixing, where $f$ approximated with secant hyperplane through $\mathbf a_i^{k},\ldots,\mathbf a_i^{(k-h+1)}$ works well
+        \item When $K$ too small, can instead solve relaxed problem
+    \[\mathbf m_i^*(\tau) = (1-\tau)\mathbf m_i + \tau \left[ \begin{array}{cccc} 0 & \ldots & 0 & M_{ii} \end{array} \right]^T \]
+        \item $n$ doesn't matter, but this method is also fairly impractical for large $p$.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Random Binary Knockoffs in Linear Regression}
+    Unfortunately, random binary Knockoffs only provide approximate FDR control for linear regression. 
+    \begin{center}
+        \includegraphics[width=11cm]{images/lasso_FDR_power_50}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Distortion from $M_L$}
+    Since $\tilde X$ is randomly generated $\frac{1}{n}X_L^TX_L$ deviates from $M_L$.
+    \begin{center}
+        \includegraphics[width=9cm]{images/sigma_fit}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Random Binary Knockoffs in Logistic Regression}
+    Still, Random Binary Knockoffs seem to do way better than original knockoffs in logistic regression.
+    \begin{center}
+        \includegraphics[width=11cm]{images/logit_FDR_power_50}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Discussion}
+    \begin{itemize}
+        \item Random Binary Knockoffs seem to offer promise as a useful technique, but have outstanding issues.
+        \item Seem to offer a method to extend Knockoffs for one type of variable to GLMs.
+        \item Computational complexity prohibitive; simpler method, perhaps by good approximation of $P$, would be helpful.
+        \item Random distortion from desired cross-moments might be compensated for by ensemble method based on multiple $\tilde X$.
+        \item Might build higher order interactions into Ising model to allow for nasty data.
+    \end{itemize}
+\end{frame}
 
 \end{document}
