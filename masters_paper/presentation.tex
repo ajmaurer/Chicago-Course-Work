@@ -75,15 +75,15 @@
      \[\mathbf{y} = X\beta + \mathbf{z}\]
     where $\mathbf{y}\in\R^n$, $X \in \R^{n\times p}$, $\beta\in\R^p$, and $\mathbf z$ is Gaussian noise. Also, assume sparsity:
     \[\beta_i = 0 \quad \forall i\not\in S\]
-    How do we pick estimate $\hat S$?
+    How do we choose a model $\hat S$?
 \end{frame}
 
-\begin{frame}{False Discover Rate}
+\begin{frame}{False Discovery Rate}
     A common goal for a method that generates $\hat S$ is to control the false discovery rate
     \[ \textrm{FDR} = \E\left[\frac{\vert{\{j: \beta_j=0 \; \& \; j\in\hat S\}}\vert}{\max\{\vert{\hat S}\vert,1\}} \right] \]
-    In other words, control portion of elements in $\hat S$ which aren't in $S$. \par
+    In other words, control proportion of elements in $\hat S$ which aren't in $S$. \par
     \vspace{1cm}
-    FDR is controlled at level $q$ if $q<$FDR irrespective of true $\beta$.
+    FDR is controlled at level $q$ if $q\leq$FDR irrespective of true $\beta$.
     
 \end{frame}
 
@@ -103,12 +103,12 @@
 \begin{frame}{Knockoff Filter}
     These knockoffs can be used in the knockoff filter method. 
     \begin{itemize}
-        \item Fit full path of LASSO regression on $[\,X\,\tilde X\,]$.
+        \item Fit full path of LASSO regression on $[\,X\,\tilde X\,]:=X_L$.
     \[ \beta(\lambda) = \argmin_\mathbf b \left\{\frac{1}{2}\|\mathbf y - X_L\mathbf b\|^2_2 + \lambda\|b\|_1 \right\}\]
-        \item $Z_i$, $\tilde Z_i$ largest $\lambda$ such that $X_i$, $\tilde X_i$ have nonzero coefficient.
+        \item $Z_i$, $\tilde Z_i$ are the largest $\lambda$ such that $X_i$, $\tilde X_i$ have nonzero coefficient.
         \item $W_i= Z_i$ if $Z_i>\tilde Z_i$, otherwise $W_i = -\tilde Z_i$.
-        \item Since $G_L$ \& $[\, X \, \tilde X\,]^T\mathbf y$ sufficient statistics for $\beta(\lambda)$, $W_i$ symmetrically distributed around $0$ when $X_i$ null predictor.
-        \item Thus, FDR controlled when $\hat S = \{i:W_i>T\}$ for 
+        \item Since $G_L$ \& $[\, X \, \tilde X\,]^T\mathbf y$ are sufficient statistics for $\beta(\lambda)$, $W_i$ symmetrically distributed around $0$ when $X_i$ null predictor.
+        \item Thus, FDR controlled when $\hat S = \{i:W_i\geq T\}$ for 
             \[ T = \min\left\{ t>0 \;: \; \frac{\vert\{j:W_j\leq -t\}\vert}{\max\{\vert\{j:W_j\geq t\}\vert,1\}}\leq q \right\} \]
     \end{itemize}
 \end{frame}
@@ -116,15 +116,15 @@
 \begin{frame}{Variable Selection in GLMs}
     Knockoffs work great for linear regression, but what about GLMs? \\
     \vspace{1cm}
-    Now, assume, for some link function $g$ and $y_i,\ldots,y_n$ from a exponential family distribution,
+    Now, assume, for some link function $g$ and $y_1,\ldots,y_n$ from a exponential family distribution,
      \[\E(\mathbf{y}) = g(X\beta)\]
     where $X \in \R^{n\times p}$ and $\beta\in\R^p$. Also, assume sparsity:
     \[\beta_i = 0 \quad \forall i\not\in S\]
-    How do we pick estimate $\hat S$?
+    How do we choose a model $\hat S$?
 \end{frame}
 
 \begin{frame}{Where Knockoff Filter Fails}
-    Knockoff filter don't work for other GLMs. \\
+    Knockoff filter doesn't work for other GLMs. \\
     \begin{center}
         \includegraphics[width=8cm]{images/entryrate_original_logit}
     \end{center}
@@ -144,8 +144,8 @@
         \item Binary data is common in data analysis and a much more manageable family of distributions for $X$.
         \item We can think of observations in $X$ as observations of random binary vector $\mathbf x\in\{0,1\}^p$.
         \item The full family for $\mathbf x$ is multinomial on $2^p$ outcomes.
-        \item Still useful to consider first two moments: 
-            \[ \E(\mathbf x) = \mathbf{m} \in [0,1]^p \quad \& \quad \E(\mathbf{x}\mathbf{x}^T) = M \in [0,1]^{p\times p} \]
+        \item Can summarize with the first two moments: 
+            \[ \E(\mathbf{x}\mathbf{x}^T) = M \in [0,1]^{p\times p} \quad \& \quad \diag{M} = \E(\mathbf x) = \mathbf{m} \in [0,1]^p  \]
         \item For arbitrary $M$ to correspond to a random binary vector, must be case that $ M-\mathbf{m}\mathbf{m}^T = \Sigma \succeq0$
             \[\max\{0,m_i+m_j -1\} \leq M_{ij} \leq \min\{m_i,m_j\} \]
 
@@ -154,20 +154,20 @@
 
 \begin{frame}{Random Binary Knockoffs}
     \begin{itemize}
-        \item Integer programing is np-hard, making finding finding $\tilde X\in\{0,1\}^{n\times p}$ to fit correlations exactly difficult. 
+        \item Integer programing is NP-hard, making finding $\tilde X\in\{0,1\}^{n\times p}$ to fit correlations exactly difficult. 
         \item Instead, introduce a relaxed problem where $\tilde X\st X$ is drawn randomly such that, where $\Sigma=\cov(\mathbf x)$
             \[ \cov(\mathbf{\tilde x}, \mathbf x) = \Sigma - \diag{\mathbf s} \quad \& \quad \cov(\mathbf{\tilde x}) = \Sigma \]
         \item For this to correspond to a random binary vector, must be the case
             \[ \Sigma_L =\cov([\,\mathbf x\,\mathbf{\tilde x}\,]) = \left[ \begin{array}{cc} \Sigma & \Sigma - \diag{\mathbf s} \\ \Sigma - \diag{\mathbf s} & \Sigma \end{array}\right] \succeq 0 \]
-        \item Almost same correlation condition as before, just only holds in expectation.
+        \item Almost same correlation condition as before, but only holds in expectation.
         \item Switch from Gramian matrix to correlation matrix makes moment condition less likely to be violated. 
     \end{itemize}
 \end{frame}
 
 \begin{frame}{Quadratic Programing}
     \begin{itemize} 
-        \item Simplest approach to Random Binary Knockoffs is to draw the entries of $\tilde X$ independently based on $P\in[0,1]^{n\times p}$.
-        \item The best possible $P$ for the task would satisfy
+        \item Simplest approach to Random Binary Knockoffs is to draw the entries of $\tilde X$ independently based on probabilities $P\in[0,1]^{n\times p}$.
+        \item $P$ should satisfy 
             \begin{center}
                 \begin{tabular}{r l}
                     minimize     & $\|X^TP-(M-\diag{s})\|_{fro}^2 + \sum_{i\neq j}(P_i^T P_j - M_{ij})^2 $\\
@@ -191,8 +191,8 @@
 
 \begin{frame}{Ising Model}
     \begin{itemize}
-        \item Instead, what if we found a random binary vector variable $\mathbf{x}_L$ that had cross-moments $M_L$ corresponding to $\Sigma_L$?
-        \item The Ising model can match any $M_L$. If $A$ lower triangular matrix and $L$ logistic link
+        \item Alternatively, find a random binary vector variable $\mathbf{x}_L$ that has cross-moments $M_L$ corresponding to $\Sigma_L$.
+        \item The Ising model can match any proper $M_L$. If $A$ is a lower triangular matrix and $L$ the logistic link function
             \[ \p(\mathbf x=\mathbf \gamma) \propto L(\mathbf{\gamma}^T A\mathbf \gamma)\]
         \item The Ising model binary analog of normal distribution; maximum entropy for given covariance matrix.
         \item Very easy to draw successive entries
@@ -204,8 +204,9 @@
 
 \begin{frame}{Fitting Ising Model}
     \begin{itemize}
-        \item If we were just trying to fit $A$ $X$, we could do so via successive logistic regression to fit row $\mathbf a_i$.
-        \item Instead, simulate $\mathbf m_i = f(\mathbf a_i)$ and fit via Newton-Raphson. Let $\mathbf x_{-i}^{(k)}\sim \mathbf x_{-i}$
+        \item If we were just trying to fit $A$ to $X$, we could do so via successive logistic regression to fit row $\mathbf a_i$.
+        \item Instead, simulate $\mathbf m_i = f(\mathbf a_i)$ and fit via Newton-Raphson. 
+        \item Draw $K$ samples $\mathbf x_{-i}^{(k)}\sim \mathbf x_{-i}$. Then
             \[f\left(\mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right] \]
             \[J\left( \mathbf a_i\right) \approx \frac{1}{K}\sum_{k=1}^K L'\left(\mathbf{a}_i^T\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\right)\left[\begin{array}{c} \mathbf x_{-i}^{(k)} \\ 1 \end{array}\right]\left[\begin{array}{cc} \mathbf [x_{-i}^{(k)}]^T & 1 \end{array}\right] \]
         \item Make successive updates
@@ -217,7 +218,7 @@
     \begin{itemize}
         \item $K$ must be very large for big $p$ and high correlation.
         \item This makes $J\left( \mathbf a_i\right)$ and even $f\left(\mathbf a_i\right)$ very expensive to calculate.
-        \item This makes quasi-Newtonian methods, where $J\left( \mathbf a_i\right)$ is approximated appealing.
+        \item This makes quasi-Newtonian methods, where $J\left( \mathbf a_i\right)$ is approximated, appealing.
         \item In particular, Anderson Mixing, where $f$ approximated with secant hyperplane through $\mathbf a_i^{k},\ldots,\mathbf a_i^{(k-h+1)}$ works well
         \item When $K$ too small, can instead solve relaxed problem
     \[\mathbf m_i^*(\tau) = (1-\tau)\mathbf m_i + \tau \left[ \begin{array}{cccc} 0 & \ldots & 0 & M_{ii} \end{array} \right]^T \]
@@ -226,24 +227,27 @@
 \end{frame}
 
 \begin{frame}{Random Binary Knockoffs in Linear Regression}
-    Unfortunately, random binary Knockoffs only provide approximate FDR control for linear regression. 
+    Random binary Knockoffs only provide approximate FDR control for linear regression. 
     \begin{center}
         \includegraphics[width=11cm]{images/lasso_FDR_power_50}
     \end{center}
+    They select too many variables, causing higher power at the expense of FDR control.
 \end{frame}
 
 \begin{frame}{Distortion from $M_L$}
-    Since $\tilde X$ is randomly generated $\frac{1}{n}X_L^TX_L$ deviates from $M_L$.
+    Since $\tilde X$ is randomly generated, $\frac{1}{n}X_L^TX_L$ deviates from $M_L$.
     \begin{center}
-        \includegraphics[width=9cm]{images/sigma_fit}
+        \includegraphics[width=8cm]{images/sigma_fit}
     \end{center}
+    As $n$ increases, this effect diminishes. 
 \end{frame}
 
 \begin{frame}{Random Binary Knockoffs in Logistic Regression}
-    Still, Random Binary Knockoffs seem to do way better than original knockoffs in logistic regression.
+    Random Binary Knockoffs perform much better than original knockoffs in logistic regression.
     \begin{center}
         \includegraphics[width=11cm]{images/logit_FDR_power_50}
     \end{center}
+    They have lower FDR and higher power.
 \end{frame}
 
 \begin{frame}{Discussion}
