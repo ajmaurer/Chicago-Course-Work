@@ -104,7 +104,7 @@
     These knockoffs can be used in the knockoff filter method. 
     \begin{itemize}
         \item Fit full path of LASSO regression on $[\,X\,\tilde X\,]:=X_L$.
-    \[ \beta(\lambda) = \argmin_\mathbf b \left\{\frac{1}{2}\|\mathbf y - X_L\mathbf b\|^2_2 + \lambda\|b\|_1 \right\}\]
+            \[ \beta(\lambda) = \argmin_\mathbf b \left\{\frac{1}{2}\|\mathbf y - X_L\mathbf b\|^2_2 + \lambda\|\mathbf{b}\|_1 \right\}\]
         \item $Z_i$, $\tilde Z_i$ are the largest $\lambda$ such that $X_i$, $\tilde X_i$ have nonzero coefficient.
         \item $W_i= Z_i$ if $Z_i>\tilde Z_i$, otherwise $W_i = -\tilde Z_i$.
         \item Since $G_L$ \& $[\, X \, \tilde X\,]^T\mathbf y$ are sufficient statistics for $\beta(\lambda)$, $W_i$ symmetrically distributed around $0$ when $X_i$ null predictor.
